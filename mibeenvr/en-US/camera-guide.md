@@ -2,7 +2,7 @@
 
 MiBee NVR supports a wide range of IP cameras through various protocols including RTSP (H.264/H.265/MJPEG), HTTP JPEG, and ONVIF. This guide provides comprehensive compatibility information for popular camera brands, including supported protocols, configuration examples, and troubleshooting tips.
 
-**ONVIF Integration**: For comprehensive ONVIF camera support, discovery methods, PTZ control, and troubleshooting, see the [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md).
+**ONVIF Integration**: For comprehensive ONVIF camera support, discovery methods, PTZ control, and troubleshooting, see the [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/onvif-guide.md).
 
 ## Quick Start (Top 3 Brands)
 
@@ -761,9 +761,9 @@ cameras:
 
 ### Documentation
 
-- [MiBee NVR Configuration Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md)
-- [MiBee NVR API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/README.md)
-- [MiBee NVR Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/getting-started.md)
+- [MiBee NVR Configuration Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/configuration.md)
+- [MiBee NVR API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/api/README.md)
+- [MiBee NVR Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/getting-started.md)
 
 ### Community Support
 

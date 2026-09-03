@@ -1,6 +1,6 @@
 # 配置参考
 
-> 适用于 MiBeeNvr v0.12.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
+> 适用于 MiBeeNvr v0.11.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
 
 MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速查**；每个键的完整字段说明见仓库中的[完整配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)。
 
@@ -13,7 +13,7 @@ MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速�
 | Web UI → 设置 | 大部分运行参数 | 存储路径、直播、GB28181、AI 检测、录像与处理等分页 |
 | 编辑 YAML | 批量 / 初始化 | 摄像头列表、部署脚本等；改完需重启 |
 
-> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](cli.md#encrypt-config-加密敏感字段)）。
+> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/cli.md#encrypt-config-加密敏感字段)）。
 
 ## 顶层键速查
 

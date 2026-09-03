@@ -273,7 +273,7 @@ cameras:
 
 ### Prometheus Metrics
 
-Transcoding metrics are exposed at `/api/metrics` (the full list with labels and types is in [metrics.md](metrics.md#11-transcoding-metrics)):
+Transcoding metrics are exposed at `/api/metrics` (the full list with labels and types is in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/metrics.md#11-transcoding-metrics)):
 - `nvr_transcoding_active_jobs`: Currently running transcoding jobs (gauge)
 - `nvr_transcoding_jobs_total`: Total transcoding jobs, with `codec_from`, `codec_to`, `encoder`, `crf`, and `status` (`completed`/`failed`/`cancelled`) labels (counter)
 - `nvr_transcoding_duration_seconds`: Duration of completed transcoding jobs, by codec conversion (histogram)
@@ -351,4 +351,4 @@ A: Yes, but expect reduced performance. Use 1 worker and simple presets for best
 - Cancel stuck tasks: `DELETE /api/transcoding/tasks/{id}`
 - Verify camera has transcoding enabled
 
-For more detailed troubleshooting, check the [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) and [API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/README.md) documents.
+For more detailed troubleshooting, check the [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/configuration.md) and [API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/api/README.md) documents.

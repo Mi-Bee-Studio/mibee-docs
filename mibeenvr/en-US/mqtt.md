@@ -1,15 +1,14 @@
 # MQTT Integration
 
-MiBee NVR supports MQTT recording triggers and status publishing for smart home automation and event-driven recording. Incoming MQTT messages can start/stop camera recording; with status publishing enabled, health alerts and recording events are also pushed to MQTT.
+MiBee NVR supports MQTT-based recording triggers for smart home automation and event-driven recording. When an MQTT message is received, the system can start recording on a specific camera for a configurable duration.
 
 ## Overview
 
 - **Protocol**: MQTT (Message Queuing Telemetry Transport)
-- **Trigger (subscribe)**: `{prefix}/trigger/{camera_id}`
-- **Status (publish)**: `{prefix}/health/{camera_id}`, `{prefix}/event/{topic}` (see [Status Publishing](#status-publishing))
-- **Trigger payload**: JSON with `action` field
-- **Actions**: `record`, `stop`, `snapshot` (persisted to storage + `camera.snapshot` event)
-- **Auto-reconnect**: Built-in with exponential backoff; a broker that is unreachable at NVR startup is retried continuously (tiered 1s→5s→10s→60s backoff) — no start-order dependency
+- **Topic Pattern**: `{prefix}/trigger/{camera_id}`
+- **Payload**: JSON with `action` field
+- **Actions**: `record`, `stop`, `snapshot`
+- **Auto-reconnect**: Built-in with exponential backoff
 
 ## Configuration
 
@@ -17,10 +16,9 @@ MiBee NVR supports MQTT recording triggers and status publishing for smart home 
 
 ```yaml
 mqtt:
-  enabled: true
-  broker: "tcp://192.168.1.100:1883"
+  broker_url: "tcp://192.168.1.100:1883"
   client_id: "mibee-nvr"
-  topic: "mibee"
+  topic_prefix: "mibee"
   username: "mqtt_user"
   password: "mqtt_password"
 ```
@@ -29,25 +27,21 @@ mqtt:
 
 | Field | Required | Type | Default | Description |
 |-------|----------|------|---------|-------------|
-| `enabled` | Yes | bool | `false` | Enable the MQTT client |
-| `broker` | Yes | string | - | MQTT broker address (e.g., `tcp://192.168.1.100:1883`) |
+| `broker_url` | Yes | string | - | MQTT broker address (e.g., `tcp://192.168.1.100:1883`) |
 | `client_id` | Yes | string | - | Unique client ID for MQTT connection |
-| `topic` | Yes | string | - | Topic prefix (e.g., `mibee`); the client subscribes to `{topic}/trigger/+` |
+| `topic_prefix` | Yes | string | - | Prefix for trigger topics (e.g., `mibee`) |
 | `username` | No | string | - | MQTT username (if broker requires auth) |
-| `password` | No | string | - | MQTT password (can be encrypted via `mibee-nvr encrypt-config`) |
-| `status_events` | No | bool | `false` | Forward recording/camera events to `{topic}/event/<topic>` (see Status Publishing) |
+| `password` | No | string | - | MQTT password (if broker requires auth) |
 
 ### Example Configuration
 
 ```yaml
 mqtt:
-  enabled: true
-  broker: "tcp://mqtt.example.com:1883"
+  broker_url: "tcp://mqtt.example.com:1883"
   client_id: "mibee-nvr-home"
-  topic: "home/security"
+  topic_prefix: "home/security"
   username: "smart_home_user"
   password: "secure_password_123"
-  status_events: true
 ```
 
 ## Usage
@@ -85,7 +79,7 @@ Stop recording on a specific camera:
 
 #### Trigger Snapshot
 
-Capture one snapshot from a specific camera and persist it (#656):
+Take a snapshot from a specific camera:
 
 ```json
 {
@@ -93,45 +87,8 @@ Capture one snapshot from a specific camera and persist it (#656):
 }
 ```
 
-Capture tries each capability in order: JPEG-family cameras (HTTP-JPEG/MJPEG) answer from the recorder's latest frame; H.264/H.265 cameras go through a one-shot StreamHub subscription (the cached IDR replays immediately — no GOP wait) decoded to JPEG by the optional FFmpeg, falling back to the camera's configured `snapshot_url` (with the camera's credentials) when FFmpeg is absent. The JPEG is persisted atomically (temp file → rename) to `{storage_root}/snapshots/{camera_id}/{timestamp}.jpg`, and a `camera.snapshot` event is published on success (see the event forwarding table below).
-
 **Topic**: `home/security/trigger/front-door`  
 **Message**: `{"action": "snapshot"}`
-
-### Status Publishing
-
-The NVR publishes the following status to MQTT (all require `mqtt.enabled: true`):
-
-#### Health alerts — `{prefix}/health/{camera_id}`
-
-Gating: `mqtt.enabled: true` **and** `health.alerts.mqtt: true`. Camera health events (connection lost, stream freeze, connection restored, etc.) are published to this topic with the health-event JSON as payload:
-
-```json
-{
-  "id": "evt-123",
-  "camera_id": "front-door",
-  "event_type": "connection_lost",
-  "status": "warning",
-  "message": "no frames for 30s",
-  "created_at": "2026-09-01T12:00:00Z"
-}
-```
-
-Repeated alerts for the same event are suppressed by `health.alerts.cooldown` (default 5m); persistent issues escalate to `error`, while positive events (`connection_restored`, `freeze_recovered`) never escalate.
-
-#### Event forwarding — `{prefix}/event/{topic}`
-
-Gating: `mqtt.enabled: true` **and** `mqtt.status_events: true`. The following event-bus topics are forwarded as-is (payload is the event's JSON):
-
-| Event topic | MQTT topic | Payload highlights |
-|-------------|------------|--------------------|
-| `segment.completed` | `{prefix}/event/segment.completed` | `camera_id`, `file_path`, `format`, `encoding`, `started_at`, `ended_at`, `file_size`, `recording_id` |
-| `camera.added` | `{prefix}/event/camera.added` | `camera_id`, `name`, `endpoint`, `source` |
-| `camera.quality` | `{prefix}/event/camera.quality` | `camera_id`, `from`, `to`, `reason` |
-| `storage.health.changed` | `{prefix}/event/storage.health.changed` | `camera_id`, `previous_state`, `current_state`, `message` |
-| `camera.snapshot` | `{prefix}/event/camera.snapshot` | `camera_id`, `file_path` (relative to storage root), `timestamp`, `trigger` |
-
-High-frequency topics (e.g. AI detections) are deliberately excluded from the whitelist. Messages use QoS 1 and retain=false; events are dropped when the broker is slow (the event bus drops on overflow and never blocks recording).
 
 ### Integration Examples
 

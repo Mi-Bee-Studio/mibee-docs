@@ -2,7 +2,7 @@
 
 MiBee NVR 通过多种协议支持广泛的 IP 摄像头，包括 RTSP（H.264/H.265/MJPEG）、HTTP JPEG 和 ONVIF。本指南提供主流摄像头品牌的全面兼容性信息，包括支持的协议、配置示例和故障排除技巧。
 
-**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)。
+**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/onvif-guide.md)。
 
 ## 快速入门（Top 3 品牌）
 
@@ -787,9 +787,9 @@ cameras:
 
 ### 文档
 
-- [MiBee NVR 配置指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)
-- [MiBee NVR API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md)
-- [MiBee NVR 入门指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/getting-started.md)
+- [MiBee NVR 配置指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md)
+- [MiBee NVR API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/api/README.md)
+- [MiBee NVR 入门指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/getting-started.md)
 
 ### 社区支持
 
@@ -881,7 +881,7 @@ sudo nmap -sV -p 554,80,8080 --open 192.168.1.0/24
 
 这是连接 NVR 无法直接拨出的摄像头的推荐方式。
 
-详细架构设计请参见[架构文档](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/architecture.md)。
+详细架构设计请参见[架构文档](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/architecture.md)。
 
 ### 前置条件
 
