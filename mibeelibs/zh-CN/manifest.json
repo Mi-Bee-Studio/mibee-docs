@@ -1,0 +1,176 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBee 库总文档",
+  "sections": [
+    {
+      "title": "总览",
+      "items": [
+        {
+          "slug": "libs-overview",
+          "file": "libs-overview.md",
+          "title": "MiBee 库总览"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Go",
+      "items": [
+        {
+          "slug": "gb28181-go-platform",
+          "file": "gb28181-go-platform.md",
+          "title": "平台侧（UAC）"
+        },
+        {
+          "slug": "gb28181-go-device",
+          "file": "gb28181-go-device.md",
+          "title": "设备侧（UAS）"
+        },
+        {
+          "slug": "gb28181-go-cascade",
+          "file": "gb28181-go-cascade.md",
+          "title": "级联"
+        },
+        {
+          "slug": "gb28181-go-manscdp",
+          "file": "gb28181-go-manscdp.md",
+          "title": "MANSCDP 消息"
+        },
+        {
+          "slug": "gb28181-go-psmux",
+          "file": "gb28181-go-psmux.md",
+          "title": "PS 流封装"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Rust",
+      "items": [
+        {
+          "slug": "gb28181-rs-server",
+          "file": "gb28181-rs-server.md",
+          "title": "服务端总览"
+        },
+        {
+          "slug": "gb28181-rs-configuration",
+          "file": "gb28181-rs-configuration.md",
+          "title": "配置"
+        },
+        {
+          "slug": "gb28181-rs-live-streaming",
+          "file": "gb28181-rs-live-streaming.md",
+          "title": "直播"
+        },
+        {
+          "slug": "gb28181-rs-recording-playback",
+          "file": "gb28181-rs-recording-playback.md",
+          "title": "录像回放"
+        },
+        {
+          "slug": "gb28181-rs-manscdp",
+          "file": "gb28181-rs-manscdp.md",
+          "title": "MANSCDP 消息"
+        },
+        {
+          "slug": "gb28181-rs-psmux",
+          "file": "gb28181-rs-psmux.md",
+          "title": "PS 流封装"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Go",
+      "items": [
+        {
+          "slug": "onvif-go-architecture",
+          "file": "onvif-go-architecture.md",
+          "title": "架构（v1）"
+        },
+        {
+          "slug": "onvif-go-v2-architecture",
+          "file": "onvif-go-v2-architecture.md",
+          "title": "架构（v2）"
+        },
+        {
+          "slug": "onvif-go-discovery",
+          "file": "onvif-go-discovery.md",
+          "title": "设备发现"
+        },
+        {
+          "slug": "onvif-go-authentication",
+          "file": "onvif-go-authentication.md",
+          "title": "鉴权"
+        },
+        {
+          "slug": "onvif-go-media",
+          "file": "onvif-go-media.md",
+          "title": "媒体"
+        },
+        {
+          "slug": "onvif-go-events",
+          "file": "onvif-go-events.md",
+          "title": "事件"
+        },
+        {
+          "slug": "onvif-go-server",
+          "file": "onvif-go-server.md",
+          "title": "服务端"
+        },
+        {
+          "slug": "onvif-go-cli",
+          "file": "onvif-go-cli.md",
+          "title": "CLI"
+        },
+        {
+          "slug": "onvif-go-concurrency",
+          "file": "onvif-go-concurrency.md",
+          "title": "并发模型"
+        },
+        {
+          "slug": "onvif-go-testing",
+          "file": "onvif-go-testing.md",
+          "title": "测试"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Rust",
+      "items": [
+        {
+          "slug": "onvif-rs-discovery",
+          "file": "onvif-rs-discovery.md",
+          "title": "设备发现"
+        },
+        {
+          "slug": "onvif-rs-media",
+          "file": "onvif-rs-media.md",
+          "title": "Media 服务"
+        },
+        {
+          "slug": "onvif-rs-ptz",
+          "file": "onvif-rs-ptz.md",
+          "title": "PTZ 服务"
+        },
+        {
+          "slug": "onvif-rs-imaging",
+          "file": "onvif-rs-imaging.md",
+          "title": "Imaging 服务"
+        },
+        {
+          "slug": "onvif-rs-handlers",
+          "file": "onvif-rs-handlers.md",
+          "title": "Handler 扩展"
+        },
+        {
+          "slug": "onvif-rs-security",
+          "file": "onvif-rs-security.md",
+          "title": "安全"
+        },
+        {
+          "slug": "onvif-rs-configuration",
+          "file": "onvif-rs-configuration.md",
+          "title": "配置"
+        }
+      ]
+    }
+  ]
+}

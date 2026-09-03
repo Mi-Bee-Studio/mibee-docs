@@ -67,6 +67,7 @@
 ## 提交规范（各项目仓库请遵守）
 
 > **mibeecam（摄像头总文档）项目有额外底层规范**：slug 前缀注册表、信息架构基线、页面骨架、图表（mermaid 优先）与截图脱敏细则，见 [mibeecam/CONVENTIONS.md](mibeecam/CONVENTIONS.md) —— 向 mibeecam 提交前必读。
+> **mibeelibs（库总文档）项目同样有底层规范**：slug 前缀注册表、库文档信息架构、可编译代码示例与协议时序图（mermaid）要求，见 [mibeelibs/CONVENTIONS.md](mibeelibs/CONVENTIONS.md)。
 
 
 1. 文档提交到 `{projectId}/{zh-CN|en-US}/`，文件名与 manifest 的 `slug` 一致。
