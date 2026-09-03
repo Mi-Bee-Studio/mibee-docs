@@ -21,7 +21,7 @@ MiBee NVR 将摄像头视频流录制为 MP4 片段并保存到磁盘，提供 W
 | `continuous`（默认） | 全帧率连续录制 | 常规监控 |
 | `adaptive` | 动静感知——安静时段自动降为延时级稀疏写入，活动 / 音频 / 外部触发立即恢复全帧率 | 看家、楼道、仓库等长时间无人的场景，磁盘占用直降 75%+ |
 
-自适应模式的调参、音频触发、环境声氛围层与活动检索见 **[自适应录制](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/adaptive-recording.md)** 专页。
+自适应模式的调参、音频触发、环境声氛围层与活动检索见 **[自适应录制](adaptive-recording.md)** 专页。
 
 ## 默认行为
 
@@ -57,7 +57,7 @@ cleanup:
 
 - **按天数**：`max_days: 30` 保留最近 30 天
 - **按磁盘**：监控磁盘使用量，自动清理最旧的片段
-- **手动**：在 Web UI 中手动删除片段，或用 [`mibee-nvr cleanup`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/cli.md#cleanup-录像清理) 按日期 / 孤儿文件批量清理
+- **手动**：在 Web UI 中手动删除片段，或用 [`mibee-nvr cleanup`](cli.md#cleanup-录像清理) 按日期 / 孤儿文件批量清理
 
 ## Web UI 回放
 
@@ -139,7 +139,7 @@ curl -u admin:password \
 两处查看：
 
 - 「**仪表盘**」→「存储趋势」：每摄像头占用 / 段数 / 占比，每日写入量堆叠趋势图（图例可点选隔离）
-- 「**设置**」→「存储」：存储路径、[候选卷与录像迁移](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/storage-management.md)
+- 「**设置**」→「存储」：存储路径、[候选卷与录像迁移](storage-management.md)
 
 ![存储设置页](images/settings-storage.webp)
 
@@ -183,7 +183,7 @@ docker compose logs -f mibee-nvr | grep -i record
 
 ### 自适应录制
 
-安静时段自动降为稀疏关键帧写入、有活动立即恢复全帧率——详见 **[自适应录制](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/adaptive-recording.md)**。
+安静时段自动降为稀疏关键帧写入、有活动立即恢复全帧率——详见 **[自适应录制](adaptive-recording.md)**。
 
 ```yaml
 cameras:
