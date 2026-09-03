@@ -66,6 +66,8 @@
 
 ## 提交规范（各项目仓库请遵守）
 
+> **分支与合并流程见 [GOVERNANCE.md](GOVERNANCE.md)**（2026-09-03 生效）：各团队只在 `team/<团队名>` 分支上更新，向 `main` 提 PR，**由官网团队审查合并并部署生产**；`main` 已启用分支保护（禁直推 / 需官网团队批准 / 仅 squash merge）。
+
 > **mibeecam（摄像头总文档）项目有额外底层规范**：slug 前缀注册表、信息架构基线、页面骨架、图表（mermaid 优先）与截图脱敏细则，见 [mibeecam/CONVENTIONS.md](mibeecam/CONVENTIONS.md) —— 向 mibeecam 提交前必读。
 > **mibeelibs（库总文档）项目同样有底层规范**：slug 前缀注册表、库文档信息架构、可编译代码示例与协议时序图（mermaid）要求，见 [mibeelibs/CONVENTIONS.md](mibeelibs/CONVENTIONS.md)。
 
