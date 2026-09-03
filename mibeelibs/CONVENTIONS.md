@@ -65,5 +65,6 @@
 ## 8. PR 流程
 
 - 标题 `docs(mibeelibs): …`；单 PR 聚焦一个库前缀。
+- **在各自团队分支（`team/<团队名>`）上工作并提 PR，由官网团队审查合并**——流程与保护规则见 [GOVERNANCE](../GOVERNANCE.md)。
 - 新页面/新前缀/分组重组先开 issue 提案。
 - mermaid 提交前在 [mermaid.live](https://mermaid.live) 校验；合并后官网一小时内自动上线。
