@@ -5,15 +5,17 @@
 
 ## 1. slug 前缀注册表（互斥，先到先得，不得占用他人前缀）
 
-| 前缀 | 归属仓库 |
-|------|----------|
-| `cam-` | 总文档公共页（overview / nvr-integration 等，由总文档维护者管理） |
-| `seeed-` | seeed-esp32s3-cam |
-| `luatos-` | luatos-esp32s3-a10-camera |
-| `aicam-` | ai-thinker-esp32-cam |
-| `n16r8-` | esp32s3-n16r8-cam |
-| `rpicam-` | mibee-eye-raspi-go |
-| `webui-` | mibee-webui |
+| 前缀 | 归属仓库 | 维护团队 |
+|------|----------|----------|
+| `cam-` | 总文档公共页（overview / nvr-integration 等，由总文档维护者管理） | 总文档维护者 |
+| `seeed-` | seeed-esp32s3-cam | esp-cam 团队 |
+| `luatos-` | luatos-esp32s3-a10-camera | esp-cam 团队 |
+| `aicam-` | ai-thinker-esp32-cam | esp-cam 团队 |
+| `n16r8-` | esp32s3-n16r8-cam | esp-cam 团队 |
+| `rpicam-` | mibee-eye-raspi-go | 树莓派 + webui 团队 |
+| `webui-` | mibee-webui | 树莓派 + webui 团队 |
+
+> 团队分工（2026-09-03 裁定）：esp-cam 团队维护四个 ESP32 相机分节；树莓派 + webui 团队维护 rpicam-/webui-，并将在文档中心新建自己的集合项目。跨前缀的公共页（`cam-`）变更需两组都过目。
 
 - slug 仅 `^[a-z0-9-]+$`：小写、数字、连字符；**不含**中文、下划线、斜杠。
 - 文件名 = `slug.md`，与 manifest 的 `slug`/`file` 完全一致。
