@@ -39,10 +39,10 @@ Starting with v0.11.0, MiBee NVR is licensed under **AGPL-3.0-only** (previously
 
 - **Just using MiBee NVR** (running it, recording cameras, watching streams — including commercially): no obligations, nothing changes for you.
 - **Redistributing a modified version**: your modified version must be released under AGPL-3.0.
-- **Building your own program on the `pkg/` extension interfaces**: covered by a [linking exception](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/LICENSE.pkg-linking-exception) — your program's license stays your choice.
+- **Building your own program on the `pkg/` extension interfaces**: covered by a [linking exception](../../LICENSE.pkg-linking-exception) — your program's license stays your choice.
 - **A separate program talking to a running NVR** over its HTTP/WebSocket APIs: never affected by the license.
 
-See [LICENSE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/LICENSE), [NOTICE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/NOTICE), and [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md) for details.
+See [LICENSE](../../LICENSE), [NOTICE](../../NOTICE), and [CONTRIBUTING.md](../../CONTRIBUTING.md) for details.
 
 ### 🔴 Breaking: `GET /api/cameras/{id}/protocols` field names
 

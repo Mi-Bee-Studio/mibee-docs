@@ -273,7 +273,7 @@ cameras:
 
 ### Prometheus Metrics
 
-Transcoding metrics are exposed at `/api/metrics` (the full list with labels and types is in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/metrics.md#11-transcoding-metrics)):
+Transcoding metrics are exposed at `/api/metrics` (the full list with labels and types is in [metrics.md](metrics.md#11-transcoding-metrics)):
 - `nvr_transcoding_active_jobs`: Currently running transcoding jobs (gauge)
 - `nvr_transcoding_jobs_total`: Total transcoding jobs, with `codec_from`, `codec_to`, `encoder`, `crf`, and `status` (`completed`/`failed`/`cancelled`) labels (counter)
 - `nvr_transcoding_duration_seconds`: Duration of completed transcoding jobs, by codec conversion (histogram)

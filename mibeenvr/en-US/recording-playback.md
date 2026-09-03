@@ -43,7 +43,7 @@ Every camera picks one **recording mode** (`recording_mode`):
 | `continuous` (default) | Full-rate recording | General surveillance |
 | `adaptive` | Motion-aware — calm spans drop to timelapse-grade sparse writing; activity / audio / external triggers instantly restore full rate | Doors, hallways, warehouses that sit empty most of the day — 75%+ less disk |
 
-Tuning knobs, the audio trigger, the ambient-audio layer and activity retrieval live in the dedicated **[Adaptive Recording](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/adaptive-recording.md)** guide.
+Tuning knobs, the audio trigger, the ambient-audio layer and activity retrieval live in the dedicated **[Adaptive Recording](adaptive-recording.md)** guide.
 
 ### Choosing a Segment Duration
 
@@ -57,7 +57,7 @@ Tuning knobs, the audio trigger, the ambient-audio layer and activity retrieval 
 
 - **By days**: `max_days: 30` keeps the most recent 30 days
 - **By disk**: monitors disk usage and deletes the oldest segments first
-- **Manual**: delete individual segments from the web UI, or bulk-clean by date / orphan files with [`mibee-nvr cleanup`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/cli.md#cleanup-recording-cleanup)
+- **Manual**: delete individual segments from the web UI, or bulk-clean by date / orphan files with [`mibee-nvr cleanup`](cli.md#cleanup-recording-cleanup)
 
 ## Web UI Playback
 
@@ -140,7 +140,7 @@ curl -u admin:password \
 Two places to look:
 
 - **Dashboard → Storage trend**: per-camera usage / segment counts / share, plus a stacked daily-write chart (clickable legend)
-- **Settings → Storage**: root path, [candidate volumes & migration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/storage-management.md)
+- **Settings → Storage**: root path, [candidate volumes & migration](storage-management.md)
 
 ![Storage settings](images/settings-storage.webp)
 
@@ -184,7 +184,7 @@ docker compose logs -f mibee-nvr | grep -i record
 
 ### Adaptive Recording
 
-Calm spans drop to sparse keyframe writing; activity instantly restores full rate — see the dedicated **[Adaptive Recording](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/adaptive-recording.md)** guide.
+Calm spans drop to sparse keyframe writing; activity instantly restores full rate — see the dedicated **[Adaptive Recording](adaptive-recording.md)** guide.
 
 ```yaml
 cameras:

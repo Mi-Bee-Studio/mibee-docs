@@ -48,7 +48,7 @@ curl -H "Authorization: Bearer mbv_xxx" http://localhost:9090/api/recordings
 | 回放 | `GET /api/cameras/{id}/playback/playlist.m3u8` | 按录像回放 |
 | AI 事件 | `POST /api/ai/events`、`GET /api/ai/events`、`GET /api/ai/stats` | 外部 AI 后端写入（Bearer）与查询统计 |
 | 设置 | `GET/PUT /api/settings`、`POST /api/settings/api-keys` | 运行配置与密钥 |
-| 存储 | `GET /api/storage`、`GET/POST/DELETE /api/storage/candidates`、`POST /api/storage/migrate` | 存储统计、候选卷管理、批量迁移（[存储管理](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/storage-management.md)） |
+| 存储 | `GET /api/storage`、`GET/POST/DELETE /api/storage/candidates`、`POST /api/storage/migrate` | 存储统计、候选卷管理、批量迁移（[存储管理](storage-management.md)） |
 | GB28181 | `/api/gb28181/*` | 设备 / 通道 / PTZ / 回放 |
 | 系统 | `GET /api/version`、`GET /api/capabilities`、`GET /api/stats` | 版本 / 能力 / 统计 |
 

@@ -11,7 +11,7 @@ The MiBee NVR web interface is organized into five top-level pages plus the sing
 The default page after login — a live multi-camera grid:
 
 - **Grid layout**: the "Configure" button picks which cameras to show
-- **Header quality switch**: a **Smooth / HD** toggle for the whole grid — "Smooth" rides the camera's [sub-stream](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/sub-stream.md) (default), slashing bandwidth and decode load when viewing many cameras at once; cameras without one silently fall back to the main stream
+- **Header quality switch**: a **Smooth / HD** toggle for the whole grid — "Smooth" rides the camera's [sub-stream](sub-stream.md) (default), slashing bandwidth and decode load when viewing many cameras at once; cameras without one silently fall back to the main stream
 - **Per tile**: camera name, live badge, playback protocol (WebCodecs / MJPEG, etc.), and a **health score**
 - **Tile controls**: unmute (cameras with audio) and fullscreen
 - **AI overlay**: with [browser-side AI detection](ai-detection.md) enabled, detection boxes draw directly on the feed
@@ -37,9 +37,9 @@ Cards show the run state (recording / live-only / stopped / reconnecting / unrea
 
 The edit form is organized into collapsible sections; beyond basic access settings these include:
 
-- **[Recording mode](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/adaptive-recording.md)**: continuous or adaptive (motion-aware) — the latter carries audio-trigger and ambient-audio options
-- **[Sub-stream](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/sub-stream.md)**: ONVIF sub-stream auto-discovery or a manual sub-stream RTSP URL
-- **Storage**: assign this camera its own recording root and enqueue [background migration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/storage-management.md) for its history
+- **[Recording mode](adaptive-recording.md)**: continuous or adaptive (motion-aware) — the latter carries audio-trigger and ambient-audio options
+- **[Sub-stream](sub-stream.md)**: ONVIF sub-stream auto-discovery or a manual sub-stream RTSP URL
+- **Storage**: assign this camera its own recording root and enqueue [background migration](storage-management.md) for its history
 - **GB cascade**: whether to expose this camera to the upper platform, and whether to cascade its sub-stream
 
 ## Recordings
@@ -65,7 +65,7 @@ Operations at a glance, organized into four tabs:
 
 ## Settings
 
-Nine pages: **General** (timezone / port / frontend prefs), **Storage** (root path, [candidate volumes & migration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/storage-management.md)), **Camera Access**, **Streaming**, **GB28181**, **AI Detection** (browser-side detection + MiBeeVision integration + per-camera config), **Recording & Processing** (incl. [activity-aware cleanup](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/adaptive-recording.md#activity-scores--retrieval)), **Advanced**, **About**.
+Nine pages: **General** (timezone / port / frontend prefs), **Storage** (root path, [candidate volumes & migration](storage-management.md)), **Camera Access**, **Streaming**, **GB28181**, **AI Detection** (browser-side detection + MiBeeVision integration + per-camera config), **Recording & Processing** (incl. [activity-aware cleanup](adaptive-recording.md#activity-scores--retrieval)), **Advanced**, **About**.
 
 - The "A new version is available" badge on the nav signals an upgrade (see the [Upgrade Guide](upgrade-faq.md))
 - Most settings apply immediately; a few (like the storage path) need a restart
@@ -75,7 +75,7 @@ Nine pages: **General** (timezone / port / frontend prefs), **Storage** (root pa
 Opened from the grid or a camera card at `#/live/{id}`:
 
 - Large live view with protocol switching
-- **Quality switcher**: switch between main / [sub-stream](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/sub-stream.md) when the camera has one
+- **Quality switcher**: switch between main / [sub-stream](sub-stream.md) when the camera has one
 - **PTZ control**: pan/tilt/preset control for capable cameras (e.g. Xiaomi PTZ models)
 - **Two-way audio**: push-to-talk back to the camera (see [Audio](audio.md))
 - **Snapshot**: save the current frame

@@ -39,10 +39,10 @@ v0.11.0 起 MiBee NVR 的许可证从 MIT 变更为 **AGPL-3.0-only**（v0.10.1 
 
 - **只是使用 MiBee NVR**（运行、录像、看流——包括商用场景）：零义务，对你没有任何变化。
 - **分发修改版**：修改版必须以 AGPL-3.0 开源发布。
-- **基于 `pkg/` 扩展接口构建自己的程序**：受[链接例外](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/LICENSE.pkg-linking-exception)保护，你的程序许可证由你决定。
+- **基于 `pkg/` 扩展接口构建自己的程序**：受[链接例外](../../LICENSE.pkg-linking-exception)保护，你的程序许可证由你决定。
 - **独立进程通过 HTTP/WebSocket API 调用运行中的 NVR**：完全不受许可证影响。
 
-详见 [LICENSE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/LICENSE)、[NOTICE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/NOTICE) 与 [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md)。
+详见 [LICENSE](../../LICENSE)、[NOTICE](../../NOTICE) 与 [CONTRIBUTING.md](../../CONTRIBUTING.md)。
 
 ### 🔴 破坏性：`GET /api/cameras/{id}/protocols` 字段改名
 
