@@ -1,10 +1,10 @@
 # Observability Guide
 
-MiBee NVR ships a complete troubleshooting and monitoring toolkit: the flow-path view, end-to-end latency display, health stability stats, per-camera frame-trace sampling, Prometheus metrics and Grafana dashboards. This page is the entry point; full metric reference lives in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/metrics.md).
+MiBee NVR ships a complete troubleshooting and monitoring toolkit: the flow-path view, end-to-end latency display, health stability stats, per-camera frame-trace sampling, Prometheus metrics and Grafana dashboards. This page is the entry point; full metric reference lives in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/metrics.md).
 
 ## Flow View
 
-The per-camera flow tree on the Dashboard shows the full journey of a video frame: **producer → StreamHub → recording / live-protocol consumers / health / relay**. Cameras with a [sub-stream](sub-stream.md) additionally show a **dashed sub-stream branch** (independent puller and hub, differential fps/kbps + consumer types) — it appears with consumers and disappears on recycle.
+The per-camera flow tree on the Dashboard shows the full journey of a video frame: **producer → StreamHub → recording / live-protocol consumers / health / relay**.
 
 ### Column reference
 
@@ -79,7 +79,7 @@ Deduction reasons are listed in plain language (e.g. "3.2% frame drops in the la
 
 ### Scraping
 
-`/metrics` is public by default (optional BasicAuth via `metrics_auth`); Prometheus scrape config in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/metrics.md).
+`/metrics` is public by default (optional BasicAuth via `metrics_auth`); Prometheus scrape config in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/metrics.md).
 
 ### Import dashboards
 
@@ -113,6 +113,6 @@ This exposes `/debug/pprof/*` (CPU/heap/goroutine profiles). The endpoint sits b
 
 ## Related docs
 
-- [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/metrics.md) — full Prometheus metric reference
-- [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) — `observability` settings
-- [troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/troubleshooting.md) — common problems
+- [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/metrics.md) — full Prometheus metric reference
+- [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/configuration.md) — `observability` settings
+- [troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/troubleshooting.md) — common problems

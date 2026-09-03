@@ -1,6 +1,6 @@
 # Configuration Reference
 
-> For MiBeeNvr v0.12.0 · default config file `mibee-nvr.yaml` (override with `-config`)
+> For MiBeeNvr v0.11.0 · default config file `mibee-nvr.yaml` (override with `-config`)
 
 A single YAML file drives all of MiBee NVR. This page is a **top-level key cheat sheet**; for every field see the [full configuration reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) in the repository.
 
@@ -13,7 +13,7 @@ There are **two entry points**; the web UI is the recommended one (persists imme
 | Web UI → Settings | Most runtime options | Storage, streaming, GB28181, AI detection, recording & processing pages |
 | Edit the YAML | Bulk edits / bootstrapping | Camera list, deploy scripts; restart after editing |
 
-> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](cli.md#encrypt-config-encrypt-sensitive-fields)).
+> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/cli.md#encrypt-config-encrypt-sensitive-fields)).
 
 ## Top-Level Key Cheat Sheet
 

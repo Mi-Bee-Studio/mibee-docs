@@ -93,7 +93,7 @@ The [AI tuning guide](ai-detection.md) has recommended values for four situation
 - Events appear live on the **AI Events** page with boxed snapshots
 - MQTT integration forwards events to home-automation platforms (Home Assistant / Node-RED) to drive lights, speakers, notifications
 
-![AI events](images/dashboard-ai.webp)
+![AI events](images/ai-events.webp)
 
 **Tip**: detection compute comes from **whichever browser is watching** (WebGPU accelerated, WASM fallback) — old NVR hardware doesn't need an upgrade, and multiple viewers share the load.
 
@@ -208,4 +208,4 @@ Recordings now land on your own disk — no subscription, no privacy concerns. C
 
 - Full feature boundary: [Feature Overview](features.md)
 - Comparing options: [How It Compares](comparison.md)
-- Stuck? Start with [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/troubleshooting.md)
+- Stuck? Start with [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/troubleshooting.md)
