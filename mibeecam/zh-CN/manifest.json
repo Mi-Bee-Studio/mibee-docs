@@ -8,7 +8,7 @@
         {
           "slug": "overview",
           "file": "overview.md",
-          "title": "MiBeeCam 摄像头家族总览"
+          "title": "MiBeeCam 摄像头总文档"
         },
         {
           "slug": "nvr-integration",
@@ -18,127 +18,37 @@
       ]
     },
     {
-      "title": "Seeed XIAO ESP32-S3 Sense 相机",
+      "title": "ESP-Cam 系列（ESP32 摄像头大集合）",
       "items": [
         {
-          "slug": "seeed-getting-started",
-          "file": "seeed-getting-started.md",
-          "title": "安装指南"
+          "slug": "espcam-overview",
+          "file": "espcam-overview.md",
+          "title": "总览与板型矩阵"
         },
         {
-          "slug": "seeed-user-guide",
-          "file": "seeed-user-guide.md",
-          "title": "使用手册"
+          "slug": "espcam-architecture",
+          "file": "espcam-architecture.md",
+          "title": "总架构：一栈四板"
         },
         {
-          "slug": "seeed-hardware",
-          "file": "seeed-hardware.md",
-          "title": "硬件手册"
+          "slug": "espcam-api",
+          "file": "espcam-api.md",
+          "title": "统一 API 设计（契约 v1.2）"
         },
         {
-          "slug": "seeed-architecture",
-          "file": "seeed-architecture.md",
-          "title": "系统架构"
+          "slug": "espcam-webui",
+          "file": "espcam-webui.md",
+          "title": "统一前端设计"
         },
         {
-          "slug": "seeed-led-status",
-          "file": "seeed-led-status.md",
-          "title": "LED 状态指示灯说明"
-        },
-        {
-          "slug": "seeed-onvif-guide",
-          "file": "seeed-onvif-guide.md",
-          "title": "ONVIF 协议指南"
-        },
-        {
-          "slug": "seeed-port-separation-design",
-          "file": "seeed-port-separation-design.md",
-          "title": "端口分离设计：为什么 MJPEG 流传输使用独立端口"
-        },
-        {
-          "slug": "seeed-troubleshooting",
-          "file": "seeed-troubleshooting.md",
-          "title": "故障排除"
-        },
-        {
-          "slug": "seeed-api-overview",
-          "file": "seeed-api-overview.md",
-          "title": "API 概述"
-        },
-        {
-          "slug": "seeed-api-wifi",
-          "file": "seeed-api-wifi.md",
-          "title": "GET /api/scan — WiFi 扫描"
-        },
-        {
-          "slug": "seeed-api-stream",
-          "file": "seeed-api-stream.md",
-          "title": "GET /stream — MJPEG 实时视频流"
-        },
-        {
-          "slug": "seeed-api-control",
-          "file": "seeed-api-control.md",
-          "title": "设备控制接口"
-        },
-        {
-          "slug": "seeed-api-config",
-          "file": "seeed-api-config.md",
-          "title": "配置接口"
-        },
-        {
-          "slug": "seeed-api-status",
-          "file": "seeed-api-status.md",
-          "title": "GET /api/status — 获取设备状态"
-        },
-        {
-          "slug": "seeed-api-files",
-          "file": "seeed-api-files.md",
-          "title": "文件管理接口"
-        },
-        {
-          "slug": "seeed-api-examples",
-          "file": "seeed-api-examples.md",
-          "title": "完整示例"
+          "slug": "espcam-kb",
+          "file": "espcam-kb.md",
+          "title": "开发知识库"
         }
       ]
     },
     {
-      "title": "Luatos ESP32-S3 A10 相机",
-      "items": [
-        {
-          "slug": "luatos-overview",
-          "file": "luatos-overview.md",
-          "title": "MiBeeCam ESP32-S3-A10 智能摄像头项目"
-        },
-        {
-          "slug": "luatos-software",
-          "file": "luatos-software.md",
-          "title": "MiBeeCam 软件架构文档"
-        },
-        {
-          "slug": "luatos-hardware",
-          "file": "luatos-hardware.md",
-          "title": "MiBeeCam 硬件配置文档"
-        },
-        {
-          "slug": "luatos-api",
-          "file": "luatos-api.md",
-          "title": "MiBeeCam API 接口文档"
-        },
-        {
-          "slug": "luatos-at_commands",
-          "file": "luatos-at_commands.md",
-          "title": "AT 指令手册"
-        },
-        {
-          "slug": "luatos-troubleshooting",
-          "file": "luatos-troubleshooting.md",
-          "title": "MiBeeCam 故障排查指南"
-        }
-      ]
-    },
-    {
-      "title": "AI-Thinker ESP32-CAM 相机",
+      "title": "ESP-Cam · AI-Thinker ESP32-CAM",
       "items": [
         {
           "slug": "aicam-getting-started",
@@ -178,7 +88,7 @@
         {
           "slug": "aicam-esp32-cam-performance",
           "file": "aicam-esp32-cam-performance.md",
-          "title": "ESP32-CAM / ESP-IDF 开发中绕不开的那些坑"
+          "title": "ESP32-CAM 开发中绕不开的那些坑"
         },
         {
           "slug": "aicam-api",
@@ -193,7 +103,157 @@
       ]
     },
     {
-      "title": "树莓派相机 rpi-cam",
+      "title": "ESP-Cam · N16R8（AI 检测）",
+      "items": [
+        {
+          "slug": "n16r8-hardware",
+          "file": "n16r8-hardware.md",
+          "title": "硬件手册"
+        },
+        {
+          "slug": "n16r8-architecture",
+          "file": "n16r8-architecture.md",
+          "title": "系统架构"
+        },
+        {
+          "slug": "n16r8-web-api",
+          "file": "n16r8-web-api.md",
+          "title": "Web API"
+        },
+        {
+          "slug": "n16r8-web-ui",
+          "file": "n16r8-web-ui.md",
+          "title": "Web UI"
+        },
+        {
+          "slug": "n16r8-development",
+          "file": "n16r8-development.md",
+          "title": "开发指南"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Luatos ESP32-S3 A10",
+      "items": [
+        {
+          "slug": "luatos-overview",
+          "file": "luatos-overview.md",
+          "title": "项目总览"
+        },
+        {
+          "slug": "luatos-software",
+          "file": "luatos-software.md",
+          "title": "软件架构"
+        },
+        {
+          "slug": "luatos-hardware",
+          "file": "luatos-hardware.md",
+          "title": "硬件配置"
+        },
+        {
+          "slug": "luatos-api",
+          "file": "luatos-api.md",
+          "title": "API 接口"
+        },
+        {
+          "slug": "luatos-at-commands",
+          "file": "luatos-at-commands.md",
+          "title": "AT 指令手册"
+        },
+        {
+          "slug": "luatos-troubleshooting",
+          "file": "luatos-troubleshooting.md",
+          "title": "故障排查"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Seeed XIAO ESP32-S3 Sense",
+      "items": [
+        {
+          "slug": "seeed-getting-started",
+          "file": "seeed-getting-started.md",
+          "title": "安装指南"
+        },
+        {
+          "slug": "seeed-user-guide",
+          "file": "seeed-user-guide.md",
+          "title": "使用手册"
+        },
+        {
+          "slug": "seeed-hardware",
+          "file": "seeed-hardware.md",
+          "title": "硬件手册"
+        },
+        {
+          "slug": "seeed-architecture",
+          "file": "seeed-architecture.md",
+          "title": "系统架构"
+        },
+        {
+          "slug": "seeed-led-status",
+          "file": "seeed-led-status.md",
+          "title": "LED 状态灯说明"
+        },
+        {
+          "slug": "seeed-onvif-guide",
+          "file": "seeed-onvif-guide.md",
+          "title": "ONVIF 协议指南"
+        },
+        {
+          "slug": "seeed-port-separation-design",
+          "file": "seeed-port-separation-design.md",
+          "title": "端口分离设计"
+        },
+        {
+          "slug": "seeed-troubleshooting",
+          "file": "seeed-troubleshooting.md",
+          "title": "故障排除"
+        },
+        {
+          "slug": "seeed-api-overview",
+          "file": "seeed-api-overview.md",
+          "title": "API 概述"
+        },
+        {
+          "slug": "seeed-api-wifi",
+          "file": "seeed-api-wifi.md",
+          "title": "WiFi 扫描接口"
+        },
+        {
+          "slug": "seeed-api-stream",
+          "file": "seeed-api-stream.md",
+          "title": "MJPEG 视频流"
+        },
+        {
+          "slug": "seeed-api-control",
+          "file": "seeed-api-control.md",
+          "title": "设备控制接口"
+        },
+        {
+          "slug": "seeed-api-config",
+          "file": "seeed-api-config.md",
+          "title": "配置接口"
+        },
+        {
+          "slug": "seeed-api-status",
+          "file": "seeed-api-status.md",
+          "title": "设备状态接口"
+        },
+        {
+          "slug": "seeed-api-files",
+          "file": "seeed-api-files.md",
+          "title": "文件管理接口"
+        },
+        {
+          "slug": "seeed-api-examples",
+          "file": "seeed-api-examples.md",
+          "title": "完整示例"
+        }
+      ]
+    },
+    {
+      "title": "树莓派相机 rpi-cam（并列子集）",
       "items": [
         {
           "slug": "rpicam-architecture",
@@ -218,7 +278,7 @@
         {
           "slug": "rpicam-troubleshooting",
           "file": "rpicam-troubleshooting.md",
-          "title": "MiBee Eye 故障排除指南"
+          "title": "故障排除"
         }
       ]
     },
@@ -228,7 +288,7 @@
         {
           "slug": "webui-spec",
           "file": "webui-spec.md",
-          "title": "相机 Web API 统一规范（SPEC v1）"
+          "title": "相机 Web API 统一规范（SPEC v1，树莓派系）"
         }
       ]
     }
