@@ -66,6 +66,9 @@
 
 ## 提交规范（各项目仓库请遵守）
 
+> **mibeecam（摄像头总文档）项目有额外底层规范**：slug 前缀注册表、信息架构基线、页面骨架、图表（mermaid 优先）与截图脱敏细则，见 [mibeecam/CONVENTIONS.md](mibeecam/CONVENTIONS.md) —— 向 mibeecam 提交前必读。
+
+
 1. 文档提交到 `{projectId}/{zh-CN|en-US}/`，文件名与 manifest 的 `slug` 一致。
 1. **同步以 release tag 为门（2026-09-03 裁定）**：各项目仓未打 release tag 之前，**不得**将该仓 main 分支的手册增量（页面刷新、新页、manifest/图片变更）同步到本仓 live 目录。live 目录必须始终等于该项目最近一个已发布 tag 的手册——官网"最新版"文档不得先于二进制描述未发布功能。增量在发版时随快照固化一起一次性同步（见下方发版流程）。
 2. **站内互链**用相对文件名（如 `quickstart.md`、`../zh-CN/images/x.png`），官网渲染时自动解析；**站外链接**用完整 URL。
