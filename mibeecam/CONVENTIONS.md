@@ -5,35 +5,43 @@
 
 ## 1. slug 前缀注册表（互斥，先到先得，不得占用他人前缀）
 
-| 前缀 | 归属仓库 | 维护团队 |
+mibeecam 是**多合并项目容器**：每个"大集合"（一组相关相机项目）在命名空间上自成一体，
+统一页用集合前缀，成员项目再用各自前缀。已注册：
+
+| 前缀 | 归属 | 维护团队 |
 |------|----------|----------|
-| `cam-` | 总文档公共页（overview / nvr-integration 等，由总文档维护者管理） | 总文档维护者 |
-| `seeed-` | seeed-esp32s3-cam | esp-cam 团队 |
-| `luatos-` | luatos-esp32s3-a10-camera | esp-cam 团队 |
-| `aicam-` | ai-thinker-esp32-cam | esp-cam 团队 |
-| `n16r8-` | esp32s3-n16r8-cam | esp-cam 团队 |
-| `rpicam-` | mibee-eye-raspi-go | 树莓派 + webui 团队 |
+| `espcam-` | ESP-Cam 大集合统一页（总览/架构/API/前端/知识库） | esp-cam 团队 |
+| `cam-` | 总文档公共页（overview / nvr-integration 等） | 总文档维护者 |
+| `aicam-` | ESP-Cam 集合成员：ai-thinker-esp32-cam | esp-cam 团队 |
+| `n16r8-` | ESP-Cam 集合成员：esp32s3-n16r8-cam | esp-cam 团队 |
+| `luatos-` | ESP-Cam 集合成员：luatos-esp32s3-a10-camera | esp-cam 团队 |
+| `seeed-` | ESP-Cam 集合成员：seeed-esp32s3-cam | esp-cam 团队 |
+| `rpicam-` | 树莓派子集（mibee-eye 系列；未来 mibee-rec 等树莓派系项目并入此前缀或注册并列前缀） | 树莓派 + webui 团队 |
 | `webui-` | mibee-webui | 树莓派 + webui 团队 |
 
-> 团队分工（2026-09-03 裁定）：esp-cam 团队维护四个 ESP32 相机分节；树莓派 + webui 团队维护 rpicam-/webui-，并将在文档中心新建自己的集合项目。跨前缀的公共页（`cam-`）变更需两组都过目。
+> 团队分工（2026-09-03 裁定）：esp-cam 团队维护 ESP-Cam 大集合（`espcam-` 统一页 + 四个 ESP32 相机分节）；树莓派 + webui 团队维护 `rpicam-`/`webui-`，并将在文档中心新建自己的集合项目。跨前缀的公共页（`cam-`）变更需两组都过目。
 
 - slug 仅 `^[a-z0-9-]+$`：小写、数字、连字符；**不含**中文、下划线、斜杠。
 - 文件名 = `slug.md`，与 manifest 的 `slug`/`file` 完全一致。
 - **slug 稳定性**：已收录的 slug 不改名。确需变更属破坏性变更——PR 必须附新旧 slug 映射表，并同步改完所有站内链接；旧 slug 不得复用。
+- 新集合接入：先注册集合前缀（开 issue 提案），manifest 里以独立 section 组呈现，组名含产品名。
 
 ## 2. 信息架构基线
 
-侧边栏结构 = manifest 顺序，重组时保持以下分组模型（组内页数不限、组内排序自定）：
+侧边栏结构 = manifest 顺序。每个**大集合**遵循"统一 → 分板"模型：
 
 ```
-总览（cam- 前缀公共页）
-├── 按项目分组（每组一个 section，组名含产品名，如 "Seeed XIAO ESP32-S3 Sense 相机"）
+总览（cam- 前缀公共页：总入口 / NVR 接入等）
+├── 大集合（如 "ESP-Cam 系列"，espcam- 统一页）
+│     统一页顺序：总览与板型矩阵 → 总架构 → 统一 API → 统一前端 → 知识库
+├── 大集合成员分组（每组一个 section，组名含产品名，如 "ESP-Cam · Seeed XIAO ESP32-S3 Sense"）
 │     组内推荐顺序：快速开始 → 用户手册 → 硬件 → 架构 → API → 知识库 → 故障排除
-├── 相机生态共享组件（webui- 等）
-└── （可选）跨项目主题组（如"接入 NVR""选型对比"，用 cam- 前缀，需先开 issue 提案）
+├── 其他大集合（如 "树莓派相机 rpi-cam"，并列 section）
+└── 相机生态共享组件（webui- 等）
 ```
 
-- 禁止把多个仓库的页面混入同一个 section。
+- 禁止把不同仓库的页面混入同一个 section；大集合统一页（espcam-）与成员页（aicam- 等）也分属不同 section。
+- 内容只写**当前最新版本**：不保留旧版页面/旧版字段对照，历史差异收敛进统一页的"契约治理"小节。
 - section `title` 用产品名，不带 emoji；item `title` 为简短名词（建议 ≤ 16 字），**不带仓库前缀**（前缀只体现在 slug）。
 
 ## 3. 页面骨架（每页必须满足）
