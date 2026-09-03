@@ -9,7 +9,7 @@ MiBee NVR 没有官方 Home Assistant 集成，但通过 RTSP 输出、REST API�
 | 用途 | 路径 | 依赖 |
 |------|------|------|
 | 看画面（H.264/H.265 相机） | RTSP 输出 + Generic Camera | 无（HA 原生） |
-| 看画面（MJPEG/JPEG 相机） | `stream.mjpeg` + MJPEG Camera | 无（HA 原生） |
+| 看画面（MJPEG/JPEG 相机） | `stream.mjpeg` + MJPEG Camera，或 RTSP 输出 + Generic Camera | 无（HA 原生） |
 | 触发联动（HA → NVR） | MQTT 触发 | MQTT 代理 |
 | 状态回传（NVR → HA） | MQTT 状态发布（推荐）或 REST 轮询 | 无 / MQTT 代理 |
 | 低延迟看画面 | HACS WebRTC 卡片 | HACS |
@@ -30,7 +30,7 @@ NVR 内置 RTSP 输出服务器（默认开启），每个摄像头一个拉流�
 rtsp://<NVR-IP>:8554/<camera_id>
 ```
 
-- 仅 H.264/H.265 原生分发，不转码、只有视频（无音频）；**MJPEG/JPEG 相机不供流**，请改用方案 A'。
+- 仅 H.264/H.265/MJPEG 原生分发（MJPEG 相机经 RTP/JPEG PT26 供流，#658），不转码、只有视频（无音频）；MJPEG 相机也可继续用方案 A'（HA 原生 MJPEG 拉流）。
 - 默认无鉴权（局域网开放）；可在配置中启用用户名密码：
 
 ```yaml
