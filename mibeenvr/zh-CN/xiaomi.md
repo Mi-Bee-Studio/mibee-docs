@@ -64,7 +64,7 @@ cameras:
 | `token` | 是 | string | - | 小米 passToken |
 | `region` | 否 | string | "cn" | 区域代码（cn、sg、de 等） |
 
-> `xiaomi:` 段没有开关字段 —— 只要配置了凭据即启用。局域网设备自动发现由顶层 [`auto_discover`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md) 控制，与小米账户发现（Web UI 扫描面板）是两回事。
+> `xiaomi:` 段没有开关字段 —— 只要配置了凭据即启用。局域网设备自动发现由顶层 [`auto_discover`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md) 控制，与小米账户发现（Web UI 扫描面板）是两回事。
 
 ### 摄像头配置选项
 
@@ -106,7 +106,7 @@ cameras:
 ```
 
 > 小米接入没有独立的超时/重试/并发配置项；连接行为由传输层（CS2/TUTK）内部管理，异常流由摄像头级
-> `frame_watchdog_timeout` 与 `health_overrides`（见 [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)）接管。
+> `frame_watchdog_timeout` 与 `health_overrides`（见 [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md)）接管。
 > 抓拍/延时摄影用 `timelapse:` 段（见 [timelapse.md](timelapse.md)），不存在 `snapshot_interval` /
 > `motion_detection` / `push_notifications` 之类的键 —— NVR 本身不做移动侦测，警报类能力由 AI 后端事件提供。
 
