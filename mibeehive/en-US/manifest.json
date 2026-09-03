@@ -1,0 +1,34 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeHive User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        { "slug": "introduction", "file": "introduction.md", "title": "Product Introduction" },
+        { "slug": "quick-start", "file": "quick-start.md", "title": "Quick Start" }
+      ]
+    },
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        { "slug": "architecture", "file": "architecture.md", "title": "Architecture" }
+      ]
+    },
+    {
+      "title": "Deployment & Configuration",
+      "items": [
+        { "slug": "deployment", "file": "deployment.md", "title": "Deployment Guide" },
+        { "slug": "configuration", "file": "configuration.md", "title": "Configuration Reference" }
+      ]
+    },
+    {
+      "title": "Reference & Advanced",
+      "items": [
+        { "slug": "api", "file": "api.md", "title": "API Reference" },
+        { "slug": "development", "file": "development.md", "title": "Development & Contributing" },
+        { "slug": "changelog", "file": "changelog.md", "title": "Changelog" }
+      ]
+    }
+  ]
+}

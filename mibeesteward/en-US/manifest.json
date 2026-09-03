@@ -1,0 +1,96 @@
+{
+  "lang": "en-US",
+  "title": "MiBee Steward User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "Product Introduction"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "Quick Start"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web UI Tour"
+        }
+      ]
+    },
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        {
+          "slug": "discovery",
+          "file": "discovery.md",
+          "title": "Device Discovery & Identification"
+        },
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "Architecture Overview"
+        }
+      ]
+    },
+    {
+      "title": "Deployment & Configuration",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "Standalone Deployment"
+        },
+        {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt Router Deployment"
+        },
+        {
+          "slug": "distributed",
+          "file": "distributed.md",
+          "title": "Distributed Deployment"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "Configuration Reference"
+        }
+      ]
+    },
+    {
+      "title": "Reference & Advanced",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API Reference"
+        },
+        {
+          "slug": "ebpf",
+          "file": "ebpf.md",
+          "title": "eBPF Passive Observer"
+        },
+        {
+          "slug": "fingerprint-spec",
+          "file": "fingerprint-spec.md",
+          "title": "Fingerprint Library — Adapter Specification"
+        },
+        {
+          "slug": "development",
+          "file": "development.md",
+          "title": "Development & Contributing"
+        },
+        {
+          "slug": "changelog",
+          "file": "changelog.md",
+          "title": "Changelog"
+        }
+      ]
+    }
+  ]
+}
