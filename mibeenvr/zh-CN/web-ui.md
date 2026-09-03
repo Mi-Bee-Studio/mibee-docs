@@ -11,7 +11,7 @@ MiBee NVR 的 Web 界面分为五个顶级页面 + 直播页。本页是各页�
 登录后的默认页面，多宫格实时画面：
 
 - **宫格布局**：右上「配置」按钮可调整显示哪些摄像头
-- **页头画质切换**：「**流畅 / 高清**」一键切换全宫格画质——「流畅」走相机[子码流](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/sub-stream.md)（默认），多路同看时带宽与解码压力骤降；无子码流的相机自动回退主码流
+- **页头画质切换**：「**流畅 / 高清**」一键切换全宫格画质——「流畅」走相机[子码流](sub-stream.md)（默认），多路同看时带宽与解码压力骤降；无子码流的相机自动回退主码流
 - **每路画面**：显示名称、「实时」状态、播放协议（WebCodecs / MJPEG 等）与**健康分**
 - **画面操作**：取消静音（有音频的摄像头）、全屏
 - **AI 叠加**：开启[浏览器端 AI 检测](ai-detection.md)后，检测框直接画在画面上
@@ -37,9 +37,9 @@ MiBee NVR 的 Web 界面分为五个顶级页面 + 直播页。本页是各页�
 
 编辑表单按功能折叠分区，除基础接入信息外还包括：
 
-- **[录像模式](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/adaptive-recording.md)**：连续录制 / 自适应（动静感知）——后者附带音频触发、环境声氛围层等参数
-- **[子码流](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/sub-stream.md)**：ONVIF 子流自动发现或手填子码流 RTSP 地址
-- **存储**：为该相机单独指定存储根，并可把历史录像排入[后台迁移](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/storage-management.md)
+- **[录像模式](adaptive-recording.md)**：连续录制 / 自适应（动静感知）——后者附带音频触发、环境声氛围层等参数
+- **[子码流](sub-stream.md)**：ONVIF 子流自动发现或手填子码流 RTSP 地址
+- **存储**：为该相机单独指定存储根，并可把历史录像排入[后台迁移](storage-management.md)
 - **国标级联**：是否向上级平台上报此摄像头、是否上报子码流
 
 ## 录像
@@ -65,7 +65,7 @@ MiBee NVR 的 Web 界面分为五个顶级页面 + 直播页。本页是各页�
 
 ## 设置
 
-九个分页：**通用**（时区 / 端口 / 前端偏好）、**存储**（存储路径、[候选卷与录像迁移](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/storage-management.md)）、**摄像头接入**、**直播**、**GB28181**、**AI 检测**（浏览器端检测 + MiBeeVision 集成 + 单摄像头配置）、**录像与处理**（含[按活动清理磁盘](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/adaptive-recording.md#活动分与检索)）、**高级**、**关于**。
+九个分页：**通用**（时区 / 端口 / 前端偏好）、**存储**（存储路径、[候选卷与录像迁移](storage-management.md)）、**摄像头接入**、**直播**、**GB28181**、**AI 检测**（浏览器端检测 + MiBeeVision 集成 + 单摄像头配置）、**录像与处理**（含[按活动清理磁盘](adaptive-recording.md#活动分与检索)）、**高级**、**关于**。
 
 - 导航上的「有新版本可用」徽标提示可升级（见[升级指南](upgrade-faq.md)）
 - 大部分设置保存即生效；存储路径等少数项需重启
@@ -75,7 +75,7 @@ MiBee NVR 的 Web 界面分为五个顶级页面 + 直播页。本页是各页�
 从监控大屏或摄像头卡片进入 `#/live/{id}`：
 
 - 大画面直播 + 协议切换
-- **画质切换器**：该相机有[子码流](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/sub-stream.md)时可在主 / 子码流间切换
+- **画质切换器**：该相机有[子码流](sub-stream.md)时可在主 / 子码流间切换
 - **PTZ 云台控制**：支持云台的摄像头（如小米云台版）可转向 / 预置位操作
 - **双向对讲**：按住说话，声音回传摄像头（见[音频](audio.md)）
 - **快照**：保存当前画面

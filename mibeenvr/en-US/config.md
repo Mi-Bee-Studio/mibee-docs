@@ -13,7 +13,7 @@ There are **two entry points**; the web UI is the recommended one (persists imme
 | Web UI → Settings | Most runtime options | Storage, streaming, GB28181, AI detection, recording & processing pages |
 | Edit the YAML | Bulk edits / bootstrapping | Camera list, deploy scripts; restart after editing |
 
-> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/cli.md#encrypt-config-encrypt-sensitive-fields)).
+> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](cli.md#encrypt-config-encrypt-sensitive-fields)).
 
 ## Top-Level Key Cheat Sheet
 

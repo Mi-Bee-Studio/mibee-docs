@@ -33,14 +33,14 @@ Zero-config discovery: ONVIF WS-Discovery scanning + mDNS/DNS-SD service adverti
 | RTSP output | Real-time | Third-party platforms (Synology Surveillance Station etc.) pull directly — one URL per camera, `rtsp://<NVR-IP>:8554/<camera_id>` |
 
 - **End-to-end H.265**: live view (WASM software decode / WebCodecs hardware decode, auto-selected), recording, playback and timelapse all support H.265
-- **[On-demand sub-streams](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/sub-stream.md)**: the grid's "Smooth" mode rides the low-resolution sub-stream and stops pulling when nobody watches — zero idle cost; ONVIF sub-streams auto-discovered, silent fallback to main
+- **[On-demand sub-streams](sub-stream.md)**: the grid's "Smooth" mode rides the low-resolution sub-stream and stops pulling when nobody watches — zero idle cost; ONVIF sub-streams auto-discovered, silent fallback to main
 - The frontend picks the best protocol per device automatically (WebCodecs → WebGPU → WASM fallback chain) — nothing to configure
 - MJPEG / JPEG cameras get a dedicated player (latest-frame polling with ETag 304 savings)
 
 ## Recording & Playback
 
 - **MP4 segment recording**: IDR-aligned segment starts (no black frames), audio muxed in (AAC / G.711 / Opus), atomic writes for crash safety
-- **[Adaptive recording](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/adaptive-recording.md)**: drop to timelapse-grade sparse writing while the scene is calm; activity, abnormal sounds or external triggers instantly restore full rate — 75%–98% less disk on static scenes, first frame of every event captured
+- **[Adaptive recording](adaptive-recording.md)**: drop to timelapse-grade sparse writing while the scene is calm; activity, abnormal sounds or external triggers instantly restore full rate — 75%–98% less disk on static scenes, first frame of every event captured
 - **Audio-triggered recording**: abnormal sounds (breaking glass, shouting) trigger full-rate recording with pre-trigger audio back-fill (G.711 cameras)
 - **Continuous playback timeline**: double-buffered seamless segment chaining (no black flashes) + a full-day VOD timeline — scrub across recordings and gaps in one drag
 - **Rolling merge**: segments merged into larger files by policy, streaming with a 1MB buffer — memory-flat
@@ -88,7 +88,7 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 ## Storage & Integrations
 
 - **SQLite (WAL)**: every bit of metadata in one file — tuned for SD cards (NORMAL sync + busy timeout), no external database
-- **[Per-camera storage & hot migration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/storage-management.md)**: switch the recording root or assign per-camera disks at runtime; history migrates in a rate-limited background job (time-windowed) — no restarts; the DB stays decoupled from the recording root
+- **[Per-camera storage & hot migration](storage-management.md)**: switch the recording root or assign per-camera disks at runtime; history migrates in a rate-limited background job (time-windowed) — no restarts; the DB stays decoupled from the recording root
 - **WebDAV server**: browse the recording library from any file manager (read-only or read-write)
 - **FTP server**: remote upload + camera auto-registration (point the camera at the FTP address and it joins)
 - **MQTT**: event publishing + trigger-based recording for home automation

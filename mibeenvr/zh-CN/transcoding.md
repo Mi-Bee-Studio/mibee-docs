@@ -273,7 +273,7 @@ cameras:
 
 ### Prometheus 指标
 
-转码指标在 `/api/metrics` 暴露（带标签和类型的完整列表见 [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/metrics.md#11-transcoding-metrics)）：
+转码指标在 `/api/metrics` 暴露（带标签和类型的完整列表见 [metrics.md](metrics.md#11-transcoding-metrics)）：
 - `nvr_transcoding_active_jobs`: 当前运行的转码任务（gauge）
 - `nvr_transcoding_jobs_total`: 转码任务总数，带 `codec_from`、`codec_to`、`encoder`、`crf` 和 `status`（`completed`/`failed`/`cancelled`）标签（counter）
 - `nvr_transcoding_duration_seconds`: 已完成转码任务的耗时，按编码转换分组（histogram）
