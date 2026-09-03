@@ -89,6 +89,7 @@ mibeecam 是**多合并项目容器**：每个"大集合"（一组相关相机�
 ## 9. PR 流程
 
 - 一切改动走 PR，标题 `docs(mibeecam): …`；单 PR 聚焦一个仓库前缀的变更（跨前缀重组拆多个 PR）。
+- **在各自团队分支（`team/<团队名>`）上工作并提 PR，由官网团队审查合并**——流程与保护规则见 [GOVERNANCE](../GOVERNANCE.md)。
 - 大改（分组重组、slug 变更、新公共组）先开 issue 附目录提案，确认后再动手。
 - 合并即上线（官网每小时同步）；mermaid 图提交前在 [mermaid.live](https://mermaid.live) 校验语法。
 - 私有仓库信息红线名单见根 README；相机项目特别注意第 5 条截图红线。
