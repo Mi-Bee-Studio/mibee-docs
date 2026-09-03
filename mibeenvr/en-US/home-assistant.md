@@ -9,7 +9,7 @@ MiBee NVR has no official Home Assistant integration, but its RTSP output, REST 
 | Purpose | Path | Dependencies |
 |---------|------|--------------|
 | View (H.264/H.265 cameras) | RTSP output + Generic Camera | None (HA native) |
-| View (MJPEG/JPEG cameras) | `stream.mjpeg` + MJPEG Camera | None (HA native) |
+| View (MJPEG/JPEG cameras) | `stream.mjpeg` + MJPEG Camera, or RTSP output + Generic Camera | None (HA native) |
 | Trigger (HA → NVR) | MQTT trigger | MQTT broker |
 | State (NVR → HA) | MQTT status publishing (recommended) or REST polling | None / MQTT broker |
 | Low-latency view | HACS WebRTC card | HACS |
@@ -30,7 +30,7 @@ The NVR ships a built-in RTSP output server (enabled by default), one pull URL p
 rtsp://<NVR-IP>:8554/<camera_id>
 ```
 
-- H.264/H.265 native distribution only — no transcoding, video only (no audio); **MJPEG/JPEG cameras are not served** — use Option A' instead.
+- H.264/H.265/MJPEG native distribution (MJPEG cameras are served as RTP/JPEG PT 26, #658) — no transcoding, video only (no audio); MJPEG cameras can also keep using Option A' (HA-native MJPEG pull).
 - No authentication by default (open on the LAN); optional username/password:
 
 ```yaml
