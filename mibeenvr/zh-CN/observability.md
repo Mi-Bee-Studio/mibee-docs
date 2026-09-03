@@ -1,10 +1,10 @@
 # 可观测性手册
 
-MiBee NVR 内置一整套排障与监控能力：链路（Flow）页、端到端延迟显示、健康稳定性数据、按相机帧追踪采样、Prometheus 指标与 Grafana 面板。本文是这些能力的总入口；Prometheus 指标明细另见 [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/metrics.md)。
+MiBee NVR 内置一整套排障与监控能力：链路（Flow）页、端到端延迟显示、健康稳定性数据、按相机帧追踪采样、Prometheus 指标与 Grafana 面板。本文是这些能力的总入口；Prometheus 指标明细另见 [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/metrics.md)。
 
 ## 链路（Flow）页
 
-仪表盘逐相机展开的链路树展示一帧视频的完整旅程：**采集源 → 分发中枢（StreamHub）→ 录像落盘 / 各直播协议消费者 / 健康检测 / 转发**。相机配置了[子码流](sub-stream.md)时另有一条**虚线子流分支**（独立拉流器、独立 hub，差分 fps/kbps + 消费者类型）——有消费者才出现，回收后自动消失。
+仪表盘逐相机展开的链路树展示一帧视频的完整旅程：**采集源 → 分发中枢（StreamHub）→ 录像落盘 / 各直播协议消费者 / 健康检测 / 转发**。
 
 ### 各列含义
 
@@ -79,7 +79,7 @@ ingest（录制器收到帧）
 
 ### 抓取
 
-`/metrics` 端点默认公开（可用 `metrics_auth` 加 BasicAuth），Prometheus 抓取配置见 [metrics.md](metrics.md#访问指标)。
+`/metrics` 端点默认公开（可用 `metrics_auth` 加 BasicAuth），Prometheus 抓取配置见 [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/metrics.md#访问指标)。
 
 ### 导入面板
 
@@ -113,6 +113,6 @@ observability:
 
 ## 相关文档
 
-- [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/metrics.md) — 全部 Prometheus 指标明细
-- [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md) — `observability` 配置项
-- [troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/troubleshooting.md) — 常见问题排查
+- [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/metrics.md) — 全部 Prometheus 指标明细
+- [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md) — `observability` 配置项
+- [troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/troubleshooting.md) — 常见问题排查

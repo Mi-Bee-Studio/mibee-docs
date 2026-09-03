@@ -42,9 +42,7 @@
       "title": "Features",
       "items": [
       { "slug": "recording-playback", "file": "recording-playback.md", "title": "Recording & Playback" },
-      {"slug": "adaptive-recording", "file": "adaptive-recording.md", "title": "Adaptive Recording (Motion-Aware)"},
       { "slug": "streaming", "file": "streaming.md", "title": "Streaming Protocol Selection" },
-      {"slug": "sub-stream", "file": "sub-stream.md", "title": "Sub-Streams (Low-Resolution Secondary Streams)"},
       { "slug": "relay", "file": "relay.md", "title": "Live Relay" },
       { "slug": "audio", "file": "audio.md", "title": "Audio" },
       { "slug": "timelapse", "file": "timelapse.md", "title": "Timelapse" },
@@ -57,7 +55,6 @@
       "title": "Integrations",
       "items": [
       { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT Integration" },
-      {"slug": "home-assistant", "file": "home-assistant.md", "title": "Home Assistant Integration"},
       { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP Storage" }
       ]
     },
@@ -65,7 +62,6 @@
       "title": "Maintenance",
       "items": [
       { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "Upgrade Guide" },
-      {"slug": "storage-management", "file": "storage-management.md", "title": "Storage Management & Recording Migration"},
       { "slug": "observability", "file": "observability.md", "title": "Observability Guide" }
       ]
     },

@@ -64,7 +64,7 @@ cameras:
 | `token` | Yes | string | - | Xiaomi passToken |
 | `region` | No | string | "cn" | Region code (cn, sg, de, etc.) |
 
-> The `xiaomi:` section has no on/off switch — integration is active whenever credentials are configured. LAN auto-discovery is controlled by the top-level [`auto_discover`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) setting and is separate from Xiaomi-account discovery (the Web UI scan panel).
+> The `xiaomi:` section has no on/off switch — integration is active whenever credentials are configured. LAN auto-discovery is controlled by the top-level [`auto_discover`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/configuration.md) setting and is separate from Xiaomi-account discovery (the Web UI scan panel).
 
 ### Camera Configuration Options
 
@@ -107,7 +107,7 @@ cameras:
 
 > Xiaomi integration has no dedicated timeout/retry/concurrency options; connection behavior is managed by
 > the transport layer (CS2/TUTK), and unhealthy streams are handled by the camera-level
-> `frame_watchdog_timeout` and `health_overrides` (see [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md)).
+> `frame_watchdog_timeout` and `health_overrides` (see [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/en/configuration.md)).
 > For snapshots/timelapse use the `timelapse:` section (see [timelapse.md](timelapse.md)) — there are no
 > `snapshot_interval` / `motion_detection` / `push_notifications` keys: the NVR itself does not perform motion
 > detection; alerting comes from AI-backend events.

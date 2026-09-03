@@ -426,7 +426,6 @@ cameras:
         use_ffmpeg: true        # ← 启用 FFmpeg 转发
         # source_url: ""        # 可选：覆盖自动解析的源地址
 
-```
 启用 `use_ffmpeg: true` 后：
 - 转发器启动 `ffmpeg -rtsp_transport tcp -i <摄像头地址> -c copy -f flv <目标地址>`
 - 摄像头的 RTSP 地址会**自动从录像器解析**（ONVIF 摄像头使用解析后的 RTSP 地址；
@@ -736,6 +735,6 @@ curl http://localhost:9090/api/cameras/front-door/health
 ---
 
 **下一步：**
-- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md) - 完整配置指南
-- [API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md) - REST API 文档
-- [故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/troubleshooting.md) - 常见问题和解决方案
+- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md) - 完整配置指南
+- [API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/api/README.md) - REST API 文档
+- [故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/troubleshooting.md) - 常见问题和解决方案

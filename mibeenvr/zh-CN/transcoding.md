@@ -273,7 +273,7 @@ cameras:
 
 ### Prometheus 指标
 
-转码指标在 `/api/metrics` 暴露（带标签和类型的完整列表见 [metrics.md](metrics.md#11-transcoding-metrics)）：
+转码指标在 `/api/metrics` 暴露（带标签和类型的完整列表见 [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/metrics.md#11-transcoding-metrics)）：
 - `nvr_transcoding_active_jobs`: 当前运行的转码任务（gauge）
 - `nvr_transcoding_jobs_total`: 转码任务总数，带 `codec_from`、`codec_to`、`encoder`、`crf` 和 `status`（`completed`/`failed`/`cancelled`）标签（counter）
 - `nvr_transcoding_duration_seconds`: 已完成转码任务的耗时，按编码转换分组（histogram）
@@ -351,4 +351,4 @@ A: 是的，但预期性能会降低。使用 1 个工作进程和简单预设�
 - 取消卡住的任务：`DELETE /api/transcoding/tasks/{id}`
 - 验证摄像头已启用转码
 
-更多详细的故障排除，请查看 [配置](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md) 和 [API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md) 文档。
+更多详细的故障排除，请查看 [配置](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/configuration.md) 和 [API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/api/README.md) 文档。
