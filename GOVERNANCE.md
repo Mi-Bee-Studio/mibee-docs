@@ -11,6 +11,7 @@ flowchart LR
         TE[team/espcam<br/>esp-cam 团队]
         TR[team/rpi-webui<br/>树莓派 + webui 团队]
         TL[team/libs<br/>库团队]
+        TN[team/nvr<br/>NVR 团队]
     end
     PR[Pull Request<br/>docs(集合): 标题]
     MAIN[main（受保护）<br/>唯一生产源]
@@ -59,5 +60,6 @@ flowchart LR
 | `team/espcam` | esp-cam 团队 | `mibeecam/` 的 `espcam-` `aicam-` `n16r8-` `luatos-` `seeed-` |
 | `team/rpi-webui` | 树莓派 + webui 团队 | `mibeecam/` 的 `rpicam-` `webui-`（及后续新集合） |
 | `team/libs` | 库团队 | `mibeelibs/` 全部前缀 |
+| `team/nvr` | NVR 团队 | `mibeenvr/` 全部（含版本快照与 `versions.json`） |
 
 新团队接入：从 `main` 创建 `team/<名称>` → 在本文件登记（PR 修改本表）→ 按 [README](README.md) 规范提交。
