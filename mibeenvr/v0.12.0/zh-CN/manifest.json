@@ -1,0 +1,77 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeNvr 用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+      { "slug": "intro", "file": "intro.md", "title": "产品介绍" },
+      { "slug": "features", "file": "features.md", "title": "功能总览" },
+      { "slug": "quickstart", "file": "quickstart.md", "title": "快速开始" },
+      { "slug": "wizard", "file": "wizard.md", "title": "初始化向导" },
+      { "slug": "web-ui", "file": "web-ui.md", "title": "Web 界面功能导览" }
+      ]
+    },
+    {
+      "title": "玩法与选型",
+      "items": [
+      { "slug": "scenarios", "file": "scenarios.md", "title": "场景玩法指引" },
+      { "slug": "comparison", "file": "comparison.md", "title": "同类方案对比" }
+      ]
+    },
+    {
+      "title": "安装部署",
+      "items": [
+      { "slug": "install-docker", "file": "install-docker.md", "title": "Docker 部署" },
+      { "slug": "install-nas", "file": "install-nas.md", "title": "NAS 部署" },
+      { "slug": "hw-transcode", "file": "hw-transcode.md", "title": "Docker 硬件转码指南" }
+      ]
+    },
+    {
+      "title": "摄像头接入",
+      "items": [
+      { "slug": "onvif-discovery", "file": "onvif-discovery.md", "title": "ONVIF 自动发现" },
+      { "slug": "camera-guide", "file": "camera-guide.md", "title": "摄像头品牌兼容指南" },
+      { "slug": "gb28181", "file": "gb28181.md", "title": "MiBee NVR GB/T 28181 指南" },
+      { "slug": "xiaomi", "file": "xiaomi.md", "title": "小米摄像头接入" },
+      { "slug": "srt-rtmp", "file": "srt-rtmp.md", "title": "SRT/RTMP 推流接入" },
+      { "slug": "raspberrypi", "file": "raspberrypi.md", "title": "树莓派摄像头接入" }
+      ]
+    },
+    {
+      "title": "功能使用",
+      "items": [
+      { "slug": "recording-playback", "file": "recording-playback.md", "title": "录制与回放" },
+      { "slug": "streaming", "file": "streaming.md", "title": "播放协议选择" },
+      { "slug": "relay", "file": "relay.md", "title": "直播转推" },
+      { "slug": "audio", "file": "audio.md", "title": "音频" },
+      { "slug": "timelapse", "file": "timelapse.md", "title": "延时摄影" },
+      { "slug": "ai-detection", "file": "ai-detection.md", "title": "AI 检测调参指南" },
+      { "slug": "transcoding", "file": "transcoding.md", "title": "转码" },
+      { "slug": "remote-access", "file": "remote-access.md", "title": "远程访问 Remote Access" }
+      ]
+    },
+    {
+      "title": "集成",
+      "items": [
+      { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT 集成" },
+      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP 存储" }
+      ]
+    },
+    {
+      "title": "维护",
+      "items": [
+      { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "升级指南" },
+      { "slug": "observability", "file": "observability.md", "title": "可观测性手册" }
+      ]
+    },
+    {
+      "title": "参考",
+      "items": [
+      { "slug": "cli", "file": "cli.md", "title": "CLI 用户手册" },
+      { "slug": "config", "file": "config.md", "title": "配置参考" },
+      { "slug": "api", "file": "api.md", "title": "API 概览" }
+      ]
+    }
+  ]
+}

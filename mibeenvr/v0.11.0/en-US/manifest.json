@@ -1,0 +1,68 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeNvr User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+      { "slug": "intro", "file": "intro.md", "title": "Product Introduction" },
+      { "slug": "quickstart", "file": "quickstart.md", "title": "Quick Start" },
+      { "slug": "wizard", "file": "wizard.md", "title": "Setup Wizard" },
+      { "slug": "web-ui", "file": "web-ui.md", "title": "Web UI Tour" }
+      ]
+    },
+    {
+      "title": "Installation",
+      "items": [
+      { "slug": "install-docker", "file": "install-docker.md", "title": "Docker Deployment" },
+      { "slug": "install-nas", "file": "install-nas.md", "title": "NAS Deployment" },
+      { "slug": "hw-transcode", "file": "hw-transcode.md", "title": "Docker Hardware Transcoding Guide" }
+      ]
+    },
+    {
+      "title": "Cameras",
+      "items": [
+      { "slug": "onvif-discovery", "file": "onvif-discovery.md", "title": "ONVIF Auto-discovery" },
+      { "slug": "camera-guide", "file": "camera-guide.md", "title": "Camera Brand Compatibility Guide" },
+      { "slug": "gb28181", "file": "gb28181.md", "title": "MiBee NVR GB/T 28181 Guide" },
+      { "slug": "xiaomi", "file": "xiaomi.md", "title": "Xiaomi Camera Setup" },
+      { "slug": "srt-rtmp", "file": "srt-rtmp.md", "title": "SRT / RTMP Streaming" },
+      { "slug": "raspberrypi", "file": "raspberrypi.md", "title": "Raspberry Pi Camera" }
+      ]
+    },
+    {
+      "title": "Features",
+      "items": [
+      { "slug": "recording-playback", "file": "recording-playback.md", "title": "Recording & Playback" },
+      { "slug": "streaming", "file": "streaming.md", "title": "Streaming Protocol Selection" },
+      { "slug": "relay", "file": "relay.md", "title": "Live Relay" },
+      { "slug": "audio", "file": "audio.md", "title": "Audio" },
+      { "slug": "timelapse", "file": "timelapse.md", "title": "Timelapse" },
+      { "slug": "ai-detection", "file": "ai-detection.md", "title": "AI Detection Tuning Guide" },
+      { "slug": "transcoding", "file": "transcoding.md", "title": "Transcoding" },
+      { "slug": "remote-access", "file": "remote-access.md", "title": "Remote Access" }
+      ]
+    },
+    {
+      "title": "Integrations",
+      "items": [
+      { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT Integration" },
+      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP Storage" }
+      ]
+    },
+    {
+      "title": "Maintenance",
+      "items": [
+      { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "Upgrade Guide" }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+      { "slug": "cli", "file": "cli.md", "title": "CLI Reference" },
+      { "slug": "config", "file": "config.md", "title": "Configuration Reference" },
+      { "slug": "api", "file": "api.md", "title": "API Overview" }
+      ]
+    }
+  ]
+}

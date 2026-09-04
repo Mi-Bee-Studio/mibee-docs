@@ -1,0 +1,186 @@
+{
+  "lang": "en-US",
+  "title": "MiBee Libraries Docs",
+  "sections": [
+    {
+      "title": "Overview",
+      "items": [
+        {
+          "slug": "libs-overview",
+          "file": "libs-overview.md",
+          "title": "MiBee Libraries Overview"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Go",
+      "items": [
+        {
+          "slug": "gb28181-go-platform",
+          "file": "gb28181-go-platform.md",
+          "title": "Platform (UAS): the SIP server side"
+        },
+        {
+          "slug": "gb28181-go-device",
+          "file": "gb28181-go-device.md",
+          "title": "Device (UAC): registering a camera with a platform"
+        },
+        {
+          "slug": "gb28181-go-cascade",
+          "file": "gb28181-go-cascade.md",
+          "title": "Cascade client: registering to an upper platform"
+        },
+        {
+          "slug": "gb28181-go-manscdp",
+          "file": "gb28181-go-manscdp.md",
+          "title": "MANSCDP XML codec"
+        },
+        {
+          "slug": "gb28181-go-psmux",
+          "file": "gb28181-go-psmux.md",
+          "title": "PS muxer and RTP packetization"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Rust",
+      "items": [
+        {
+          "slug": "gb28181-rs-server",
+          "file": "gb28181-rs-server.md",
+          "title": "Server lifecycle: start, shutdown, transports"
+        },
+        {
+          "slug": "gb28181-rs-configuration",
+          "file": "gb28181-rs-configuration.md",
+          "title": "Configuration reference"
+        },
+        {
+          "slug": "gb28181-rs-live-streaming",
+          "file": "gb28181-rs-live-streaming.md",
+          "title": "Live streaming: the FrameSource seam"
+        },
+        {
+          "slug": "gb28181-rs-recording-playback",
+          "file": "gb28181-rs-recording-playback.md",
+          "title": "Recording, RecordInfo, and playback"
+        },
+        {
+          "slug": "gb28181-rs-manscdp",
+          "file": "gb28181-rs-manscdp.md",
+          "title": "MANSCDP messages, charsets, and device IDs"
+        },
+        {
+          "slug": "gb28181-rs-psmux",
+          "file": "gb28181-rs-psmux.md",
+          "title": "PS muxing and RTP, standalone"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Go",
+      "items": [
+        {
+          "slug": "onvif-go-architecture",
+          "file": "onvif-go-architecture.md",
+          "title": "Architecture"
+        },
+        {
+          "slug": "onvif-go-v2-architecture",
+          "file": "onvif-go-v2-architecture.md",
+          "title": "v2 Architecture (Breaking)"
+        },
+        {
+          "slug": "onvif-go-discovery",
+          "file": "onvif-go-discovery.md",
+          "title": "Device Discovery"
+        },
+        {
+          "slug": "onvif-go-authentication",
+          "file": "onvif-go-authentication.md",
+          "title": "Authentication"
+        },
+        {
+          "slug": "onvif-go-media",
+          "file": "onvif-go-media.md",
+          "title": "Media and Streaming"
+        },
+        {
+          "slug": "onvif-go-events",
+          "file": "onvif-go-events.md",
+          "title": "Events"
+        },
+        {
+          "slug": "onvif-go-server",
+          "file": "onvif-go-server.md",
+          "title": "ONVIF Server"
+        },
+        {
+          "slug": "onvif-go-cli",
+          "file": "onvif-go-cli.md",
+          "title": "CLI Tools"
+        },
+        {
+          "slug": "onvif-go-concurrency",
+          "file": "onvif-go-concurrency.md",
+          "title": "Concurrency Model"
+        },
+        {
+          "slug": "onvif-go-testing",
+          "file": "onvif-go-testing.md",
+          "title": "Testing"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Rust",
+      "items": [
+        {
+          "slug": "onvif-rs-discovery",
+          "file": "onvif-rs-discovery.md",
+          "title": "WS-Discovery: being findable"
+        },
+        {
+          "slug": "onvif-rs-media",
+          "file": "onvif-rs-media.md",
+          "title": "Media service: profiles, stream URIs, snapshots"
+        },
+        {
+          "slug": "onvif-rs-ptz",
+          "file": "onvif-rs-ptz.md",
+          "title": "PTZ service: the virtual PTZ state machine"
+        },
+        {
+          "slug": "onvif-rs-imaging",
+          "file": "onvif-rs-imaging.md",
+          "title": "Imaging service: the ImagingParams seam"
+        },
+        {
+          "slug": "onvif-rs-handlers",
+          "file": "onvif-rs-handlers.md",
+          "title": "The action-handler model"
+        },
+        {
+          "slug": "onvif-rs-security",
+          "file": "onvif-rs-security.md",
+          "title": "Authentication and hardening"
+        },
+        {
+          "slug": "onvif-rs-configuration",
+          "file": "onvif-rs-configuration.md",
+          "title": "Configuration reference"
+        }
+      ]
+    },
+    {
+      "title": "Fingerprint Rule Engine",
+      "items": [
+        {
+          "slug": "fingerprints-overview",
+          "file": "fingerprints-overview.md",
+          "title": "mibee-fingerprints-go"
+        }
+      ]
+    }
+  ]
+}

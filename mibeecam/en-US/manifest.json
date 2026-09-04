@@ -1,0 +1,321 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeCam Camera Docs",
+  "sections": [
+    {
+      "title": "Overview",
+      "items": [
+        {
+          "slug": "overview",
+          "file": "overview.md",
+          "title": "MiBeeCam Documentation Hub"
+        },
+        {
+          "slug": "nvr-integration",
+          "file": "nvr-integration.md",
+          "title": "Integrating with MiBee NVR"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam Series (ESP32 camera collection)",
+      "items": [
+        {
+          "slug": "espcam-overview",
+          "file": "espcam-overview.md",
+          "title": "Overview & Board Matrix"
+        },
+        {
+          "slug": "espcam-architecture",
+          "file": "espcam-architecture.md",
+          "title": "Unified Architecture"
+        },
+        {
+          "slug": "espcam-api",
+          "file": "espcam-api.md",
+          "title": "Unified API Design (Contract v1.2)"
+        },
+        {
+          "slug": "espcam-webui",
+          "file": "espcam-webui.md",
+          "title": "Unified Frontend Design"
+        },
+        {
+          "slug": "espcam-kb",
+          "file": "espcam-kb.md",
+          "title": "Development Knowledge Base"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · AI-Thinker ESP32-CAM",
+      "items": [
+        {
+          "slug": "aicam-getting-started",
+          "file": "aicam-getting-started.md",
+          "title": "Getting Started"
+        },
+        {
+          "slug": "aicam-user-guide",
+          "file": "aicam-user-guide.md",
+          "title": "User Guide"
+        },
+        {
+          "slug": "aicam-capabilities",
+          "file": "aicam-capabilities.md",
+          "title": "Capabilities"
+        },
+        {
+          "slug": "aicam-hardware",
+          "file": "aicam-hardware.md",
+          "title": "Hardware Manual"
+        },
+        {
+          "slug": "aicam-lens-and-fov",
+          "file": "aicam-lens-and-fov.md",
+          "title": "Lens & Field of View"
+        },
+        {
+          "slug": "aicam-architecture",
+          "file": "aicam-architecture.md",
+          "title": "Software Architecture"
+        },
+        {
+          "slug": "aicam-performance",
+          "file": "aicam-performance.md",
+          "title": "Performance Notes"
+        },
+        {
+          "slug": "aicam-esp32-cam-performance",
+          "file": "aicam-esp32-cam-performance.md",
+          "title": "ESP32-CAM Constraints You Can't Code Around"
+        },
+        {
+          "slug": "aicam-api",
+          "file": "aicam-api.md",
+          "title": "API Reference"
+        },
+        {
+          "slug": "aicam-troubleshooting",
+          "file": "aicam-troubleshooting.md",
+          "title": "Troubleshooting"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · N16R8 (AI detection)",
+      "items": [
+        {
+          "slug": "n16r8-hardware",
+          "file": "n16r8-hardware.md",
+          "title": "Hardware Manual"
+        },
+        {
+          "slug": "n16r8-architecture",
+          "file": "n16r8-architecture.md",
+          "title": "System Architecture"
+        },
+        {
+          "slug": "n16r8-web-api",
+          "file": "n16r8-web-api.md",
+          "title": "Web API"
+        },
+        {
+          "slug": "n16r8-web-ui",
+          "file": "n16r8-web-ui.md",
+          "title": "Web UI"
+        },
+        {
+          "slug": "n16r8-development",
+          "file": "n16r8-development.md",
+          "title": "Development Guide"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Luatos ESP32-S3 A10",
+      "items": [
+        {
+          "slug": "luatos-overview",
+          "file": "luatos-overview.md",
+          "title": "Project Overview"
+        },
+        {
+          "slug": "luatos-software",
+          "file": "luatos-software.md",
+          "title": "Software Architecture"
+        },
+        {
+          "slug": "luatos-hardware",
+          "file": "luatos-hardware.md",
+          "title": "Hardware Configuration"
+        },
+        {
+          "slug": "luatos-api",
+          "file": "luatos-api.md",
+          "title": "API Reference"
+        },
+        {
+          "slug": "luatos-at-commands",
+          "file": "luatos-at-commands.md",
+          "title": "AT Command Manual"
+        },
+        {
+          "slug": "luatos-troubleshooting",
+          "file": "luatos-troubleshooting.md",
+          "title": "Troubleshooting"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Seeed XIAO ESP32-S3 Sense",
+      "items": [
+        {
+          "slug": "seeed-getting-started",
+          "file": "seeed-getting-started.md",
+          "title": "Installation Guide"
+        },
+        {
+          "slug": "seeed-user-guide",
+          "file": "seeed-user-guide.md",
+          "title": "User Guide"
+        },
+        {
+          "slug": "seeed-hardware",
+          "file": "seeed-hardware.md",
+          "title": "Hardware Manual"
+        },
+        {
+          "slug": "seeed-architecture",
+          "file": "seeed-architecture.md",
+          "title": "System Architecture"
+        },
+        {
+          "slug": "seeed-led-status",
+          "file": "seeed-led-status.md",
+          "title": "LED Status Indicator Guide"
+        },
+        {
+          "slug": "seeed-onvif-guide",
+          "file": "seeed-onvif-guide.md",
+          "title": "ONVIF Protocol Guide"
+        },
+        {
+          "slug": "seeed-port-separation-design",
+          "file": "seeed-port-separation-design.md",
+          "title": "Port Separation Design"
+        },
+        {
+          "slug": "seeed-troubleshooting",
+          "file": "seeed-troubleshooting.md",
+          "title": "Troubleshooting"
+        },
+        {
+          "slug": "seeed-api-overview",
+          "file": "seeed-api-overview.md",
+          "title": "API Overview"
+        },
+        {
+          "slug": "seeed-api-wifi",
+          "file": "seeed-api-wifi.md",
+          "title": "WiFi Scan"
+        },
+        {
+          "slug": "seeed-api-stream",
+          "file": "seeed-api-stream.md",
+          "title": "MJPEG Stream"
+        },
+        {
+          "slug": "seeed-api-control",
+          "file": "seeed-api-control.md",
+          "title": "Device Control"
+        },
+        {
+          "slug": "seeed-api-config",
+          "file": "seeed-api-config.md",
+          "title": "Configuration"
+        },
+        {
+          "slug": "seeed-api-status",
+          "file": "seeed-api-status.md",
+          "title": "Device Status"
+        },
+        {
+          "slug": "seeed-api-files",
+          "file": "seeed-api-files.md",
+          "title": "File Management"
+        },
+        {
+          "slug": "seeed-api-examples",
+          "file": "seeed-api-examples.md",
+          "title": "Complete Examples"
+        }
+      ]
+    },
+    {
+      "title": "Raspberry Pi camera rpi-cam (parallel collection)",
+      "items": [
+        {
+          "slug": "rpicam-architecture",
+          "file": "rpicam-architecture.md",
+          "title": "System Architecture"
+        },
+        {
+          "slug": "rpicam-configuration",
+          "file": "rpicam-configuration.md",
+          "title": "Configuration"
+        },
+        {
+          "slug": "rpicam-config-reference",
+          "file": "rpicam-config-reference.md",
+          "title": "Configuration Reference"
+        },
+        {
+          "slug": "rpicam-config-examples",
+          "file": "rpicam-config-examples.md",
+          "title": "Configuration Examples"
+        },
+        {
+          "slug": "rpicam-deployment",
+          "file": "rpicam-deployment.md",
+          "title": "Deployment Guide"
+        },
+        {
+          "slug": "rpicam-gb28181",
+          "file": "rpicam-gb28181.md",
+          "title": "GB28181 Integration"
+        },
+        {
+          "slug": "rpicam-onvif-compliance",
+          "file": "rpicam-onvif-compliance.md",
+          "title": "ONVIF Compliance Reference"
+        },
+        {
+          "slug": "rpicam-troubleshooting",
+          "file": "rpicam-troubleshooting.md",
+          "title": "Troubleshooting"
+        },
+        {
+          "slug": "rpicam-troubleshooting-media",
+          "file": "rpicam-troubleshooting-media.md",
+          "title": "Streaming Troubleshooting"
+        },
+        {
+          "slug": "rpicam-research",
+          "file": "rpicam-research.md",
+          "title": "Research Notes"
+        }
+      ]
+    },
+    {
+      "title": "Camera Ecosystem Shared Components",
+      "items": [
+        {
+          "slug": "webui-spec",
+          "file": "webui-spec.md",
+          "title": "MiBee Camera Web API Unified Specification (SPEC v1)"
+        }
+      ]
+    }
+  ]
+}
