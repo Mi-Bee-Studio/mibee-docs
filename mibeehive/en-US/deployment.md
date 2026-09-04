@@ -36,19 +36,23 @@ go vet ./...                                        # Static analysis
 
 ## Deployment Layout (on device)
 
-```
-/opt/mibeehive/
-├── bin/mibeehive
-├── config.yaml
-├── mibeehive.db
-├── mibeehive.log
-├── backup-*.tar.gz
-└── backups/
-
-/var/lib/mibeehive/
-├── oss/            # Phase 1: Downloaded binary releases (Foraging)
-├── os-install/     # Phase 2: OS installation files (Provisioning)
-└── webdav/         # Phase 3: WebDAV shared files (Sharing)
+```mermaid
+flowchart TB
+  subgraph OPT["/opt/mibeehive/"]
+    direction TB
+    BIN["bin/mibeehive"]
+    CFG["config.yaml"]
+    DB["mibeehive.db"]
+    LOG["mibeehive.log"]
+    BAK["backup-*.tar.gz"]
+    BKD["backups/"]
+  end
+  subgraph VAR["/var/lib/mibeehive/"]
+    direction TB
+    OSS["oss/ — Phase 1: Downloaded binary releases (Foraging)"]
+    OSI["os-install/ — Phase 2: OS installation files (Provisioning)"]
+    WDV["webdav/ — Phase 3: WebDAV shared files (Sharing)"]
+  end
 ```
 
 ## Deploy & Restart
