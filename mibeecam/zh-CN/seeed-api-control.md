@@ -198,7 +198,7 @@ setDeviceTime(new Date());
 ```
 
 > **注意**：设备在发送此响应后立即执行重启。客户端收到此响应后应预期连接断开。
-> 重启后设备将使用默认配置启动（默认进入 AP 模式，密码恢复为 `admin`）。
+> 重启后设备将使用默认配置启动（默认进入 AP 模式，密码恢复为 `mibeecam2026`）。
 
 **出厂默认值**：
 
@@ -207,7 +207,7 @@ setDeviceTime(new Date());
 | wifi_ssid | `""` (AP 模式) |
 | wifi_pass | `""` |
 | device_name | `"MiBee Cam"` |
-| web_password | `"admin"` |
+| web_password | `"mibeecam2026"` |
 | resolution | `1` (SVGA) |
 | fps | `10` |
 | segment_sec | `300` |

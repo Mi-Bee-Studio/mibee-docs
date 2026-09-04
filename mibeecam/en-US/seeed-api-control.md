@@ -198,7 +198,7 @@ Restore device configuration to factory default values and reboot. Configuration
 ```
 
 > **Note**: Device executes reboot immediately after sending this response. Client should expect connection disconnect after receiving this response.
-> After reboot, device will start with default configuration (default AP mode, password restored to `admin`).
+> After reboot, device will start with default configuration (default AP mode, password restored to `mibeecam2026`).
 
 **Factory Default Values**:
 
@@ -207,7 +207,7 @@ Restore device configuration to factory default values and reboot. Configuration
 | wifi_ssid | `""` (AP mode) |
 | wifi_pass | `""` |
 | device_name | `"MiBee Cam"` |
-| web_password | `"admin"` |
+| web_password | `"mibeecam2026"` |
 | resolution | `1` (SVGA) |
 | fps | `10` |
 | segment_sec | `300` |

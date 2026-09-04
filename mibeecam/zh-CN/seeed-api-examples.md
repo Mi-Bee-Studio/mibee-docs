@@ -8,7 +8,7 @@
 
 ```javascript
 class MiBee Cam API {
-  constructor(baseURL = '', password = 'admin') {
+  constructor(baseURL = '', password = 'mibeecam2026') {
     this.base = baseURL;
     this.password = password;
   }

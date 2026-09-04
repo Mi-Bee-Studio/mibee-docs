@@ -26,7 +26,7 @@ The following endpoints require authentication:
 - `POST /api/auth` — Verify web password
 
 ### Authentication Method
-Use the `X-Password` header with the web password (default: "admin"):
+Use the `X-Password` header with the web password (default: "mibeecam2026"):
 
 ```bash
 curl -X POST http://192.168.1.100/api/config \
@@ -133,7 +133,7 @@ Verify web password and return authentication status.
 # Check authentication
 curl -X POST http://192.168.1.100/api/auth \
   -H "Content-Type: application/json" \
-  -d '{"password":"admin"}'
+  -d '{"password":"mibeecam2026"}'
 
 # Change password
 curl -X POST http://192.168.1.100/api/config \

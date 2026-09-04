@@ -349,7 +349,7 @@ idf.py -p COM3 erase-flash
 idf.py -p COM3 flash monitor
 ```
 
-> **注意**：恢复出厂设置将清除所有配置（WiFi、NAS、密码等），恢复为默认值 `admin`，设备重启后进入 AP 模式。TF 卡上的录像文件不受影响。
+> **注意**：恢复出厂设置将清除所有配置（WiFi、NAS、密码等），恢复为默认值 `mibeecam2026`，设备重启后进入 AP 模式。TF 卡上的录像文件不受影响。
 
 
 ### 下载的 AVI 文件无法播放

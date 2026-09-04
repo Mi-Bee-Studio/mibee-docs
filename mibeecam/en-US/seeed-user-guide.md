@@ -22,7 +22,7 @@ The device has a built-in HTTP server providing Web management interface and RES
 
 ### Login Password
 
-Default management password: `admin`. API requests involving write operations need to pass the password via `X-Password` request header or `?password=xxx` query parameter.
+Default management password: `mibeecam2026`. API requests involving write operations need to pass the password via `X-Password` request header or `?password=xxx` query parameter.
 
 ### Page Description
 
@@ -494,7 +494,7 @@ curl -X POST http://192.168.4.1/api/reset \
 
 ### Reset Result
 
-All configuration parameters restored to default values (WiFi cleared, password reset to `admin`), device enters AP mode after restart. Recording files on TF card are not deleted.
+All configuration parameters restored to default values (WiFi cleared, password reset to `mibeecam2026`), device enters AP mode after restart. Recording files on TF card are not deleted.
 
 ---
 
