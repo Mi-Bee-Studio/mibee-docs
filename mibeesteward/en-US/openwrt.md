@@ -86,7 +86,7 @@ scp configs/agent.yaml root@router:/etc/mibee/agent.yaml   # then edit on the ro
 # On the router, edit /etc/mibee/agent.yaml:
 #   center.url:         http://<your-center-ip>:<port>
 #   center.auth_token:  <minted on the center via POST /api/v1/agents/tokens>
-#   network.name/cidr:  this router's LAN (e.g. lan-62 / 192.168.62.0/24)
+#   network.name/cidr:  this router's LAN (e.g. lan-1 / 192.168.1.0/24)
 #   scanner.discovery.*: enable the router-only sources you want
 #     (dhcp_leases, conntrack, hostapd, dns_log — all default false)
 

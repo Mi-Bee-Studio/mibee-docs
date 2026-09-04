@@ -9,7 +9,7 @@
 - 成功：`{"ok":true,"data":...}` + HTTP 200
 - 失败：`{"ok":false,"error":"<消息>"}` + 400/401/404/500/503
 
-写操作鉴权用 `X-Password` 请求头。家族统一默认密码（真实值仅存本地部署配置，不写入本仓库；服务端拒绝空密码与少于 6 位的密码）；修改密码走 `POST /api/config` 携带 `{"web_password":"..."}`，旧密码经 `X-Password` 隐式验证。密码字段在 GET 响应中掩码为 `"****"`，POST 回传掩码值视为"未修改"。CORS 全开（`OPTIONS /*` → 204）。
+写操作鉴权用 `X-Password` 请求头。家族统一默认密码 `mibeecam2026`（公开初始密码，完成首次配置后请立即修改；服务端拒绝空密码与少于 6 位的密码）；修改密码走 `POST /api/config` 携带 `{"web_password":"..."}`，旧密码经 `X-Password` 隐式验证。密码字段在 GET 响应中掩码为 `"****"`，POST 回传掩码值视为"未修改"。CORS 全开（`OPTIONS /*` → 204）。
 
 MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / n16r8 2 / luatos 2 / seeed 3，通过 `status.stream_clients_max` 下发。
 

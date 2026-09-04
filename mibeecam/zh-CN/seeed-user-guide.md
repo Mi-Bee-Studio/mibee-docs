@@ -17,7 +17,7 @@
 | AP 模式 | `http://192.168.4.1` |
 | STA 模式 | `http://<设备IP>` |
 
-- AP 模式：连接 WiFi 热点 `MiBee Cam-XXXX`（密码 `12345678`），然后访问 `http://192.168.4.1`
+- AP 模式：连接 WiFi 热点 `MiBee Cam-XXXX`（密码 `mibeecam2026`），然后访问 `http://192.168.4.1`
 - STA 模式：设备连接路由器后，通过路由器分配的 IP 访问
 
 ### 登录密码
@@ -72,12 +72,12 @@
 ```bash
 # 修改 WiFi
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"wifi_ssid":"MyWiFi","wifi_pass":"mypassword"}'
 
 # 修改视频参数
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"resolution":1,"fps":10,"jpeg_quality":12,"segment_sec":300}'
 ```
 
@@ -183,7 +183,7 @@ ON 200ms → OFF 200ms → ON 200ms → OFF 1000ms → 循环
 设备首次启动或未配置 WiFi 时自动进入 AP 模式：
 
 - SSID：`MiBee Cam-XXXX`（XXXX 为 MAC 地址后 4 位十六进制）
-- 密码：`12345678`
+- 密码：`mibeecam2026`
 - IP 地址：`192.168.4.1`
 - 加密方式：WPA2-PSK
 - 最大连接数：4
@@ -223,11 +223,11 @@ STA 模式下断开后，设备每 60 秒自动尝试重连，无需手动干预
 ```bash
 # 开始录像
 curl -X POST "http://192.168.4.1/api/record?action=start" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 
 # 停止录像
 curl -X POST "http://192.168.4.1/api/record?action=stop" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 ### 录像格式
@@ -354,7 +354,7 @@ curl http://192.168.4.1/api/status
 ### 通过 API
 
 ```bash
-curl -X POST http://192.168.4.1/api/ota -H "Content-Type: application/json" -H "X-Password: admin" -d '{"url":"https://example.com/firmware/mibee_cam.bin"}'
+curl -X POST http://192.168.4.1/api/ota -H "Content-Type: application/json" -H "X-Password: mibeecam2026" -d '{"url":"https://example.com/firmware/mibee_cam.bin"}'
 ```
 
 当前固件版本：v0.4.0，可在仪表盘页面查看。
@@ -433,7 +433,7 @@ TF 卡配置文件 > NVS 闪存 > 默认值
 ```bash
 curl -X POST http://192.168.4.1/api/ota \
   -H "Content-Type: application/json" \
-  -H "X-Password: admin" \
+  -H "X-Password: mibeecam2026" \
   -d '{"url":"https://example.com/firmware/mibee_cam.bin"}'
 ```
 
@@ -478,7 +478,7 @@ http://<设备IP>:81/stream
 
 ```bash
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"vflip":true,"hmirror":true}'
 ```
 
@@ -502,7 +502,7 @@ STA 模式下设备启动后会自动通过 NTP 同步时间：
 ```bash
 curl -X POST http://192.168.4.1/api/time \
   -H "Content-Type: application/json" \
-  -H "X-Password: admin" \
+  -H "X-Password: mibeecam2026" \
   -d '{"year":2026,"month":4,"day":24,"hour":14,"min":30,"sec":0}'
 ```
 
@@ -520,7 +520,7 @@ curl -X POST http://192.168.4.1/api/time \
 
 ```bash
 curl -X POST http://192.168.4.1/api/reset \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 ### 恢复结果

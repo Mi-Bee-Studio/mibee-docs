@@ -47,7 +47,7 @@ gb28181:
   sip_domain: "3402000000"            # 国标域（10 位）
   device_id: "34020000001320000001"   # 设备编码（20 位）
   channel_id: "34020000001320000001"  # 通道编码（20 位）
-  password: "12345678"                # 接入密码（与平台一致）
+  password: "mibeecam2026"                # 接入密码（与平台一致）
   local_sip_port: 5060                # 本地 SIP 监听端口
   register_interval_secs: 60          # 注册周期（秒）
   heartbeat_interval_secs: 60         # 保活周期（秒）
@@ -67,7 +67,7 @@ platform_sip_port = 5060
 sip_domain = "3402000000"
 device_id = "34020000001320000001"
 channel_id = "34020000001320000001"
-password = "12345678"
+password = "mibeecam2026"
 local_sip_port = 5060
 register_interval_secs = 60
 heartbeat_interval_secs = 60

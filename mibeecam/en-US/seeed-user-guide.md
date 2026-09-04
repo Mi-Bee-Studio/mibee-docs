@@ -17,7 +17,7 @@ The device has a built-in HTTP server providing Web management interface and RES
 | AP Mode | `http://192.168.4.1` |
 | STA Mode | `http://<deviceIP>` |
 
-- AP Mode: Connect to WiFi hotspot `MiBee Cam-XXXX` (password `12345678`), then access `http://192.168.4.1`
+- AP Mode: Connect to WiFi hotspot `MiBee Cam-XXXX` (password `mibeecam2026`), then access `http://192.168.4.1`
 - STA Mode: After device connects to router, access via the IP assigned by router
 
 ### Login Password
@@ -71,12 +71,12 @@ Use `POST /api/config` interface to modify configuration, requires `X-Password` 
 ```bash
 # Modify WiFi
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"wifi_ssid":"MyWiFi","wifi_pass":"mypassword"}'
 
 # Modify video parameters
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"resolution":1,"fps":10,"jpeg_quality":12,"segment_sec":300}'
 ```
 
@@ -207,7 +207,7 @@ ON 200ms → OFF 200ms → ON 200ms → OFF 1000ms → Loop
 Device automatically enters AP mode on first boot or when WiFi is not configured:
 
 - SSID: `MiBee Cam-XXXX` (XXXX is last 4 hex digits of MAC address)
-- Password: `12345678`
+- Password: `mibeecam2026`
 - IP Address: `192.168.4.1`
 - Encryption: WPA2-PSK
 - Max connections: 4
@@ -246,11 +246,11 @@ Manually start or stop recording via API:
 ```bash
 # Start recording
 curl -X POST "http://192.168.4.1/api/record?action=start" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 
 # Stop recording
 curl -X POST "http://192.168.4.1/api/record?action=stop" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 ### Recording Format
@@ -404,7 +404,7 @@ All updates are SHA-256 verified. After update, the device reboots and runs a se
 ```bash
 curl -X POST http://192.168.4.1/api/ota \
   -H "Content-Type: application/json" \
-  -H "X-Password: admin" \
+  -H "X-Password: mibeecam2026" \
   -d '{"url":"https://example.com/firmware/mibee_cam.bin"}'
 ```
 
@@ -447,7 +447,7 @@ Modify camera flip/mirror via `POST /api/config`:
 
 ```bash
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: admin' \
+  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
   -d '{"vflip":true,"hmirror":true}'
 ```
 
@@ -471,7 +471,7 @@ In STA mode, device automatically syncs time via NTP after startup:
 ```bash
 curl -X POST http://192.168.4.1/api/time \
   -H "Content-Type: application/json" \
-  -H "X-Password: admin" \
+  -H "X-Password: mibeecam2026" \
   -d '{"year":2026,"month":4,"day":24,"hour":14,"min":30,"sec":0}'
 ```
 
@@ -489,7 +489,7 @@ Click "Factory Reset" button on Web configuration page.
 
 ```bash
 curl -X POST http://192.168.4.1/api/reset \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 ### Reset Result

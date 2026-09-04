@@ -69,11 +69,11 @@ Manually start or stop video recording.
 ```bash
 # Start recording
 curl -X POST "http://192.168.4.1/api/record?action=start" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 
 # Stop recording
 curl -X POST "http://192.168.4.1/api/record?action=stop" \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 **JavaScript Example**:
@@ -82,7 +82,7 @@ async function toggleRecording(start) {
   const action = start ? 'start' : 'stop';
   const resp = await fetch(`/api/record?action=${action}`, {
     method: 'POST',
-    headers: { 'X-Password': 'admin' }
+    headers: { 'X-Password': 'mibeecam2026' }
   });
   const { data } = await resp.json();
   console.log(`Action: ${data.action}, Status: ${data.status}`);
@@ -146,7 +146,7 @@ Manually set device system time. When NTP auto-sync is not possible (e.g., AP mo
 ```bash
 curl -X POST http://192.168.4.1/api/time \
   -H "Content-Type: application/json" \
-  -H "X-Password: admin" \
+  -H "X-Password: mibeecam2026" \
   -d '{"year": 2026, "month": 4, "day": 24, "hour": 14, "min": 30, "sec": 0}'
 ```
 
@@ -157,7 +157,7 @@ async function setDeviceTime(date) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Password': 'admin'
+      'X-Password': 'mibeecam2026'
     },
     body: JSON.stringify({
       year: date.getFullYear(),
@@ -224,7 +224,7 @@ Restore device configuration to factory default values and reboot. Configuration
 **cURL Example**:
 ```bash
 curl -X POST http://192.168.4.1/api/reset \
-  -H "X-Password: admin"
+  -H "X-Password: mibeecam2026"
 ```
 
 **JavaScript Example**:
@@ -233,7 +233,7 @@ async function factoryReset() {
   if (!confirm('Are you sure you want to factory reset? Device will reboot.')) return;
   const resp = await fetch('/api/reset', {
     method: 'POST',
-    headers: { 'X-Password': 'admin' }
+    headers: { 'X-Password': 'mibeecam2026' }
   });
   const result = await resp.json();
   if (result.ok) {
