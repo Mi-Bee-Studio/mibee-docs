@@ -17,12 +17,12 @@ Get all current configuration items of the device. Password fields are masked.
 {
   "ok": true,
   "data": {
-    "wifi_ssid": "MickeyMiRoute",
+    "wifi_ssid": "MyHomeWiFi",
     "wifi_pass": "****",
     "device_name": "MiBee Cam",
     "upload_method": 1,
     "upload_base_path": "/MiBee Cam",
-    "webdav_url": "http://192.168.63.31:9090/dav",
+    "webdav_url": "http://192.168.1.31:9090/dav",
     "webdav_user": "admin",
     "webdav_enabled": true,
     "http_upload_url": "",

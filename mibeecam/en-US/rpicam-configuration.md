@@ -201,7 +201,7 @@ gb28181:
   channel_id: "34020000001320000001"
 
   # Access password (must match the platform)
-  password: "12345678"
+  password: "mibeecam2026"
 
   # Local SIP listening port (must change when co-located with the platform)
   local_sip_port: 5060

@@ -65,7 +65,7 @@ Default values for every section of the [configuration guide](rpicam-configurati
 | | sip_domain | `"3402000000"` | string | GB domain (10 digits) |
 | | device_id | `"34020000001320000001"` | string | Device ID (20 digits) |
 | | channel_id | `"34020000001320000001"` | string | Channel ID (20 digits) |
-| | password | `"12345678"` | string | Access password |
+| | password | `"mibeecam2026"` | string | Access password |
 | | local_sip_port | `5060` | int | Local SIP listening port |
 | | register_interval_secs | `60` | int | Registration interval (seconds) |
 | | heartbeat_interval_secs | `60` | int | Keep-alive interval (seconds) |
