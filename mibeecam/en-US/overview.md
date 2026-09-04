@@ -13,11 +13,11 @@ Collections currently hosted:
 
 | Project | Platform / Sensor | Key Capabilities | Positioning |
 |---------|-------------------|------------------|-------------|
-| Seeed XIAO ESP32-S3 Sense | ESP32-S3 + OV2640/OV5640 | MJPEG, AVI recording, NAS upload, G.711 audio, OTA | Balanced surveillance cam |
-| Luatos ESP32-S3 A10 | ESP32-S3 + OV2640 | MJPEG, WebSocket events, webhooks, AT commands | Event-driven compact cam |
-| AI-Thinker ESP32-CAM | ESP32 + OV2640 | MJPEG, dual WiFi, SD management, OTA, lightweight MPA | Low-cost entry |
-| ESP32-S3-N16R8 | ESP32-S3 + OV3660 (3MP) | RTSP (digest), ONVIF, face/motion/QR detection | HD + standard protocols + AI |
-| rpi-cam | Raspberry Pi (Go) | ONVIF Device/Media/PTZ/Imaging, RTSP, RTMP/SRT push, WS-Discovery | Raspberry Pi software camera |
+| [Seeed XIAO ESP32-S3 Sense](https://github.com/Mi-Bee-Studio/seeed-esp32s3-cam) | ESP32-S3 + OV2640/OV5640 | MJPEG, RTSP (MJPEG + G.711 audio), AVI segmented recording, NAS upload (WebDAV/HTTP), dynamic timelapse, OTA | Balanced surveillance cam |
+| [Luatos ESP32-S3 A10](https://github.com/Mi-Bee-Studio/luatos-esp32s3-a10-camera) | ESP32-S3 + OV2640 | MJPEG, motion detection, WebSocket events, webhooks, ONVIF, AT commands | Event-driven compact cam (no PSRAM) |
+| [AI-Thinker ESP32-CAM](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam) | ESP32 + OV2640 | MJPEG, motion detection, SD timelapse/burst, ONVIF, dual WiFi, file manager, OTA, lightweight MPA | Low-cost entry |
+| [ESP32-S3-N16R8](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) | ESP32-S3 + OV3660 (3MP) | MJPEG, RTSP (digest), ONVIF, face/motion/QR detection, web OTA | HD + standard protocols + AI |
+| [rpi-cam](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go) | Raspberry Pi (Go) | ONVIF Device/Media/PTZ/Imaging, RTSP, RTMP/SRT push, WS-Discovery | Raspberry Pi software camera |
 
 ## Ecosystem
 
@@ -29,7 +29,7 @@ flowchart LR
         A[Seeed XIAO]
         B[Luatos A10]
         C[AI-Thinker]
-        D[N16R8 + AI]
+        D["N16R8 · AI detection"]
     end
     subgraph raspi [Raspberry Pi collection (SPEC v1)]
         E[rpi-cam]
