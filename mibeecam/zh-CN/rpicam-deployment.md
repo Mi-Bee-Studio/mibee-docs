@@ -1,6 +1,6 @@
 [English](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/deployment.md)
 
-# MiBee Eye ONVIF 服务器部署指南
+# 部署指南
 
 本指南涵盖 MiBee Eye ONVIF 相机服务在树莓派、香蕉派、香橙派等单板计算机上的部署，包括从 MediaMTX 迁移以及与 NVR 系统的集成。
 
@@ -59,8 +59,8 @@ scp /tmp/mtxrpicam_64/mtxrpicam <your-rpi-user>@<your-rpi-ip>:~/mibee-eye/deploy
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Mi-Bee-Studio/mibee-eye-raspi
-cd mibee-eye-raspi
+git clone https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go
+cd mibee-eye-raspi-go
 
 # 构建 ARM64 架构版本
 make build GOOS=linux GOARCH=arm64
@@ -248,8 +248,8 @@ curl -X POST http://<your-rpi-ip>:8080/onvif/device_service \
 ### 5. 快照测试
 
 ```bash
-# 测试快照端点
-curl -s http://<your-rpi-ip>:8080/snapshot -o snapshot.jpg
+# 测试快照端点（挂在 Web 端口 8088）
+curl -s http://<your-rpi-ip>:8088/snapshot -o snapshot.jpg
 file snapshot.jpg
 # 预期输出：JPEG image data, baseline, precision 8, 1280x720
 ```
@@ -264,7 +264,7 @@ file snapshot.jpg
 # 验证 HLS 实时预览加载（检查浏览器控制台 hls.js 错误）
 
 # 测试快照按钮
-curl -s http://<your-rpi-ip>:8080/snapshot -o snapshot.jpg
+curl -s http://<your-rpi-ip>:8088/snapshot -o snapshot.jpg
 file snapshot.jpg
 # 预期：JPEG 图像数据
 ```
@@ -279,6 +279,9 @@ ps -o pid,rss,comm -p $(pgrep -f "mibee-eye|mtxrpicam")
 
 # 检查 Web UI
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8088/
+
+# 检查存活探针
+curl -s http://localhost:8088/api/health
 
 # 检查 HLS 播放列表
 curl -s http://localhost:8088/hls/stream.m3u8 | head -3
@@ -346,9 +349,6 @@ telnet <your-rpi-ip> 8554
 ```bash
 # 验证 YAML 语法
 yamllint config.yaml
-
-# 检查配置值
-./build/mibee-eye --validate-config --config config.yaml
 ```
 
 **问题：** 无效的 ONVIF 密码
@@ -373,6 +373,7 @@ make build
 # 部署（使用上面的手动流程 - make deploy 已损坏，参见已知部署问题）
 gzip -c build/mibee-eye | ssh <your-rpi-user>@<your-rpi-ip> 'gunzip > ~/mibee-eye/mibee-eye && chmod +x ~/mibee-eye/mibee-eye'
 ssh <your-rpi-user>@<your-rpi-ip> 'sudo systemctl restart mibee-eye'
+```
 
 ### 备份配置
 
@@ -382,10 +383,9 @@ sudo cp /etc/systemd/system/mibee-eye.service ~/backups/
 cp config.yaml ~/backups/config.yaml.$(date +%Y%m%d).backup
 ```
 
-## 支持
 ## 已知部署问题
 
-AGENTS.md 中记录了以下影响部署的问题：
+以下问题影响部署：
 
 1. **`make deploy` 已损坏** — Makefile 目标尝试 `scp configs/config.yaml`，但仓库中只有 `configs/config.example.yaml`。请使用上面的手动部署流程。
 
@@ -396,7 +396,7 @@ AGENTS.md 中记录了以下影响部署的问题：
    ssh user@host 'sudo systemctl start mibee-eye'
    ```
 
-3. **`mtxrpicam` 二进制文件路径要求** — 二进制文件必须存在于 `~/mibee-eye/deploy/bin/mtxrpicam`，并附带捆绑的 libcamera 库文件（`libcamera.so.9.9`、`libcamera-base.so.9.9`、IPA 模块）。systemd 单元设置了 `LD_LIBRARY_PATH=/home/mickey/mibee-eye/deploy/bin`。如果没有此设置，摄像头捕获会静默失败。
+3. **`mtxrpicam` 二进制文件路径要求** — 二进制文件必须存在于 `~/mibee-eye/deploy/bin/mtxrpicam`，并附带捆绑的 libcamera 库文件（`libcamera.so.9.9`、`libcamera-base.so.9.9`、IPA 模块）。systemd 单元设置了 `LD_LIBRARY_PATH=/home/pi/mibee-eye/deploy/bin`。如果没有此设置，摄像头捕获会静默失败。
 
 4. **摄像头独占性** — 只有一个进程可以持有 `/dev/video0`。systemd 单元中有 `Conflicts=mediamtx.service` 以防止冲突。如果已安装 MediaMTX，请禁用它：`sudo systemctl disable --now mediamtx`。
 
@@ -407,13 +407,7 @@ AGENTS.md 中记录了以下影响部署的问题：
 ## 支持
 
 如需额外支持：
-- 查看故障排除文档
+- 查看[故障排除](rpicam-troubleshooting.md)文档
 - 使用 `journalctl -u mibee-eye -f` 检查服务日志
-- 使用 `--validate-config` 标志验证配置
-- 使用调试日志进行测试：`MIBEE_EYE_LOGGING_LEVEL=debug`
-
-如需额外支持：
-- 查看故障排除文档
-- 使用 `journalctl -u mibee-eye -f` 检查服务日志
-- 使用 `--validate-config` 标志验证配置
+- 使用 `yamllint` 预先校验配置语法
 - 使用调试日志进行测试：`MIBEE_EYE_LOGGING_LEVEL=debug`

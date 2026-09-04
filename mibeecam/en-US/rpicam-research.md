@@ -1,4 +1,6 @@
-# Research Documentation - MiBee Eye
+# Research Notes
+
+> **Historical decision record (2026-05-29).** This page preserves the research and evaluation process that shaped the MiBee Eye architecture. It reflects the state of the evaluated projects on that date. Where the final implementation diverged from the original selection, the divergence is annotated inline.
 
 ## Overview
 
@@ -37,6 +39,8 @@ Several Go ONVIF server libraries were evaluated for this project. The primary r
 ### Verdict
 
 **Selected**: `0x524a/onvif-go` for primary server implementation due to comprehensive ONVIF support and pure Go architecture.
+
+> **Outcome**: the library was extracted into an independently maintained fork, `mickeyzzc/onvif-go/v2`, which is what the product actually consumes today (see the [ONVIF · Go library docs](https://www.mlsbs.top/docs/mibeelibs/onvif-go-architecture)).
 
 **Reference**: `ohcnetwork/mock-ptz-camera` was used for PTZ implementation patterns and digital PTZ reference architecture (PTZ later removed as dead code).
 
@@ -106,6 +110,8 @@ The project requires RTMP push capabilities for cloud service integration (Aliyu
 ### Verdict
 
 **Selected**: `lal (q191201771/lal)` as primary RTMP push library for Go native integration, moderate resource usage, and active maintenance.
+
+> **Outcome**: the shipped implementation ended up as a self-contained RTMP push client inside the project (`internal/rtmp`) instead of the lal dependency; the evaluation criteria below still document why an in-process Go approach was preferred.
 
 **Fallback**: FFmpeg subprocess as universal fallback for edge cases requiring specific transcoding options.
 
@@ -321,10 +327,10 @@ OV5647 Camera → Custom rpicam → gortsplib v5 → Go ONVIF Server → NVR
 
 ## References
 
-1. [0x524a/onvif-go](https://github.com/0x524a/onvif-go) - Primary ONVIF server library
+1. [0x524a/onvif-go](https://github.com/0x524a/onvif-go) - Primary ONVIF server library (later extracted into `mickeyzzc/onvif-go/v2`)
 2. [ohcnetwork/mock-ptz-camera](https://github.com/ohcnetwork/mock-ptz-camera) - Go ONVIF reference architecture (PTZ patterns not used)
 3. [bluenviron/mediamtx](https://github.com/bluenviron/mediamtx) - Current RTSP server (issue #1402)
-4. [q191201771/lal](https://github.com/q191201771/lal) - Selected RTMP push library
+4. [q191201771/lal](https://github.com/q191201771/lal) - Evaluated RTMP push library (superseded by the in-house `internal/rtmp` client)
 5. [vladimirvivien/go4vl](https://github.com/vladimirvivien/go4vl) - Evaluated V4L2 capture (rejected)
 6. MiBee NVR - Consumer application that defines the ONVIF client requirements
 
