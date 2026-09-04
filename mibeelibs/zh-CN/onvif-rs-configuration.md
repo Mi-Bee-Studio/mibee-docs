@@ -44,7 +44,7 @@ let config = OnvifConfig {
 GetDeviceInformation 上报的身份：
 
 ```rust
-use onvif_device_rs::device::DeviceConfig;
+use onvif_device_rs::DeviceConfig;
 
 let device = DeviceConfig {
     name: "前门摄像头".into(),

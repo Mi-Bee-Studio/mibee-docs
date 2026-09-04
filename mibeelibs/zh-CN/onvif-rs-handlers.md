@@ -4,7 +4,8 @@ SOAP 服务器按**局部名**路由：SOAP body 的第一个子元素就是动�
 （`GetProfiles`、`GetStreamUri`……），每个动作映射到一个 handler：
 
 ```rust
-use onvif_device_rs::{OnvifServer, OnvifActionHandler, RequestInfo, OnvifError};
+use onvif_device_rs::server::{OnvifActionHandler, OnvifServer};
+use onvif_device_rs::types::{OnvifError, RequestInfo};
 
 #[async_trait::async_trait]
 impl OnvifActionHandler for MyHandler {
@@ -56,7 +57,8 @@ crate 自带常用服务的 handler 实现——要哪个动作注册哪个：
 
 ```rust
 use std::sync::Arc;
-use onvif_device_rs::device::{DeviceConfig, DeviceHandler, DeviceServiceHandlers};
+use onvif_device_rs::device::{DeviceHandler, DeviceServiceHandlers};
+use onvif_device_rs::DeviceConfig;
 
 // Device 服务:五个动作共用一份状态
 let device = Arc::new(DeviceServiceHandlers::new(device_config, port, device_ip));

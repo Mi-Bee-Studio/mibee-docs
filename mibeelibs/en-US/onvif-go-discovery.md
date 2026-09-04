@@ -9,6 +9,23 @@ layer. All live in the self-contained `discovery` package.
 | Passive listener | `Listener` | Same subnet, zero latency |
 | Directed probe | `ProbeEndpoint` / `ProbeSerial` | Any address, cross-subnet, pure HTTP |
 
+
+## Discovery Exchange
+
+```mermaid
+sequenceDiagram
+    participant C as discovery client
+    participant D as ONVIF device
+    C->>D: UDP Probe (multicast 3702)
+    D-->>C: ProbeMatches (XAddrs)
+    C->>D: HTTP POST GetCapabilities
+    D-->>C: Capability document (Media/Device addresses)
+    C->>D: GetProfiles / GetStreamUri
+    D-->>C: Profiles and stream URI
+```
+
+Active and directed probes share the same Probe/ProbeMatches parsing; the passive `Listener` only observes existing probes on the network and never transmits.
+
 ## Install
 
 ```bash
@@ -64,12 +81,12 @@ must be found again by serial) needs pure HTTP:
 // http://host:port/onvif/device_service, then an unauthenticated
 // GetDeviceInformation. nil = not ONVIF / offline (the two are
 // indistinguishable from outside; both mean "not found").
-dev := discovery.ProbeEndpoint(ctx, "192.168.2.50", 80, 1200*time.Millisecond)
+dev := discovery.ProbeEndpoint(ctx, "192.0.2.50", 80, 1200*time.Millisecond)
 
 // Serial number via common-port scan (80, 8080, 8000 by default). The
 // serial is extracted namespace-agnostically — it is the stable identity
 // anchor for correlating one physical camera across protocols.
-serial, ok := discovery.ProbeSerial(ctx, "192.168.2.50", nil)
+serial, ok := discovery.ProbeSerial(ctx, "192.0.2.50", nil)
 ```
 
 Malformed responses from arbitrary hosts are contained (never a panic);

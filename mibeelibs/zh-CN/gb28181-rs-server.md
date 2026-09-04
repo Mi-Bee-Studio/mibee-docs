@@ -1,5 +1,31 @@
 # 服务器生命周期：启动、停机与传输层
 
+本页覆盖 `Gb28181Server` 的构造、启动、优雅停机与传输层选择，并附设备侧与平台交互的协议时序总览。注册、点播等功能的配置细节见[配置](gb28181-rs-configuration.md)，直播与回放分别见[直播推流](gb28181-rs-live-streaming.md)与[录像回放](gb28181-rs-recording-playback.md)。
+
+## 协议交互一览
+
+设备上线后与平台的典型交互：注册（摘要认证）→ 周期保活 → 目录/设备信息查询 → INVITE 点播 → PS over RTP 媒体流 → BYE 结束。
+
+```mermaid
+sequenceDiagram
+    participant P as SIP 平台
+    participant S as Gb28181Server
+    S->>P: REGISTER（摘要认证）
+    P-->>S: 200 OK（到期时间）
+    loop 每 heartbeat_interval_secs
+        S->>P: MESSAGE Keepalive
+        P-->>S: 200 OK
+    end
+    P->>S: MESSAGE Catalog / DeviceInfo 查询
+    S-->>P: MESSAGE 响应
+    P->>S: INVITE（SDP offer）
+    S-->>P: 200 OK（SDP answer）
+    P->>S: ACK
+    S->>P: RTP（PS 流）
+    P->>S: BYE
+    S-->>P: 200 OK
+```
+
 ## 安装
 
 ```bash
@@ -12,7 +38,8 @@ cargo add gb28181-rs@0.7.0
 
 ```rust
 use std::sync::Arc;
-use gb28181_rs::{Gb28181Config, Gb28181Server, MockFrameHub};
+use gb28181_rs::mock::MockFrameHub;
+use gb28181_rs::{Gb28181Config, Gb28181Server};
 
 let server = Gb28181Server::new(config, Arc::new(MockFrameHub::new()));
 let server = Gb28181Server::with_recording_index(

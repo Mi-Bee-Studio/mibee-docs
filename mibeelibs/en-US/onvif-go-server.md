@@ -14,7 +14,7 @@ go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
 
 ## Transport architecture
 
-```
+```http
 POST /onvif/device_service
         │
         ▼

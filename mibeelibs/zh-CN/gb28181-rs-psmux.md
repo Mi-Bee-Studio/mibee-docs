@@ -12,7 +12,7 @@ cargo add gb28181-rs@0.7.0
 ## 封装
 
 ```rust
-use gb28181_rs::{mux_h264_to_ps, mux_h265_to_ps};
+use gb28181_rs::ps::{mux_h264_to_ps, mux_h265_to_ps};
 
 // NAL 负载不含 Annex-B 起始码；PTS/DTS 为 90 kHz 时钟值。
 let ps: Vec<u8> = mux_h264_to_ps(&[&sps, &pps, &idr], true, 90_000, 90_000);

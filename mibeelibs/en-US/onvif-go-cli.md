@@ -47,7 +47,7 @@ fixtures:
 
 ```bash
 go run ./cmd/onvif-diagnostics \
-    -endpoint http://192.168.1.100/onvif/device_service \
+    -endpoint http://192.0.2.100/onvif/device_service \
     -username admin -password '***' \
     -verbose
 

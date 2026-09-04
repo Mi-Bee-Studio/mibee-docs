@@ -8,6 +8,23 @@ onvif-go 提供三种互补的发现模式和一个后处理层，全部位于�
 | 被动监听 | `Listener` | 同子网、零延迟 |
 | 定向探测 | `ProbeEndpoint` / `ProbeSerial` | 任意地址、跨子网、纯 HTTP |
 
+
+## 发现交互时序
+
+```mermaid
+sequenceDiagram
+    participant C as discovery 客户端
+    participant D as ONVIF 设备
+    C->>D: UDP Probe（组播 3702）
+    D-->>C: ProbeMatches（XAddrs）
+    C->>D: HTTP POST GetCapabilities
+    D-->>C: 能力描述（Media/Device 地址）
+    C->>D: GetProfiles / GetStreamUri
+    D-->>C: Profile 与拉流地址
+```
+
+主动探测与定向探测都最终落到同一套 Probe/ProbeMatches 解析；被动 `Listener` 只监听网络上既有的 Probe 与 ProbeMatches，不主动发帧。
+
 ## 安装
 
 ```bash
@@ -56,11 +73,11 @@ defer listener.Stop()
 // http://host:port/onvif/device_service，失败则发无鉴权
 // GetDeviceInformation。返回 nil = 非 ONVIF / 离线
 // （从外部无法区分，两者都算「没找到」）。
-dev := discovery.ProbeEndpoint(ctx, "192.168.2.50", 80, 1200*time.Millisecond)
+dev := discovery.ProbeEndpoint(ctx, "192.0.2.50", 80, 1200*time.Millisecond)
 
 // 常用端口扫描（默认 80、8080、8000）取序列号——命名空间无关提取；
 // 序列号是同一实体相机跨协议关联的身份锚点。
-serial, ok := discovery.ProbeSerial(ctx, "192.168.2.50", nil)
+serial, ok := discovery.ProbeSerial(ctx, "192.0.2.50", nil)
 ```
 
 来自任意主机的畸形响应都有 recover 防护（绝不 panic）；401/405 类应答按
