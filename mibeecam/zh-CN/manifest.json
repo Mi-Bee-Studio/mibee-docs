@@ -266,19 +266,44 @@
           "title": "配置文档"
         },
         {
+          "slug": "rpicam-config-reference",
+          "file": "rpicam-config-reference.md",
+          "title": "配置参考"
+        },
+        {
+          "slug": "rpicam-config-examples",
+          "file": "rpicam-config-examples.md",
+          "title": "配置示例"
+        },
+        {
           "slug": "rpicam-deployment",
           "file": "rpicam-deployment.md",
           "title": "部署指南"
         },
         {
+          "slug": "rpicam-gb28181",
+          "file": "rpicam-gb28181.md",
+          "title": "GB28181 接入"
+        },
+        {
           "slug": "rpicam-onvif-compliance",
           "file": "rpicam-onvif-compliance.md",
-          "title": "ONVIF 合规说明"
+          "title": "ONVIF 合规性参考"
         },
         {
           "slug": "rpicam-troubleshooting",
           "file": "rpicam-troubleshooting.md",
           "title": "故障排除"
+        },
+        {
+          "slug": "rpicam-troubleshooting-media",
+          "file": "rpicam-troubleshooting-media.md",
+          "title": "流媒体故障排除"
+        },
+        {
+          "slug": "rpicam-research",
+          "file": "rpicam-research.md",
+          "title": "调研记录"
         }
       ]
     },
@@ -288,7 +313,7 @@
         {
           "slug": "webui-spec",
           "file": "webui-spec.md",
-          "title": "相机 Web API 统一规范（SPEC v1，树莓派系）"
+          "title": "MiBee 相机 Web API 统一规范（SPEC v1）"
         }
       ]
     }

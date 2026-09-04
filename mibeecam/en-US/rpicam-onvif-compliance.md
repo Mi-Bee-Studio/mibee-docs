@@ -105,6 +105,8 @@ Settings:
 PTZ service was removed as dead code (state machine tracked position but never applied to camera - no ScalerCrop wiring). The OV5647 hardware has no PTZ motors.
 
 
+## WS-Discovery Support
+
 The service supports both WS-Discovery probe methods:
 ### UDP Multicast (239.255.255.250:3702)
 - Listens for Probe messages on multicast group

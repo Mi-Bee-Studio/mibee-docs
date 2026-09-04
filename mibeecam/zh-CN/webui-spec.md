@@ -1,12 +1,14 @@
-# MiBee Camera Web API 统一规范 (SPEC v1)
+# MiBee 相机 Web API 统一规范（SPEC v1）
 
-本规范定义 MiBee 摄像头设备 Web 管理 API 的统一契约，由三个设备实现：
+本规范定义 MiBee 摄像头设备 Web 管理 API 的统一契约，是各设备实现与统一前端（mibee-webui）之间的唯一真源。规范版本通过 `/api/capabilities` 的 `spec_version` 通告，当前为 `"1"`。
 
-| 实现 | 仓库 | 部署 |
-|------|------|------|
-| `mibee-eye-raspi-go` | 本工作区 | 树莓派，HTTP :8088，单相机（固定 id `"0"`） |
+| 实现 | 部署 |
+|------|------|
+| `mibee-eye-raspi-rs`（Rust 版树莓派相机） | HTTP :8088，单相机（固定 id `"0"`） |
+| `mibee-eye-raspi-go`（Go 版树莓派相机） | HTTP :8088，单相机（固定 id `"0"`） |
+| `notebook-cam`（笔记本相机） | HTTPS :8443（TLS 强制），多相机 CRUD |
 
-配套参考前端：本仓库 `static/`（ES Modules，零构建），由三个设备仓库嵌入。
+配套参考前端为 ES Modules 零构建实现，由三个设备仓库直接嵌入；前端一切功能开关以 capabilities 通告为准。
 
 ## 0. 总则
 
@@ -28,7 +30,7 @@
   | `not_implemented` | 501 | 能力通告存在但后端未实现 |
   | `internal_error` | 500 | 内部错误 |
 
-- **版本化**：`/api/capabilities` 的 `spec_version` 标识本规范版本。同一 `spec_version` 内只允许增量变更；破坏性变更必须升版本。
+- **版本化**：同一 `spec_version` 内只允许增量变更；破坏性变更必须升版本。
 - **认证**：会话 cookie + CSRF 双提交（见 §2）。除 §1 公开端点外，一切 API 需认证。静态资源（前端本身）公开。
 - **扩展机制**：Core 端点三端必须实现；Extension 端点仅实现了的设备存在，且**必须**在 `/api/capabilities` 中如实通告。前端一切功能开关以 capabilities 为准，不做设备探测猜测。
 
@@ -53,6 +55,7 @@
 | POST | `/api/auth/reset` | `{"old_password","new_password"}` | `{"username"}`；成功后使所有既有会话失效 |
 
 Cookie 契约：
+
 - `session=<token>`；`HttpOnly`；`Path=/`；`SameSite=Strict`；TLS 部署加 `Secure`；有效期 24h。
 - `csrf-token=<token>`；**非** HttpOnly（供 JS 读取）；`Path=/`；`SameSite=Strict`；登录/setup 时随会话一起下发。
 
@@ -88,19 +91,73 @@ CSRF 契约：所有 `POST/PUT/DELETE/PATCH` 到 `/api/*`（auth 族除外：log
   "webrtc": false,
   "events": ["param_changed", "ai_detection"],
   "config_apply": {"default": "restart", "sections": {"imaging": "immediate"}},
-  "restart": true
+  "restart": true,
+  "observability": {"metrics": true, "logs": true, "requests": true}
 }
 ```
 
 字段语义：
+
 - `multi_camera`：相机数 > 1（前端显示相机列表/网格视图）。
 - `camera_management`：支持相机 CRUD（§4.2）。
 - `camera_control`：支持 start/stop（§4.3）。
 - `imaging` / `ai` / `ptz` / `hls` / `recording` / `devices` / `webrtc`：对应 Extension 端点存在。
 - `mjpeg` / `mse`：对应流端点存在（前端回落链 MSE → MJPEG → 快照轮询）。
 - `events`：SSE 实际会推送的事件词汇表（§6）。
-- `config_apply`：`"restart"`（写后需进程重启生效）/ `"immediate"`（立即生效），按配置节细化；节未列出时用 `default`。前端应在每个配置节标题处标注其生效时机，并在改动了 `restart` 节后向用户提供重启入口（§5.1）。
+- `config_apply`：`"restart"`（写后需进程重启生效）/ `"immediate"`（立即生效），按配置节细化；节未列出时用 `default`。前端应在每个配置节标题处标注其生效时机，并在改动了 `restart` 节后向用户提供重启入口（§5.1）。可选布尔 `auto`（缺省 `false`）：为 `true` 时（Go 方言）改动 `restart` 节的**保存会使设备自动立即自重启**（保存响应即带 `applied:"restart"`），前端应进入统一重启等待流程（提示→轮询 `/api/health`→恢复后自动重载），而不是展示手动重启入口。
 - `restart`：设备支持 `POST /api/system/restart`（§5.1）。
+- `observability`：可观测能力（§3.2）；缺省（字段不存在）视为三项皆 `false`，前端隐藏资源监控图与日志/请求视图。
+
+### 3.2 可观测（Extension：`observability`）
+
+实时监控与可观测性。所有速率值由设备内置 2s 采样器计算（与调用方请求节奏无关，多次轮询语义稳定）；无历史存储——历史由前端滚动窗口自行保留。
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/metrics/summary` | 系统+进程资源实时快照（结构见下），会话鉴权 |
+| GET | `/metrics` | Prometheus 文本格式（0.0.4），**公开无鉴权**（抓取惯例；go 保留 9100 独立端口为方言） |
+| GET | `/api/logs?limit=&level=` | 内存环形缓冲的最近日志（`limit` 缺省 200 上限 1000；`level` 为最低级别过滤 debug/info/warn/error），会话鉴权 |
+| GET | `/api/requests?limit=` | 最近的 Web API 请求追踪摘要（`limit` 缺省 100 上限 500），会话鉴权 |
+
+`/api/metrics/summary` 响应 data：
+
+```json
+{
+  "ts": 1788320000,
+  "interval_ms": 2000,
+  "system": {
+    "cpu_percent": 23.5,
+    "load_avg": [0.4, 0.35, 0.3],
+    "memory": {"total": 8589934592, "used": 3200000000, "available": 5389934592},
+    "disks": [{"path": "/", "total": 61080000000, "used": 12216000000, "free": 48864000000},
+               {"path": "/mnt/data", "total": 240000000000, "used": 9600000000, "free": 230400000000}],
+    "network": {"rx_bytes": 123456789, "tx_bytes": 9876543,
+                 "rx_rate": 12000.0, "tx_rate": 800.0}
+  },
+  "process": {
+    "cpu_percent": 12.0,
+    "rss_bytes": 123456789,
+    "open_fds": 42,
+    "uptime": 3600,
+    "io_read_bytes": 1000000, "io_write_bytes": 2000000,
+    "storage_bytes": 9600000000,
+    "traffic": {"http_rx_bytes": 5000, "http_tx_bytes": 900000,
+                 "rtsp_tx_bytes": 100000000, "gb28181_tx_bytes": 40000000}
+  }
+}
+```
+
+字段语义：
+
+- `system.cpu_percent`：自上一采样周期以来的整机 CPU 占用（0–100，含其它进程）。
+- `system.disks`：设备相关挂载点（根分区 + 录像数据分区，如已挂载）。
+- `system.network`：聚合网卡计数与速率（字节/秒）。
+- `process.cpu_percent` / `rss_bytes` / `open_fds`：本服务进程的 CPU、常驻内存、打开的文件描述符数。
+- `process.io_read_bytes` / `io_write_bytes`：进程累计 I/O 字节（Linux `/proc/<pid>/io` 的 rchar/wchar，含文件与套接字）。
+- `process.storage_bytes`：本服务的磁盘占用 = 录像数据目录实际大小（按录像索引累计；未启用录像时为 0）。
+- `process.traffic`：**应用归因**流量计数（非内核精确值）：HTTP 请求收发字节（中间件统计）、RTSP/RTP 出流字节、GB28181 出流字节。Linux 不提供按进程的内核网络计数，此字段为设备自行埋点的累计值，速率由前端按两次轮询差值计算。
+
+`/api/requests` 响应 data：`{"entries":[{"id":"a1b2c3","method":"GET","path":"/api/status","status":200,"duration_ms":3.2,"ts":1788320000}]}`，按时间倒序。中间件为每个 Web API 请求分配 `request_id`（响应头 `X-Request-Id` 回显），记录方法/路径/状态码/耗时；该 `request_id` 同时出现在 `/api/logs` 的相关条目中，用于设备级调用关联。RTSP/ONVIF/GB28181 独立端口面不在追踪范围（以 `/metrics` 计数器覆盖）。
 
 ## 4. 相机资源（Core）
 
@@ -172,6 +229,8 @@ MSE 流细则：init segment（`ftyp`+`moov`）只发一次，随后每访问单
 |------|------|------|
 | GET | `/api/detections` | `{"detections":[{"label","confidence","bbox":[x,y,w,h]}],"model","timestamp"}`；未启用时 `{"enabled":false}` |
 
+**bbox 坐标系**：`[x, y, w, h]` 为整数**视频像素**，原点左上角，坐标系为相机原生流分辨率（即 `/api/cameras` 返回的流分辨率，如 1280×720）。不是模型输入分辨率，也不是 0..1 归一化值——设备必须把模型空间坐标映射回视频像素空间后再返回（模型内部将 16:9 帧拉伸进正方形输入时，x/y 轴缩放比不同，映射不可省略）。
+
 ### 4.7 PTZ（Extension：`ptz`，虚拟或实云台）
 
 | 方法 | 路径 | 说明 |
@@ -217,7 +276,7 @@ MSE 流细则：init segment（`ftyp`+`moov`）只发一次，随后每访问单
 | `camera_added` | `{"camera_id","name","device_index"?}` | notebook 热插拔 |
 | `camera_offlined` | `{"camera_id"}` | notebook 热插拔 |
 | `param_changed` | `{"camera_id","name","value"}` | imaging 参数被任意客户端修改 |
-| `ai_detection` | `{"camera_id","detections":[{"label","confidence","bbox"}],"frame_number"?}` | AI 推理帧 |
+| `ai_detection` | `{"camera_id","detections":[{"label","confidence","bbox"}],"frame_number"?}` | AI 推理帧；bbox 坐标系同 §4.6（视频像素空间） |
 | `recording` | `{"camera_id","active"}` | 录像启停 |
 | `status` | `{"uptime",...}` | 周期状态摘要（可选） |
 
@@ -225,14 +284,15 @@ MSE 流细则：init segment（`ftyp`+`moov`）只发一次，随后每访问单
 
 1. **传输层**：Pi 走 HTTP :8088（cookie 无 `Secure`）；notebook 默认 TLS :8443（cookie 带 `Secure`），可另配 `web.http_port` 开启一个附加纯 HTTP 监听用于局域网免证书访问——经该端口颁发的会话 cookie 不带 `Secure`（浏览器拒发 `Secure` cookie 到 http://，带上会导致 HTTP 端口无法登录）。前端以 `location.protocol` 自适应。
 2. **Go 遗留 `/snapshot`**（:8088，无认证）保留，专供 NVR 拉流，与 `/api/cameras/0/snapshot` 并存。
-3. **凭证存储**：Pi 存于配置文件（会话为内存态，进程重启即全员下线）；notebook 存 SQLite（bcrypt 哈希，会话持久）。认证协议层面无差别。
+3. **凭证存储**：Pi 存于配置文件（rs 会话持久化在配置同目录 `web-sessions.json`；go 同样持久化）；notebook 存 SQLite（bcrypt 哈希，会话持久）。认证协议层面无差别。
 4. **Go 无 MJPEG**（H.264 管线无原始帧），`capabilities.mjpeg=false`，前端回落快照轮询。
 5. **metrics 指标名**各设备自定义（`mibee_eye_*` / `mibee_*`），不做统一。
 6. **Go HLS**（`/hls/*`）与其 metrics 独立端口 :9100 保留为 Go 专属方言。
 7. **notebook 协议热切换**：`GET /api/protocols/runtime-status` 为 notebook 扩展端点（ONVIF/GB28181/RTMP 运行态），配置本体已并入 `/api/config` 的 `protocols` 节。
 8. **配置文件格式**：Go YAML、Pi Rust TOML、notebook SQLite —— 对前端不可见，仅是 `PUT /api/config` 的落地方式。
-9. **设备级翻转（hflip/vflip）**：翻转烘焙进编码流，对所有观看端（RTSP/ONVIF/GB28181/录像/快照）持久生效，与浏览器端仅显示用的直播翻转按钮（localStorage）相互独立。配置位置方言：rs 为 `/api/config` 的 `camera.hflip`/`camera.vflip`（bool，重启生效）；Go 为同名字段（经 libcamera transform，重启生效）；notebook 为每相机 `PUT /api/cameras/{id}` 的 `config.hflip`/`config.vflip`（相机流 (重)启时生效，前端相机卡片提供翻转按钮并自动 stop→start）。
-10. **配置生效路径**：Go 保存即自动重启服务（`applied:"restart"` 落地为 SIGTERM 自重启，内存会话失效）；rs 保存仅落盘，由用户经 `POST /api/system/restart`（§5.1）显式重启应用；notebook 按节热应用，无 `restart` 能力（`capabilities.restart=false`，前端不展示重启入口）。
+9. **设备级翻转（hflip/vflip）**：翻转烘焙进编码流，对所有观看端（RTSP/ONVIF/GB28181/录像/快照）持久生效，与浏览器端仅显示用的直播翻转按钮（localStorage）相互独立。配置位置方言：rs 为 `/api/config` 的 `camera.hflip`/`camera.vflip`（bool，重启生效）；Go 为同名字段（经 libcamera transform，重启生效），且 Go 的成像端点（§4.5）收到 `VFlip`/`HFlip` 时同样转发落地为 `camera.vflip`/`camera.hflip` 并重启生效（响应附 `applied:"restart"`，为 §4.5「立即生效」的显式例外——rpicam-vid 无运行时翻转通道；值与现值相同的翻转请求为幂等 no-op：不写盘、不重启，响应不带 `applied` 字段）；notebook 为每相机 `PUT /api/cameras/{id}` 的 `config.hflip`/`config.vflip`（相机流 (重)启时生效，前端相机卡片提供翻转按钮并自动 stop→start）。
+10. **配置生效路径**：Go 保存即自动重启服务（`applied:"restart"` 落地为 SIGTERM 自重启；会话持久化在配置同目录的 `web-sessions.json`，自重启（保存/翻转/§5.1 显式重启）后浏览器免重登无感恢复，显式登出或密码重置仍清空全部会话）；rs 保存仅落盘，由用户经 `POST /api/system/restart`（§5.1）显式重启应用（会话同样持久化到配置同目录的 `web-sessions.json`，重启后保持登录）；notebook 按节热应用，无 `restart` 能力（`capabilities.restart=false`，前端不展示重启入口）。
+11. **可观测（§3.2）实现方言**：Go 保留 9100 独立 Prometheus 端口（历史抓取配置），同时 `/metrics` 挂在 Web 端口；rs 仅 Web 端口 `/metrics`。日志环形缓冲覆盖 log 门面（Go 为 slog 全量、rs 为协议库 log 门面）；请求追踪覆盖 Web API 面；RTSP/ONVIF/GB28181 独立端口面以 `/metrics` 计数器覆盖。notebook 后端尚未实现 §3.2（`capabilities.observability` 缺省，前端自动隐藏资源监控区）。
 
 ## 8. 附录 B：本规范取代的旧端点（迁移对照）
 

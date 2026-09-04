@@ -266,14 +266,29 @@
           "title": "Configuration"
         },
         {
+          "slug": "rpicam-config-reference",
+          "file": "rpicam-config-reference.md",
+          "title": "Configuration Reference"
+        },
+        {
+          "slug": "rpicam-config-examples",
+          "file": "rpicam-config-examples.md",
+          "title": "Configuration Examples"
+        },
+        {
           "slug": "rpicam-deployment",
           "file": "rpicam-deployment.md",
           "title": "Deployment Guide"
         },
         {
+          "slug": "rpicam-gb28181",
+          "file": "rpicam-gb28181.md",
+          "title": "GB28181 Integration"
+        },
+        {
           "slug": "rpicam-onvif-compliance",
           "file": "rpicam-onvif-compliance.md",
-          "title": "ONVIF Compliance"
+          "title": "ONVIF Compliance Reference"
         },
         {
           "slug": "rpicam-troubleshooting",
@@ -281,9 +296,24 @@
           "title": "Troubleshooting"
         },
         {
+          "slug": "rpicam-troubleshooting-media",
+          "file": "rpicam-troubleshooting-media.md",
+          "title": "Streaming Troubleshooting"
+        },
+        {
           "slug": "rpicam-research",
           "file": "rpicam-research.md",
           "title": "Research Notes"
+        }
+      ]
+    },
+    {
+      "title": "Camera Ecosystem Shared Components",
+      "items": [
+        {
+          "slug": "webui-spec",
+          "file": "webui-spec.md",
+          "title": "MiBee Camera Web API Unified Specification (SPEC v1)"
         }
       ]
     }

@@ -1,5 +1,5 @@
 [中文](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/zh/deployment.md)
-# MiBee Eye ONVIF Camera Server Deployment Guide
+# Deployment Guide
 
 This guide covers deployment of the MiBee Eye ONVIF camera server for single-board computers (Raspberry Pi, Banana Pi, Orange Pi), including migration from MediaMTX and integration with NVR systems.
 
@@ -59,8 +59,8 @@ scp /tmp/mtxrpicam_64/mtxrpicam <your-rpi-user>@<your-rpi-ip>:~/mibee-eye/deploy
 
 ```bash
 # Clone the repository
-git clone https://github.com/Mi-Bee-Studio/mibee-eye-raspi
-cd mibee-eye-raspi
+git clone https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go
+cd mibee-eye-raspi-go
 
 # Build for ARM64 architecture
 make build GOOS=linux GOARCH=arm64
@@ -246,8 +246,8 @@ curl -X POST http://<your-rpi-ip>:8080/onvif/device_service \
 ### 5. Snapshot Test
 
 ```bash
-# Test snapshot endpoint
-curl -s http://<your-rpi-ip>:8080/snapshot -o snapshot.jpg
+# Test snapshot endpoint (served on the web port 8088)
+curl -s http://<your-rpi-ip>:8088/snapshot -o snapshot.jpg
 file snapshot.jpg
 # Expected: JPEG image data, baseline, precision 8, 1280x720
 ```
@@ -262,7 +262,7 @@ file snapshot.jpg
 # Verify HLS live preview loads (check browser console for hls.js errors)
 
 # Test snapshot button
-curl -s http://<your-rpi-ip>:8080/snapshot -o snapshot.jpg
+curl -s http://<your-rpi-ip>:8088/snapshot -o snapshot.jpg
 file snapshot.jpg
 # Expected: JPEG image data
 ```
@@ -277,6 +277,9 @@ ps -o pid,rss,comm -p $(pgrep -f "mibee-eye|mtxrpicam")
 
 # Check web UI
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8088/
+
+# Check liveness probe
+curl -s http://localhost:8088/api/health
 
 # Check HLS playlist
 curl -s http://localhost:8088/hls/stream.m3u8 | head -3
@@ -344,9 +347,6 @@ telnet <your-rpi-ip> 8554
 ```bash
 # Validate YAML syntax
 yamllint config.yaml
-
-# Check config values
-./build/mibee-eye --validate-config --config config.yaml
 ```
 
 **Problem:** Invalid ONVIF password
@@ -370,6 +370,7 @@ make build
 # Deploy (use manual procedure above - make deploy is broken, see Known Deployment Issues)
 gzip -c build/mibee-eye | ssh <your-rpi-user>@<your-rpi-ip> 'gunzip > ~/mibee-eye/mibee-eye && chmod +x ~/mibee-eye/mibee-eye'
 ssh <your-rpi-user>@<your-rpi-ip> 'sudo systemctl restart mibee-eye'
+```
 
 ### Backup Configuration
 
@@ -379,16 +380,9 @@ sudo cp /etc/systemd/system/mibee-eye.service ~/backups/
 cp config.yaml ~/backups/config.yaml.$(date +%Y%m%d).backup
 ```
 
-## Support
-
-For additional support:
-- Review troubleshooting documentation
-Check service logs with `journalctl -u mibee-eye -f`
-- Validate configuration with `--validate-config` flag
-Test with debug logging: `MIBEE_EYE_LOGGING_LEVEL=debug`
 ## Known Deployment Issues
 
-These issues are acknowledged in AGENTS.md and affect deployment:
+These issues affect deployment:
 
 1. **`make deploy` is broken** — The Makefile target tries to `scp configs/config.yaml`, but only `configs/config.example.yaml` exists in the repo. Use the manual deploy procedure above instead.
 
@@ -399,10 +393,17 @@ These issues are acknowledged in AGENTS.md and affect deployment:
    ssh user@host 'sudo systemctl start mibee-eye'
    ```
 
-3. **`mtxrpicam` binary path requirement** — The binary must exist at `~/mibee-eye/deploy/bin/mtxrpicam` along with bundled libcamera libraries (`libcamera.so.9.9`, `libcamera-base.so.9.9`, IPA modules). The systemd unit sets `LD_LIBRARY_PATH=/home/mickey/mibee-eye/deploy/bin`. Without this, camera capture fails silently.
+3. **`mtxrpicam` binary path requirement** — The binary must exist at `~/mibee-eye/deploy/bin/mtxrpicam` along with bundled libcamera libraries (`libcamera.so.9.9`, `libcamera-base.so.9.9`, IPA modules). The systemd unit sets `LD_LIBRARY_PATH=/home/pi/mibee-eye/deploy/bin`. Without this, camera capture fails silently.
 
 4. **Camera exclusivity** — Only one process can hold `/dev/video0`. The systemd unit has `Conflicts=mediamtx.service` to prevent conflicts. If MediaMTX is installed, disable it: `sudo systemctl disable --now mediamtx`.
 
 5. **Port 9100 conflict** — Metrics defaults to port 9100, which is also used by Prometheus `node_exporter`. Either:
    - Set `metrics.enabled: false` in `config.yaml`, OR
    - Change `metrics.port` to a free port (e.g., 9101)
+## Support
+
+For additional support:
+- Review the [troubleshooting](rpicam-troubleshooting.md) documentation
+- Check service logs with `journalctl -u mibee-eye -f`
+- Validate configuration syntax up front with `yamllint`
+- Test with debug logging: `MIBEE_EYE_LOGGING_LEVEL=debug`

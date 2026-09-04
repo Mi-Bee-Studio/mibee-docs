@@ -1,8 +1,6 @@
 # 配置文档
 
-[English](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/configuration.md)
-
-MiBee Eye 配置采用 YAML 格式，控制摄像头服务的所有方面，包括捕获设置、流媒体协议和设备标识。
+MiBee Eye 配置采用 YAML 格式，控制摄像头服务的所有方面，包括捕获设置、流媒体协议、GB28181 接入、本地录像和设备标识。全部键的默认值与环境变量覆盖见[配置参考](rpicam-config-reference.md)，可直接套用的完整配置见[配置示例](rpicam-config-examples.md)。
 
 ## 配置文件
 
@@ -23,6 +21,8 @@ metrics:       # Prometheus 指标导出器
 snapshot:      # JPEG 快照端点
 rtmp:          # RTMP 推送流媒体
 hls:           # HLS 实时流媒体
+gb28181:       # GB28181 国标注册（默认关闭）
+recording:     # 本地连续录像（默认关闭）
 ```
 
 ## 配置部分
@@ -33,7 +33,8 @@ hls:           # HLS 实时流媒体
 
 ```yaml
 camera:
-  # 捕获模式："mtxrpicam"（默认，使用子进程）或 "rtsp"（消费外部 RTSP URL）
+  # 捕获模式："mtxrpicam"（默认，捆绑 libcamera 的子进程）、
+  # "rpicamvid"（使用系统 rpicam-vid）或 "rtsp"（消费外部 RTSP URL）
   mode: mtxrpicam
 
   # mtxrpicam 二进制文件路径（摄像头捕获子进程）
@@ -42,44 +43,44 @@ camera:
 
   # 摄像头设备路径（V4L2 或 libcamera）
   device: /dev/video0
-  
+
   # 捕获分辨率（宽度 x 高度）
   # 支持的分辨率：640x480, 1296x972, 1920x1080, 2592x1944
   width: 1280
   height: 720
-  
+
   # 每秒帧数（OV5647 传感器最大 30）
   fps: 15
-  
+
   # 视频编解码器（h264 或 h265）
   codec: h264
-  
+
   # 目标比特率（每秒位数）
   # 示例：2000000 = 2 Mbps
   bitrate: 2000000
-  
+
   # 图像控制（硬件特定范围适用）
   # 亮度：-1.0 到 1.0（0.0 = 默认值，负值 = 更暗，正值 = 更亮）
   brightness: 0.0
-  
+
   # 对比度：0.0 到 32.0（1.0 = 默认值）
   contrast: 1.0
-  
+
   # 饱和度：0.0 到 32.0（1.0 = 默认值）
   saturation: 1.0
-  
+
   # 锐度：0.0 到 16.0（1.0 = 默认值）
   sharpness: 1.0
-  
+
   # mode=rtsp 时的外部 RTSP URL（mode=mtxrpicam 时忽略）
   rtsp_url: ""
-  
+
   # 关键帧间隔（1=每帧，15=每15帧）
   idr_period: 15
-  
+
   # 帧通道缓冲容量（帧数）
   frame_buffer_size: 30
-  
+
   # 最大子进程重启退避持续时间
   max_backoff: 30s
 ```
@@ -92,24 +93,24 @@ RTSP 服务器设置用于视频流客户端。
 rtsp:
   # RTSP 服务器端口（默认：8554）
   port: 8554
-  
+
   # 可选的 RTSP 身份验证
   # 留空字符串表示无身份验证
   username: ""
   password: ""
-  
+
   # AUHub 订阅者通道缓冲大小
   subscriber_buffer_size: 64
-  
+
   # gortsplib 写队列大小（256默认对WiFi来说太小）
   write_queue_size: 2048
-  
+
   # 启用 UDP 传输（NVR客户端需要）
   enable_udp: true
-  
+
   # UDP RTP 端口（默认：8000）
   udp_rtp_port: 8000
-  
+
   # UDP RTCP 端口（默认：8001）
   udp_rtcp_port: 8001
 ```
@@ -122,11 +123,11 @@ ONVIF 服务器设置，用于通过 NVR 系统进行设备发现和控制。
 onvif:
   # ONVIF HTTP/SOAP 端口（默认：8080）
   port: 8080
-  
+
   # ONVIF WS-UsernameToken 身份验证
   # MiBee NVR 集成必需
   username: "admin"
-  
+
   # ONVIF 密码（生产环境必须设置）
   password: ""
 ```
@@ -143,22 +144,21 @@ web:
   # Web UI HTTP 端口（默认：8088）
   port: 8088
 
-  # Web UI 身份验证
-  # 当用户名/密码为空时使用 ONVIF 凭据
-  username: "admin"
+  # Web UI 身份验证（会话 cookie + CSRF，见统一 Web API 规范）
+  # 当用户名/密码为空时回落使用 ONVIF 凭据
+  username: ""
   password: ""
-  
+
   # CORS 允许的来源（生产环境使用特定来源）
   allowed_origins:
     - "*"
-  
+
   # HTTP 服务器超时
   read_header_timeout: 5s
   read_timeout: 10s
   write_timeout: 30s
   idle_timeout: 120s
 ```
-
 
 ### RTMP 配置
 
@@ -168,15 +168,70 @@ RTMP 推送设置，用于流式传输到云服务。
 rtmp:
   # 启用 RTMP 推送流媒体
   enabled: false
-  
+
   # 云服务的 RTMP 推送 URL
   # 示例：
   # - rtmp://push-server/app/stream
   # - rtmp://live.twitch.tv/app/channel-key
   url: "rtmp://push-server/app/stream"
-  
+
   # 最大重连尝试次数（0 = 无限制）
   max_retries: 10
+```
+
+### GB28181 配置
+
+国标设备侧注册，用于接入 GB/T 28181 SIP 平台。完整说明见 [GB28181 接入](rpicam-gb28181.md)。
+
+```yaml
+gb28181:
+  # 启用国标注册（默认：false）
+  enabled: false
+
+  # SIP 传输层：udp（默认）或 tcp
+  transport: udp
+
+  # 平台 SIP 服务器地址与端口
+  platform_sip_address: "192.168.1.1"
+  platform_sip_port: 5060
+
+  # 国标域（10 位）、设备编码与通道编码（各 20 位）
+  sip_domain: "3402000000"
+  device_id: "34020000001320000001"
+  channel_id: "34020000001320000001"
+
+  # 接入密码（与平台一致）
+  password: "12345678"
+
+  # 本地 SIP 监听端口（与平台同机部署时必须改端口）
+  local_sip_port: 5060
+
+  # 注册与保活周期（秒）与心跳超时次数
+  register_interval_secs: 60
+  heartbeat_interval_secs: 60
+  heartbeat_timeout_count: 3
+```
+
+### 本地录像配置
+
+连续录像把裸 H.264 段落盘到按天/小时组织的目录，并维护 `index.jsonl` 索引，供 GB28181 录像查询与回放/下载使用。
+
+```yaml
+recording:
+  # 启用连续本地录像（默认：false）
+  enabled: false
+
+  # 录像根目录
+  storage_path: "recordings"
+
+  # 目标分段时长（秒，默认：600）
+  segment_secs: 600
+
+  # 删除超过该天数的段（0 = 永不删除）
+  retention_days: 3
+
+  # 超过该容量上限（MB）时删最旧的段（0 = 无上限）
+  max_storage_mb: 8192
 ```
 
 ### 设备配置
@@ -187,19 +242,19 @@ rtmp:
 device:
   # NVR 中显示的友好摄像头名称
   name: "Pi Camera V1"
-  
+
   # 设备制造商
   manufacturer: "Raspberry Pi"
-  
+
   # 摄像头传感器型号
   model: "OV5647"
-  
+
   # 固件版本字符串
   firmware: "1.0.0"
-  
+
   # 硬件标识符
   hardware_id: "OV5647"
-  
+
   # 序列号（如果不可用则为空）
   serial_number: ""
 ```
@@ -264,312 +319,6 @@ hls:
 
 HLS 服务器使用纯 Go MPEG-TS 分段器 — 无 ffmpeg 子进程。分段保存在内存中。
 
-
-## 默认值参考
-
-| 部分 | 字段 | 默认值 | 类型 | 描述 |
-|------|------|--------|------|------|
-| **camera** | mode | `"mtxrpicam"` | string | 捕获模式（mtxrpicam 或 rtsp） |
-| | bin_path | `"deploy/bin/mtxrpicam"` | string | mtxrpicam 二进制文件路径 |
-| | device | `/dev/video0` | string | 摄像头设备路径 |
-| | width | `1280` | int | 捕获宽度（像素） |
-| | height | `720` | int | 捕获高度（像素） |
-| | fps | `15` | int | 每秒帧数 |
-| | codec | `"h264"` | string | 视频编解码器 |
-| | bitrate | `2000000` | int | 比特率（每秒位数） |
-| | brightness | `0.0` | float | 亮度控制 |
-| | contrast | `1.0` | float | 对比度控制 |
-| | saturation | `1.0` | float | 饱和度控制 |
-| | sharpness | `1.0` | float | 锐度控制 |
-| | rtsp_url | `""` | string | 外部 RTSP URL（mode=rtsp 时使用） |
-| | idr_period | `15` | int | 关键帧间隔 |
-| | frame_buffer_size | `30` | int | 帧通道缓冲容量 |
-| | max_backoff | `"30s"` | string | 最大子进程重启退避 |
-| **rtsp** | port | `8554` | int | RTSP 服务器端口 |
-| | username | `""` | string | RTSP 用户名 |
-| | password | `""` | string | RTSP 密码 |
-| | subscriber_buffer_size | `64` | int | AUHub 订阅者通道缓冲大小 |
-| | write_queue_size | `2048` | int | gortsplib 写队列大小 |
-| | enable_udp | `true` | bool | 启用 UDP 传输 |
-| | udp_rtp_port | `8000` | int | UDP RTP 端口 |
-| | udp_rtcp_port | `8001` | int | UDP RTCP 端口 |
-| **onvif** | port | `8080` | int | ONVIF HTTP 端口 |
-| | username | `"admin"` | string | ONVIF 用户名 |
-| | password | `""` | string | ONVIF 密码 |
-| **device** | name | `"Pi Camera V1"` | string | 友好摄像头名称 |
-| | manufacturer | `"Raspberry Pi"` | string | 设备制造商 |
-| | model | `"OV5647"` | string | 摄像头传感器型号 |
-| | firmware | `"1.0.0"` | string | 固件版本 |
-| | hardware_id | `"OV5647"` | string | 硬件标识符 |
-| | serial_number | `""` | string | 设备序列号 |
-| **logging** | level | `"info"` | string | 日志级别 |
-| **web** | enabled | `true` | bool | 启用 Web UI |
-| | port | `8088` | int | Web UI HTTP 端口 |
-| | username | `""` | string | Web UI 用户名（默认使用 onvif.username） |
-| | password | `""` | string | Web UI 密码（默认使用 onvif.password） |
-| | allowed_origins | `["*"]` | []string | CORS 允许的来源 |
-| | read_header_timeout | `"5s"` | string | HTTP 读取头超时 |
-| | read_timeout | `"10s"` | string | HTTP 读取超时 |
-| | write_timeout | `"30s"` | string | HTTP 写入超时 |
-| | idle_timeout | `"120s"` | string | HTTP 空闲超时 |
-| **metrics** | enabled | `true` | bool | 启用指标端点 |
-| | port | `9100` | int | 指标 HTTP 服务器端口 |
-| **snapshot** | enabled | `true` | bool | 启用 snapshot 端点 |
-| | quality | `85` | int | JPEG 质量 1-100 |
-| **rtmp** | enabled | `false` | bool | 启用 RTMP 推送 |
-| | url | `"rtmp://push-server/app/stream"` | string | RTMP 推送 URL |
-| | max_retries | `10` | int | 最大重连尝试次数 |
-| **hls** | enabled | `false` | bool | 启用 HLS 服务器 |
-| | segment_duration | `"2s"` | string | 目标分段持续时间 |
-## 环境变量覆盖
-
-所有配置值都可以使用 `MIBEE_EYE_` 前缀的环境变量覆盖。这对于部署、测试和容器化环境很有用。
-
-### 格式
-环境变量遵循模式：`MIBEE_EYE_<部分>_<字段>`
-
-### 示例
-```bash
-# 覆盖摄像头分辨率
-MIBEE_EYE_CAMERA_WIDTH=1920 MIBEE_EYE_CAMERA_HEIGHT=1080 ./mibee-eye
-
-# 为生产环境设置 ONVIF 密码
-MIBEE_EYE_ONVIF_PASSWORD=securepassword123 ./mibee-eye
-
-# 更改 RTSP 端口
-MIBEE_EYE_RTSP_PORT=554 ./mibee-eye
-
-# 启用调试日志
-
-MIBEE_EYE_LOGGING_LEVEL=debug ./mibee-eye
-
-# Web UI 访问和凭据
-MIBEE_EYE_WEB_ENABLED=true ./mibee-eye
-
-# 设置 Web UI 凭据（独立于 ONVIF）
-MIBEE_EYE_WEB_USERNAME=admin MIBEE_EYE_WEB_PASSWORD=webpass ./mibee-eye
-# 为生产环境设置 ONVIF 密码
-MIBEE_EYE_ONVIF_PASSWORD=securepassword123 ./mibee-eye
-# 设置设备信息
-MIBEE_EYE_DEVICE_NAME="Office Camera" ./mibee-eye
-```
-### 所有环境变量
-
-| 部分 | 字段 | 环境变量 |
-|------|------|----------|
-| **camera** | device | `MIBEE_EYE_CAMERA_DEVICE` |
-| | width | `MIBEE_EYE_CAMERA_WIDTH` |
-| | height | `MIBEE_EYE_CAMERA_HEIGHT` |
-| | fps | `MIBEE_EYE_CAMERA_FPS` |
-| | codec | `MIBEE_EYE_CAMERA_CODEC` |
-| | bitrate | `MIBEE_EYE_CAMERA_BITRATE` |
-| | brightness | `MIBEE_EYE_CAMERA_BRIGHTNESS` |
-| | contrast | `MIBEE_EYE_CAMERA_CONTRAST` |
-| | saturation | `MIBEE_EYE_CAMERA_SATURATION` |
-| | sharpness | `MIBEE_EYE_CAMERA_SHARPNESS` |
-| | idr_period | `MIBEE_EYE_CAMERA_IDR_PERIOD` |
-| | bin_path | `MIBEE_EYE_CAMERA_BIN_PATH` |
-| | frame_buffer_size | `MIBEE_EYE_CAMERA_FRAME_BUFFER_SIZE` |
-| | max_backoff | `MIBEE_EYE_CAMERA_MAX_BACKOFF` |
-| **rtsp** | port | `MIBEE_EYE_RTSP_PORT` |
-| | username | `MIBEE_EYE_RTSP_USERNAME` |
-| | password | `MIBEE_EYE_RTSP_PASSWORD` |
-| | subscriber_buffer_size | `MIBEE_EYE_RTSP_SUBSCRIBER_BUFFER_SIZE` |
-| | write_queue_size | `MIBEE_EYE_RTSP_WRITE_QUEUE_SIZE` |
-| | enable_udp | `MIBEE_EYE_RTSP_ENABLE_UDP` |
-| | udp_rtp_port | `MIBEE_EYE_RTSP_UDP_RTP_PORT` |
-| | udp_rtcp_port | `MIBEE_EYE_RTSP_UDP_RTCP_PORT` |
-| **onvif** | port | `MIBEE_EYE_ONVIF_PORT` |
-| | username | `MIBEE_EYE_ONVIF_USERNAME` |
-| | password | `MIBEE_EYE_ONVIF_PASSWORD` |
-| **device** | name | `MIBEE_EYE_DEVICE_NAME` |
-| | manufacturer | `MIBEE_EYE_DEVICE_MANUFACTURER` |
-| | model | `MIBEE_EYE_DEVICE_MODEL` |
-| | firmware | `MIBEE_EYE_DEVICE_FIRMWARE` |
-| | hardware_id | `MIBEE_EYE_DEVICE_HARDWAREID` |
-| | serial_number | `MIBEE_EYE_DEVICE_SERIALNUMBER` |
-| **logging** | level | `MIBEE_EYE_LOGGING_LEVEL` |
-| **web** | enabled | `MIBEE_EYE_WEB_ENABLED` |
-| | port | `MIBEE_EYE_WEB_PORT` |
-| | username | `MIBEE_EYE_WEB_USERNAME` |
-| | password | `MIBEE_EYE_WEB_PASSWORD` |
-| | allowed_origins | `MIBEE_EYE_WEB_ALLOWED_ORIGINS` |
-| | read_header_timeout | `MIBEE_EYE_WEB_READ_HEADER_TIMEOUT` |
-| | read_timeout | `MIBEE_EYE_WEB_READ_TIMEOUT` |
-| | write_timeout | `MIBEE_EYE_WEB_WRITE_TIMEOUT` |
-| | idle_timeout | `MIBEE_EYE_WEB_IDLE_TIMEOUT` |
-| **metrics** | enabled | `MIBEE_EYE_METRICS_ENABLED` |
-| | port | `MIBEE_EYE_METRICS_PORT` |
-| **snapshot** | enabled | `MIBEE_EYE_SNAPSHOT_ENABLED` |
-| | quality | `MIBEE_EYE_SNAPSHOT_QUALITY` |
-| **rtmp** | enabled | `MIBEE_EYE_RTMP_ENABLED` |
-| | url | `MIBEE_EYE_RTMP_URL` |
-| | max_retries | `MIBEE_EYE_RTMP_MAX_RETRIES` |
-| **hls** | enabled | `MIBEE_EYE_HLS_ENABLED` |
-| | segment_duration | `MIBEE_EYE_HLS_SEGMENT_DURATION` |
-## 示例配置
-
-### 基本配置（默认设置）
-```yaml
-# configs/config.yaml
-camera:
-  device: /dev/video0
-  width: 1280
-  height: 720
-  fps: 15
-  codec: h264
-  bitrate: 2000000
-  brightness: 0.0
-  contrast: 1.0
-  saturation: 1.0
-  sharpness: 1.0
-
-rtsp:
-  port: 8554
-  username: ""
-  password: ""
-
-onvif:
-  port: 8080
-  username: "admin"
-  password: ""
-
-rtmp:
-  enabled: false
-  url: "rtmp://push-server/app/stream"
-
-device:
-  name: "Pi Camera V1"
-  manufacturer: "Raspberry Pi"
-  model: "OV5647"
-  firmware: "1.0.0"
-  hardware_id: "OV5647"
-  serial_number: ""
-
-logging:
-  level: "info"
-
-web:
-  enabled: true
-  port: 8088
-  username: "admin"
-  password: ""
-
-### 高分辨率配置
-```yaml
-camera:
-  device: /dev/video0
-  width: 1920
-  height: 1080
-  fps: 25
-  codec: h264
-  bitrate: 4000000  # 4 Mbps
-  brightness: 0.2
-  contrast: 1.5
-  saturation: 1.2
-  sharpness: 2.0
-
-rtsp:
-  port: 8554
-  username: "stream"
-  password: "streampass"
-
-onvif:
-  port: 8080
-  username: "admin"
-  password: "onvif123"
-
-device:
-  name: "HD Security Camera"
-  manufacturer: "Raspberry Pi"
-  model: "OV5647"
-  firmware: "2.0.0"
-  hardware_id: "OV5647-HD"
-  serial_number: "SN-2024-001"
-
-web:
-  enabled: true
-  port: 8088
-  username: "admin"
-  password: ""
-
-### 云流媒体配置
-```yaml
-camera:
-  width: 1280
-  height: 720
-  fps: 15
-  codec: h264
-  bitrate: 2000000
-
-rtsp:
-  port: 8554
-  username: ""
-  password: ""
-
-onvif:
-  port: 8080
-  username: "admin"
-  password: "secure123"
-
-rtmp:
-  enabled: true
-  url: "rtmp://live.example.com/live/stream-key"
-
-device:
-  name: "Cloud Stream Camera"
-  manufacturer: "Raspberry Pi"
-  model: "OV5647"
-  firmware: "1.2.0"
-  hardware_id: "OV5647-CLOUD"
-
-logging:
-  level: "warn"
-
-web:
-  enabled: true
-  port: 8088
-  username: "admin"
-  password: ""
-
-
-### 低带宽配置
-```yaml
-camera:
-  width: 640
-  height: 480
-  fps: 10
-  codec: h264
-  bitrate: 500000  # 0.5 Mbps
-  brightness: 0.0
-  contrast: 1.0
-  saturation: 1.0
-  sharpness: 1.0
-
-rtsp:
-  port: 8554
-  username: ""
-  password: ""
-
-onvif:
-  port: 8080
-  username: "admin"
-  password: "lowpass"
-
-device:
-  name: "Low Bandwidth Camera"
-  manufacturer: "Raspberry Pi"
-  model: "OV5647"
-  firmware: "1.0.0"
-  hardware_id: "OV5647-LBW"
-
-
-web:
-  enabled: true
-  port: 8088
-  username: "admin"
-  password: ""
-
 ## 配置提示
 
 1. **摄像头兼容性**：并非所有分辨率和设置都与所有摄像头模块兼容。请使用您的特定摄像头硬件测试配置。
@@ -586,6 +335,6 @@ web:
 
 7. **验证**：服务将根据硬件约束验证配置值。无效的设置将被记录或设置为默认值。
 
-8. **Web UI 访问**：Web 管理面板可通过 http://<设备-ip>:8088/ 访问。使用 ONVIF 凭据（如果配置了特定的 Web 凭据则使用 Web 凭据）登录。
+8. **Web UI 访问**：Web 管理面板可通过 `http://<设备-ip>:8088/` 访问，使用会话登录（默认回落 ONVIF 凭据）。端点契约见[统一 Web API 规范](webui-spec.md)。
 
-9. **摄像头二进制文件**：`bin_path` 必须指向有效的 mtxrpicam 二进制文件。该文件所在目录还必须包含捆绑的 libcamera 共享库（libcamera.so.9.9、libcamera-base.so.9.9）和 IPA 模块。详见部署文档。
+9. **摄像头二进制文件**：`bin_path` 必须指向有效的 mtxrpicam 二进制文件。该文件所在目录还必须包含捆绑的 libcamera 共享库（libcamera.so.9.9、libcamera-base.so.9.9）和 IPA 模块。详见[部署指南](rpicam-deployment.md)。
