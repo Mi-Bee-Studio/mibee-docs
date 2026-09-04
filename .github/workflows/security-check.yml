@@ -1,0 +1,21 @@
+name: security-check
+
+# 合并前泄密扫描（治理规范 §3.6 强制门禁）
+# 除官方公开默认密码（mibeecam2026 / mibeestudio2026 / mibeehome2026）外，
+# 任何疑似泄密（真实内网 IP、公网 IP、密钥格式、未登记白名单的凭据取值）都会令 CI 失败。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 泄密扫描
+        run: python3 scripts/security-check.py
