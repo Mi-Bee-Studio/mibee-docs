@@ -105,6 +105,8 @@ SNTP 同步后 `time(NULL)` 从 epoch 起跳（日志会打出天文数字级 Up
 
 OTA 端点不是 multipart 表单，是 `Content-Type: application/octet-stream` 的裸流（curl 示例见[统一 API](espcam-api.md)）。镜像必须 ≤ OTA 槽尺寸；SPIFFS 上传中途失败只能串口救；验证以 `running_partition` 切换 + 设备 `/app.js` md5 与仓库一致为准。
 
+**日常升级优先走 Web OTA**（有 OTA 能力的板）：每次改动都经由 OTA 交付，固件与前端的上传链路才能持续保持可用；USB 刷机仅用于全新芯片、救砖或设备不可达。luatos 单分区无 OTA（串口是唯一途径）；n16r8 的 OTA 端点在开发中，合入前仍走 USB。
+
 ### 设备序列号的稳定来源
 
 序列号/UUID 一律从出厂 eFuse MAC 派生（读一次缓存）。曾经各消费点在请求时实时读 WiFi MAC——WiFi 未就绪时返回全零，污染 NVR 侧的 stable_id 记账。
