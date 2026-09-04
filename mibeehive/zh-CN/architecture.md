@@ -22,27 +22,29 @@ MiBeeHive 将文件操作抽象为一个蜂巢（BeeHive）— 一个小型团�
 MiBeeHive 是一个单体 Go 二进制文件，用于爬取、下载和服务二进制发行版（GitHub、Go、HashiCorp、Grafana、NPM、PyPI），面向资源受限的 ARM64 NAS 设备（469MB RAM）。它通过 `go:embed` 嵌入了一个 **Preact + HTM** SPA 前端，并包含一个 Web 管理面板，具有仪表板概览和标签式导航，用于管理所有三个模块以及容器、搜索、日志、任务和备份。
 
 ### 架构概览
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    MiBeeHive 应用程序                         │
-├─────────────────────────────────────────────────────────────┤
-│  Go 后端 (cmd/mibeehive)                                  │
-│  ├── HTTP 处理器 (internal/handler/)                      │
-│  ├── 业务逻辑 (internal/service/)                         │
-│  ├── 数据层 (internal/db/)                                │
-│  ├── 配置 (internal/config/)                              │
-│  ├── 中间件 (internal/middleware/)                        │
-│  ├── Docker 客户端 (internal/docker/)                    │
-│  ├── 监控器 (internal/monitor/)                          │
-│  └── WebDAV (internal/webdav/)                            │
-│                                                             │
-│  嵌入式前端 (web/)                                         │
-│  ├── HTML/CSS (CSS 变量、响应式)                          │
-│  └── JavaScript 模块 (31 个文件、3 层架构)                 │
-│                                                             │
-│  SQLite 数据库                                             │
-│  └── 14 个嵌入式迁移文件                                   │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph APP["MiBeeHive 应用程序"]
+    subgraph BE["Go 后端（cmd/mibeehive）"]
+      direction TB
+      H["HTTP 处理器 · internal/handler/"]
+      S["业务逻辑 · internal/service/"]
+      D["数据层 · internal/db/"]
+      C["配置 · internal/config/"]
+      M["中间件 · internal/middleware/"]
+      DK["Docker 客户端 · internal/docker/"]
+      MO["监控器 · internal/monitor/"]
+      WV["WebDAV · internal/webdav/"]
+      H --> S --> D
+    end
+    subgraph FE["嵌入式前端（web/）"]
+      direction TB
+      F1["HTML/CSS（CSS 变量、响应式）"]
+      F2["JavaScript 模块（31 个文件、3 层架构）"]
+    end
+    DB[("SQLite 数据库<br/>14 个嵌入式迁移文件")]
+    D --> DB
+  end
 ```
 
 ## 前端模块结构
@@ -90,8 +92,9 @@ MiBeeHive 是一个单体 Go 二进制文件，用于爬取、下载和服务二
 ## 后端架构
 
 ### 层结构
-```
-HTTP 请求 → 处理器 → 服务 → 仓库 → 数据库
+```mermaid
+flowchart LR
+  REQ["HTTP 请求"] --> H["处理器"] --> S["服务"] --> R["仓库"] --> DB[("数据库")]
 ```
 
 ### 处理器层 (internal/handler/)
@@ -199,28 +202,33 @@ HTTP 请求 → 处理器 → 服务 → 仓库 → 数据库
 ## 数据流
 
 ### 仪表板流
-```
-仪表板 UI → 单个 /admin/dashboard/summary → DashboardHandler → 多个仓库 → 聚合响应
+```mermaid
+flowchart LR
+  UI["仪表板 UI"] --> API["单个 /admin/dashboard/summary"] --> H["DashboardHandler"] --> R["多个仓库"] --> RES["聚合响应"]
 ```
 
 ### 爬取和下载流
-```
-用户请求 → 管理 UI → 爬取触发 → 爬取器 → 下载服务 → 文件存储
+```mermaid
+flowchart LR
+  REQ["用户请求"] --> UI["管理 UI"] --> T["爬取触发"] --> CR["爬取器"] --> DS["下载服务"] --> FS[("文件存储")]
 ```
 
 ### 文件访问流
-```
-客户端请求 → 文件搜索 → 文件服务 → 下载流 → 客户端
+```mermaid
+flowchart LR
+  REQ["客户端请求"] --> Q["文件搜索"] --> S["文件服务"] --> DS["下载流"] --> C["客户端"]
 ```
 
 ### WebDAV 流
-```
-WebDAV 客户端 → 基础认证 → 文件系统 → 文件操作
+```mermaid
+flowchart LR
+  WC["WebDAV 客户端"] --> BA["基础认证"] --> FS["文件系统"] --> FO["文件操作"]
 ```
 
 ### 操作系统安装流
-```
-PXE 客户端 → 公共端点 → 配置生成 → 引导文件 → 安装
+```mermaid
+flowchart LR
+  PXE["PXE 客户端"] --> PE["公共端点"] --> CG["配置生成"] --> BF["引导文件"] --> IN["安装"]
 ```
 
 ## 关键设计原则
