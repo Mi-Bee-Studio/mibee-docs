@@ -47,6 +47,7 @@
       { "slug": "audio", "file": "audio.md", "title": "音频" },
       { "slug": "timelapse", "file": "timelapse.md", "title": "延时摄影" },
       { "slug": "ai-detection", "file": "ai-detection.md", "title": "AI 检测调参指南" },
+      { "slug": "vision", "file": "vision.md", "title": "MiBee Vision 智能分析" },
       { "slug": "transcoding", "file": "transcoding.md", "title": "转码" },
       { "slug": "remote-access", "file": "remote-access.md", "title": "远程访问 Remote Access" }
       ]

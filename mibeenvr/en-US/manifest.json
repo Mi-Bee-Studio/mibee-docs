@@ -47,6 +47,7 @@
       { "slug": "audio", "file": "audio.md", "title": "Audio" },
       { "slug": "timelapse", "file": "timelapse.md", "title": "Timelapse" },
       { "slug": "ai-detection", "file": "ai-detection.md", "title": "AI Detection Tuning Guide" },
+      { "slug": "vision", "file": "vision.md", "title": "MiBee Vision" },
       { "slug": "transcoding", "file": "transcoding.md", "title": "Transcoding" },
       { "slug": "remote-access", "file": "remote-access.md", "title": "Remote Access" }
       ]
