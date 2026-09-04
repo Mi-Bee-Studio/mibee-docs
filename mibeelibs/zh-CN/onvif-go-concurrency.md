@@ -2,6 +2,12 @@
 
 一个 `Client` 可被多个 goroutine 并发使用。本文说明该保证的依据与用法。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 契约
 
 - **一个 `Client`、多个 goroutine、无需外部加锁。** 在录制、快照、PTZ、

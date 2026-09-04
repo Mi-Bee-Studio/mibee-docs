@@ -4,6 +4,12 @@ The `manscdp` package is the shared MESSAGE-layer codec used by both
 roles: typed structs for every command, XML marshal/unmarshal, and the
 charset reality of GB/T 28181 deployments.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Message types
 
 | Type | Direction | Purpose |

@@ -5,6 +5,12 @@ Media、PTZ、Imaging 服务的虚拟摄像头模拟器。v2 传输层（`server
 面向真实设备嵌入重构——请求上下文、按动作鉴权、字节级可预测的 XML
 输出。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 传输层架构
 
 ```

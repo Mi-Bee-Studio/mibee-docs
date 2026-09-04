@@ -3,6 +3,12 @@
 测试套件默认完全离线：所有行为测试都跑在 `httptest` mock 设备或原始 XML
 fixture 上。真机集成测试存在，但由环境变量门控，从不在 CI 运行。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 运行
 
 ```bash

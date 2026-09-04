@@ -11,6 +11,13 @@ go build -o bin/ ./cmd/...
 All tools are zero-dependency single binaries; there is no release pipeline
 for them — build from source.
 
+## Install
+
+```bash
+# or build from source (above) and use the ./cmd/ binaries
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc4
+```
+
 ## discover
 
 Multicast WS-Discovery probe with interface selection (useful on multi-NIC

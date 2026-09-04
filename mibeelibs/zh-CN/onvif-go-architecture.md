@@ -3,6 +3,12 @@
 onvif-go 是一个零第三方依赖的 Go 库，用于与 ONVIF 设备通信，另附一个虚拟摄像头服务器，
 让你在没有实体相机的情况下测试录像软件。本文说明各组件如何协作。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go@v1.2.0
+```
+
 ## 分层
 
 ```mermaid

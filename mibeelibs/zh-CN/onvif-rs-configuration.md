@@ -3,6 +3,12 @@
 配置一个 ONVIF 设备用两个结构体：[`OnvifConfig`] 管 SOAP 服务器（端口、
 认证、限制），[`DeviceConfig`] 管 GetDeviceInformation 上报的设备身份。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## OnvifConfig
 
 ```rust

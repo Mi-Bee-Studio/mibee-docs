@@ -33,6 +33,12 @@ are built from the interface the client actually reached, falling back
 to the startup `device_ip` for loopback-sourced requests (reverse-proxy
 scenario).
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## Anonymous (pre-auth) actions
 
 Real cameras answer some actions before credentials are presented —

@@ -5,6 +5,12 @@ snapshot URIs, and encoder configuration. This document covers the parts with
 field-tested semantics: profile selection, stream-setup parameterization,
 and response parsing.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Choosing the right profile
 
 Blindly using `profiles[0]` silently records a substream on devices that list

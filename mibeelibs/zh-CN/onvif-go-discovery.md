@@ -8,6 +8,12 @@ onvif-go 提供三种互补的发现模式和一个后处理层，全部位于�
 | 被动监听 | `Listener` | 同子网、零延迟 |
 | 定向探测 | `ProbeEndpoint` / `ProbeSerial` | 任意地址、跨子网、纯 HTTP |
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 主动：组播探测
 
 ```go

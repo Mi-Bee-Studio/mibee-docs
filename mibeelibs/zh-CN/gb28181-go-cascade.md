@@ -3,6 +3,12 @@
 `platform/cascade` 让**你的**平台成为 GB/T 28181 级联中的下级平台：
 向上注册、上传聚合目录、把 INVITE 转发为流、从你的录像提供回放。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config
 
 ```go

@@ -4,6 +4,12 @@ Two structs configure an ONVIF device: [`OnvifConfig`] for the SOAP
 server (ports, auth, limits) and [`DeviceConfig`] for the device
 identity reported through GetDeviceInformation.
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## OnvifConfig
 
 ```rust

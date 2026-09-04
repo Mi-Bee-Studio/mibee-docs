@@ -7,6 +7,12 @@ v2 is a deliberately breaking release. Two forces drive it:
 1. **Client-side scale**: ~24k lines behind a facade API that structurally required a single package, leaving the root directory flat.
 2. **Server-side ambitions**: issues #15–#19 need `server/` to graduate from a test simulator into an embeddable device-side framework for real cameras (MiBee Eye / rpi3b-cam).
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Module versioning
 
 Go modules require the `/v2` suffix for v2+: the module path becomes

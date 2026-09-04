@@ -5,6 +5,12 @@ recordings and play them back. Everything else (RecordInfo response
 shapes, playback pacing, download, SIP INFO playback control) is the
 library's job.
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## The RecordingSource seam
 
 ```rust

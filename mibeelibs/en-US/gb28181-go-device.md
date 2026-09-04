@@ -4,6 +4,12 @@ The `device` package turns a Go program into a GB/T 28181 camera:
 REGISTER with digest auth, keepalive, catalog answering, and
 INVITE-driven RTP/PS streaming — over UDP, TCP, or SIPS (TLS).
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config reference
 
 ```go

@@ -3,6 +3,12 @@
 事件服务门面（`client.Events()`）覆盖 PullPoint 订阅。原始原语都在，但通常
 你要的是托管 API。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 托管订阅
 
 `SubscribeEvents` 包办整个生命周期：后台 goroutine 长轮询 `PullMessages`、

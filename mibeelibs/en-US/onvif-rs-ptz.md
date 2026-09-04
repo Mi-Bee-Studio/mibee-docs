@@ -4,6 +4,12 @@ No motors required. `PtzState` is a pure state machine that makes a
 fixed camera controllable like a PTZ one — positions, velocities,
 presets, and a tick-driven motion simulation.
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## The state machine
 
 ```rust

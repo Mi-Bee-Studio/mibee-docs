@@ -10,6 +10,13 @@ go build -o bin/ ./cmd/...
 
 所有工具都是零依赖单文件二进制；没有发布流水线——从源码构建。
 
+## 安装
+
+```bash
+# 或从源码构建(见上)后使用 ./cmd/ 下的二进制
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc4
+```
+
 ## discover
 
 带接口选择的组播 WS-Discovery 探测（多网卡主机有用）：

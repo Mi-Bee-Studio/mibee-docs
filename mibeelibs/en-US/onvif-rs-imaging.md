@@ -3,6 +3,12 @@
 Imaging (brightness, contrast, saturation, focus, …) is host hardware —
 the library translates one small trait into three ONVIF actions.
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## The seam
 
 ```rust

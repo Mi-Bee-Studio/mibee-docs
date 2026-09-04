@@ -3,6 +3,12 @@
 媒体服务门面（`client.Media()`）覆盖 profile、流/快照 URI、编码配置。本文讲
 其中经过真机验证的语义部分：profile 选择、StreamSetup 参数化、响应解析。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## 选对 Profile
 
 盲目取 `profiles[0]` 会在「低分辨率 profile 排第一」的设备上静默录成子码流
