@@ -4,6 +4,12 @@ Clients find ONVIF devices via WS-Discovery probes. This crate answers
 both probe paths real clients use: **UDP multicast** (239.255.255.250:3702)
 and **HTTP POST** probes.
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## Basic responder
 
 ```rust

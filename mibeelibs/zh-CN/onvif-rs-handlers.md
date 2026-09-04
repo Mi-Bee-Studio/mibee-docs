@@ -31,6 +31,12 @@ pub struct RequestInfo {
 到达的网卡**构造；回环来源的请求（反向代理场景）回退到启动时的
 `device_ip`。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## 匿名（免认证）动作
 
 真机在出示凭证前就会应答一部分动作——客户端探测 GetSystemDateAndTime、

@@ -3,6 +3,12 @@
 成像参数（亮度、对比度、饱和度、聚焦……）是宿主硬件——库把一个极小
 的 trait 翻译成三个 ONVIF 动作。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## 接缝
 
 ```rust

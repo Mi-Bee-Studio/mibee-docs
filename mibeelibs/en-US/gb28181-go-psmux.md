@@ -4,6 +4,12 @@ The `psmux` package muxes H.264/H.265 (+ G.711 audio) into MPEG-2
 Program Stream and packetizes it onto RTP — shared by the device push
 path and platform/cascade forwarding.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Muxer
 
 ```go

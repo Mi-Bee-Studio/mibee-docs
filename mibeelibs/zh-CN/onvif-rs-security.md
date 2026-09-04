@@ -1,5 +1,11 @@
 # 认证与加固
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## WS-UsernameToken 双模式
 
 客户端以 WS-Security UsernameToken 头认证。两种 profile 模式都校验：

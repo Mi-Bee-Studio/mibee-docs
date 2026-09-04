@@ -3,6 +3,12 @@
 `OnvifMediaConfig` 描述你真实的媒体端点——RTSP 服务器与快照 HTTP
 端点在**你的宿主**里；ONVIF 层负责把它们播报出去。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## 配置
 
 ```rust

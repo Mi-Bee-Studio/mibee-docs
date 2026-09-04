@@ -3,6 +3,12 @@
 客户端经 WS-Discovery 探测发现 ONVIF 设备。本库应答真实客户端的两条
 探测路径：**UDP 组播**（239.255.255.250:3702）与 **HTTP POST** 探测。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## 基础应答器
 
 ```rust

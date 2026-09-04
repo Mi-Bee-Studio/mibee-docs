@@ -4,6 +4,12 @@ The test suite runs entirely offline by default: every behavioral test works
 against `httptest` mock devices or raw XML fixtures. Real-camera integration
 tests exist but are gated behind environment variables and never run in CI.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Running
 
 ```bash

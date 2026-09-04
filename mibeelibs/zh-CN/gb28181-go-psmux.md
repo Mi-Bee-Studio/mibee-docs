@@ -3,6 +3,12 @@
 `psmux` 包把 H.264/H.265（+ G.711 音频）封进 MPEG-2 节目流并打包
 上 RTP——设备推流路径与平台/级联转发共用。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## 封装器
 
 ```go

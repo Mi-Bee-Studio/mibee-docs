@@ -3,6 +3,12 @@
 `manscdp` 包是两个角色共用的 MESSAGE 层编解码：每个命令的类型化
 结构体、XML 序列化/反序列化，以及 GB/T 28181 现场的字符集现实。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## 消息类型
 
 | 类型 | 方向 | 用途 |

@@ -3,6 +3,12 @@
 不需要电机。`PtzState` 是一个纯状态机，让固定机位像云台机一样可被
 控制——位置、速度、预置位，以及 tick 驱动的运动模拟。
 
+## 安装
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+```
+
 ## 状态机
 
 ```rust

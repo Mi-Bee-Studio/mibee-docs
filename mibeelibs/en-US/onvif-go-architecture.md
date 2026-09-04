@@ -4,6 +4,12 @@ onvif-go is a zero-dependency Go library for talking to ONVIF devices, plus a
 virtual camera server for testing recorders without hardware. This document
 describes how the pieces fit together.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go@v1.2.0
+```
+
 ## Layering
 
 ```mermaid

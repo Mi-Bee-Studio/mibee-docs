@@ -6,6 +6,12 @@ Imaging services. The v2 transport (`server/soap`) is rebuilt for real
 device embedding — request context, per-action authentication, and
 byte-predictable XML output.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Transport architecture
 
 ```

@@ -171,6 +171,16 @@
           "title": "配置"
         }
       ]
+    },
+    {
+      "title": "指纹规则引擎",
+      "items": [
+        {
+          "slug": "fingerprints-overview",
+          "file": "fingerprints-overview.md",
+          "title": "mibee-fingerprints-go"
+        }
+      ]
     }
   ]
 }

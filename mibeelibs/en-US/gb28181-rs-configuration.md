@@ -5,6 +5,12 @@ construction all work. The TOML shape is identical to the `[gb28181]`
 section used by the library's origin project, so hosts can re-export the
 struct directly into their own config files.
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## Full field reference
 
 ```rust

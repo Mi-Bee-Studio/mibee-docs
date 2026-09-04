@@ -4,6 +4,12 @@
 28181 cascade: it registers upward, uploads an aggregated catalog,
 forwards INVITEs as streams, and serves playback from your recordings.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config
 
 ```go

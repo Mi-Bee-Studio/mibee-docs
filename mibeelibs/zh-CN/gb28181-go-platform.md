@@ -4,6 +4,12 @@
 [gosip] 构建，处理 REGISTER/保活/目录/INVITE 全生命周期；持久化
 由你注入，事件由你消费。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config
 
 ```go

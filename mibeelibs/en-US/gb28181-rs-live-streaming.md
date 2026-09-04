@@ -4,6 +4,12 @@ The server never talks to a capture pipeline directly. When the platform
 INVITEs a live stream, the server asks the host's [`FrameSource`] for a
 subscription and pushes whatever arrives into the RTP/PS media path.
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## Data model
 
 Frames are plain data with no start codes:

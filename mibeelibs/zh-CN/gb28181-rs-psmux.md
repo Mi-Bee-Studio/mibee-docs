@@ -3,6 +3,12 @@
 媒体路径可以脱离 SIP 服务器单独使用：把 H.264/H.265 NAL 封成
 MPEG-2 节目流、打包 RTP，或把 PS 流解析回 NAL。
 
+## 安装
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## 封装
 
 ```rust

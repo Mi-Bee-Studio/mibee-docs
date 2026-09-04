@@ -4,6 +4,12 @@
 Built on [gosip], it handles the REGISTER/keepalive/catalog/INVITE
 lifecycle; you inject persistence and consume events.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config
 
 ```go

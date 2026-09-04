@@ -4,6 +4,12 @@ The media path is usable without the SIP server: mux H.264/H.265 NAL
 units into MPEG-2 Program Stream, packetize to RTP, or parse a PS stream
 back into NAL units.
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## Mux
 
 ```rust

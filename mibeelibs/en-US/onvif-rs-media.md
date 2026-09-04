@@ -4,6 +4,12 @@
 server and snapshot HTTP endpoint live in **your** host; the ONVIF
 layer advertises them.
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## Configuration
 
 ```rust

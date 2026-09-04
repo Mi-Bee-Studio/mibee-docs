@@ -6,6 +6,12 @@ Loads YAML rule files and evaluates them against `Evidence` to emit
 `ServiceIdentity` assertions. Implements the adapter spec
 ([fingerprint-spec.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/docs/fingerprint-spec.md)).
 
+## Install
+
+```bash
+go get github.com/Mi-Bee-Studio/mibee-fingerprints-go@v0.1.0
+```
+
 ## Usage
 
 ```go

@@ -1,5 +1,11 @@
 # Server lifecycle: start, shutdown, transports
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## Construction is I/O-free
 
 Constructors only store configuration — no sockets, no panics:

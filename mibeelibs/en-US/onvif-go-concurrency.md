@@ -3,6 +3,12 @@
 A `Client` is safe for concurrent use by multiple goroutines. This document
 explains what backs that guarantee and how to use it.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## The contract
 
 - **One `Client`, many goroutines, no external locking.** Share a single

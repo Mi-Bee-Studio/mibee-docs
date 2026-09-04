@@ -4,6 +4,12 @@
 一切（RecordInfo 应答格式、回放节奏、下载、SIP INFO 回放控制）都是
 库的事。
 
+## 安装
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## RecordingSource 接缝
 
 ```rust

@@ -4,6 +4,12 @@
 REGISTER、保活、目录应答、INVITE 驱动的 RTP/PS 推流——走 UDP、TCP
 或 SIPS（TLS）。
 
+## 安装
+
+```bash
+go get github.com/mickeyzzc/gb28181-go@v0.3.0
+```
+
 ## Config 参考
 
 ```go

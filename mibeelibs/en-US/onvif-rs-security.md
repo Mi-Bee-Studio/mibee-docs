@@ -1,5 +1,11 @@
 # Authentication and hardening
 
+## Install
+
+```bash
+cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+```
+
 ## WS-UsernameToken, both modes
 
 Clients authenticate with WS-Security UsernameToken headers. Both

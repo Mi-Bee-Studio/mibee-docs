@@ -9,6 +9,12 @@ layer. All live in the self-contained `discovery` package.
 | Passive listener | `Listener` | Same subnet, zero latency |
 | Directed probe | `ProbeEndpoint` / `ProbeSerial` | Any address, cross-subnet, pure HTTP |
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Active: multicast probe
 
 ```go

@@ -4,6 +4,12 @@ The MESSAGE layer (MANSCDP-XML: catalog queries, keepalives, device
 info/status, record queries) is exported as plain data types plus codec
 helpers, so hosts can build tooling on it without running a server.
 
+## Install
+
+```bash
+cargo add gb28181-rs@0.7.0
+```
+
 ## Message types
 
 ```rust

@@ -5,6 +5,12 @@ device, per service on the same device, even per firmware revision. This
 document explains the auth modes, the fallback ladder, clock-skew handling,
 and the diagnostics API.
 
+## Install
+
+```bash
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+```
+
 ## Auth modes
 
 ```go
