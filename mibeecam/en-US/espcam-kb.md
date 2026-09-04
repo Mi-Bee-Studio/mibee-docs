@@ -105,6 +105,8 @@ Production batches exist where the docs said OV2640 but the board carried an OV5
 
 The OTA endpoints are not multipart forms — they take `Content-Type: application/octet-stream` raw streams (curl examples in [Unified API](espcam-api.md)). Images must fit the OTA slot; a mid-upload SPIFFS failure requires serial rescue; verify by the `running_partition` flip + the device's `/app.js` md5 matching the repo.
 
+**Day-to-day upgrades go over Web OTA first** (on OTA-capable boards): delivering every change through OTA keeps both the firmware and the UI upload paths continuously working; USB flashing is reserved for blank chips, rescue, or unreachable devices. luatos has no OTA (single partition — serial is the only path); n16r8's OTA endpoints are in development, USB until they land.
+
 ### Stable device identity comes from eFuse
 
 Serial/UUID derive from the factory eFuse MAC, read once and cached. The historical bug read the WiFi MAC at request time — all zeros before WiFi was ready, polluting NVR-side stable_id bookkeeping.
