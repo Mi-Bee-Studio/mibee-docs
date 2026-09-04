@@ -1,6 +1,8 @@
 [English](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/onvif-compliance.md)
 # ONVIF 合规性参考
 
+> 本页以 **Go 版**的 ONVIF 行为为准；Rust 版消费同语义的开源库 [onvif-rs](https://github.com/mickeyzzc/onvif-rs)，见 [Rust 版](rpicam-rs.md)。
+
 本文档提供了 mibee-eye ONVIF 相机服务的详细合规性信息。该实现提供了 ONVIF Device/Media/Imaging 服务、WS-Discovery 支持和 WS-Security 身份验证，用于 NVR 集成。
 
 ## ONVIF Profile S 合规性

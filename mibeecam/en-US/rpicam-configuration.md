@@ -2,6 +2,7 @@
 
 The MiBee Eye configuration is written in YAML format and controls all aspects of the camera service, including capture settings, streaming protocols, GB28181 integration, local recording, and device identification. Default values and environment variable overrides for every key are in the [configuration reference](rpicam-config-reference.md); ready-to-adapt complete configs are in the [configuration examples](rpicam-config-examples.md).
 
+> This page targets the **Go edition (YAML)**. The Rust edition uses TOML with identical key names — see [Rust Edition](rpicam-rs.md).
 ## Configuration File
 
 ### File Location

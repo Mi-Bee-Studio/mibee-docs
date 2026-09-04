@@ -2,6 +2,7 @@
 
 可直接套用的 [MiBee Eye](rpicam-configuration.md) 完整配置示例。各字段含义与默认值见[配置文档](rpicam-configuration.md)与[配置参考](rpicam-config-reference.md)。所有示例均需按实际环境调整设备路径、凭据与地址。
 
+> 示例为 **Go 版（YAML）**语法；Rust 版为 TOML，键名相同、语法略异。
 ## 基本配置（默认设置）
 
 ```yaml

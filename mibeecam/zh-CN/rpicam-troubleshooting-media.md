@@ -1,5 +1,7 @@
 # 流媒体故障排除
 
+> 本页面向 **Go 版**（mtxrpicam 采集链）；Rust 版为原生 V4L2/libcamera 采集、无 mtxrpicam 子进程，编码器类问题不适用，其余排查方法通用（见 [Rust 版](rpicam-rs.md)）。
+
 MiBee Eye 相机检测、编码器、RTSP、快照与 HLS 相关问题的症状、诊断与解决方案。Web UI / ONVIF / NVR / 系统资源类问题见[故障排除](rpicam-troubleshooting.md)；GB28181 相关见 [GB28181 接入](rpicam-gb28181.md)。
 
 ## 相机检测问题

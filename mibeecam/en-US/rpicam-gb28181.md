@@ -56,7 +56,7 @@ gb28181:
 
 ### Rust implementation (TOML)
 
-The Rust build (mibee-eye-raspi-rs) uses identical keys in the `[gb28181]` section of its `config.toml`, with the same defaults:
+The Rust edition (closed-source, see [Rust Edition](rpicam-rs.md)) uses identical keys in the `[gb28181]` section of its `config.toml`, with the same defaults:
 
 ```toml
 [gb28181]

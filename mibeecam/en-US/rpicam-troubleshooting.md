@@ -1,5 +1,7 @@
 # Troubleshooting
 
+> Command examples target the **Go edition** service (systemd unit `mibee-eye`); see [Rust Edition](rpicam-rs.md) — port and protocol diagnostics apply to both.
+
 Common issues and solutions for mibee-eye, the single-board computer ONVIF camera service. For camera / encoder / RTSP / snapshot / HLS topics see [streaming troubleshooting](rpicam-troubleshooting-media.md).
 
 ## Quick Health Check

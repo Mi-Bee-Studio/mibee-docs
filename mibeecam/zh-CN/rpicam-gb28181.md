@@ -56,7 +56,7 @@ gb28181:
 
 ### Rust 实现（TOML）
 
-树莓派 Rust 版（mibee-eye-raspi-rs）的配置键与 Go 版完全同名，写在 `config.toml` 的 `[gb28181]` 节下，默认值一致：
+Rust 版（闭源发行，见 [Rust 版](rpicam-rs.md)）的配置键与 Go 版完全同名，写在 `config.toml` 的 `[gb28181]` 节下，默认值一致：
 
 ```toml
 [gb28181]
