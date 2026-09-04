@@ -1,0 +1,24 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeHive User Manual",
+  "sections": [
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        { "slug": "architecture", "file": "architecture.md", "title": "Architecture" }
+      ]
+    },
+    {
+      "title": "Deployment",
+      "items": [
+        { "slug": "deployment", "file": "deployment.md", "title": "Deployment Guide" }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+        { "slug": "api-reference", "file": "api-reference.md", "title": "API Reference" }
+      ]
+    }
+  ]
+}

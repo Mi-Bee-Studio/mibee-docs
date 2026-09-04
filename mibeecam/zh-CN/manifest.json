@@ -1,0 +1,321 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeCam 摄像头总文档",
+  "sections": [
+    {
+      "title": "总览",
+      "items": [
+        {
+          "slug": "overview",
+          "file": "overview.md",
+          "title": "MiBeeCam 摄像头总文档"
+        },
+        {
+          "slug": "nvr-integration",
+          "file": "nvr-integration.md",
+          "title": "接入 MiBee NVR"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam 系列（ESP32 摄像头大集合）",
+      "items": [
+        {
+          "slug": "espcam-overview",
+          "file": "espcam-overview.md",
+          "title": "总览与板型矩阵"
+        },
+        {
+          "slug": "espcam-architecture",
+          "file": "espcam-architecture.md",
+          "title": "总架构：一栈四板"
+        },
+        {
+          "slug": "espcam-api",
+          "file": "espcam-api.md",
+          "title": "统一 API 设计（契约 v1.2）"
+        },
+        {
+          "slug": "espcam-webui",
+          "file": "espcam-webui.md",
+          "title": "统一前端设计"
+        },
+        {
+          "slug": "espcam-kb",
+          "file": "espcam-kb.md",
+          "title": "开发知识库"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · AI-Thinker ESP32-CAM",
+      "items": [
+        {
+          "slug": "aicam-getting-started",
+          "file": "aicam-getting-started.md",
+          "title": "快速开始"
+        },
+        {
+          "slug": "aicam-user-guide",
+          "file": "aicam-user-guide.md",
+          "title": "用户手册"
+        },
+        {
+          "slug": "aicam-capabilities",
+          "file": "aicam-capabilities.md",
+          "title": "能力总览"
+        },
+        {
+          "slug": "aicam-hardware",
+          "file": "aicam-hardware.md",
+          "title": "硬件手册"
+        },
+        {
+          "slug": "aicam-lens-and-fov",
+          "file": "aicam-lens-and-fov.md",
+          "title": "镜头与视场角"
+        },
+        {
+          "slug": "aicam-architecture",
+          "file": "aicam-architecture.md",
+          "title": "软件架构"
+        },
+        {
+          "slug": "aicam-performance",
+          "file": "aicam-performance.md",
+          "title": "性能说明"
+        },
+        {
+          "slug": "aicam-esp32-cam-performance",
+          "file": "aicam-esp32-cam-performance.md",
+          "title": "ESP32-CAM 开发中绕不开的那些坑"
+        },
+        {
+          "slug": "aicam-api",
+          "file": "aicam-api.md",
+          "title": "API 参考"
+        },
+        {
+          "slug": "aicam-troubleshooting",
+          "file": "aicam-troubleshooting.md",
+          "title": "故障排除"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · N16R8（AI 检测）",
+      "items": [
+        {
+          "slug": "n16r8-hardware",
+          "file": "n16r8-hardware.md",
+          "title": "硬件手册"
+        },
+        {
+          "slug": "n16r8-architecture",
+          "file": "n16r8-architecture.md",
+          "title": "系统架构"
+        },
+        {
+          "slug": "n16r8-web-api",
+          "file": "n16r8-web-api.md",
+          "title": "Web API"
+        },
+        {
+          "slug": "n16r8-web-ui",
+          "file": "n16r8-web-ui.md",
+          "title": "Web UI"
+        },
+        {
+          "slug": "n16r8-development",
+          "file": "n16r8-development.md",
+          "title": "开发指南"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Luatos ESP32-S3 A10",
+      "items": [
+        {
+          "slug": "luatos-overview",
+          "file": "luatos-overview.md",
+          "title": "项目总览"
+        },
+        {
+          "slug": "luatos-software",
+          "file": "luatos-software.md",
+          "title": "软件架构"
+        },
+        {
+          "slug": "luatos-hardware",
+          "file": "luatos-hardware.md",
+          "title": "硬件配置"
+        },
+        {
+          "slug": "luatos-api",
+          "file": "luatos-api.md",
+          "title": "API 接口"
+        },
+        {
+          "slug": "luatos-at-commands",
+          "file": "luatos-at-commands.md",
+          "title": "AT 指令手册"
+        },
+        {
+          "slug": "luatos-troubleshooting",
+          "file": "luatos-troubleshooting.md",
+          "title": "故障排查"
+        }
+      ]
+    },
+    {
+      "title": "ESP-Cam · Seeed XIAO ESP32-S3 Sense",
+      "items": [
+        {
+          "slug": "seeed-getting-started",
+          "file": "seeed-getting-started.md",
+          "title": "安装指南"
+        },
+        {
+          "slug": "seeed-user-guide",
+          "file": "seeed-user-guide.md",
+          "title": "使用手册"
+        },
+        {
+          "slug": "seeed-hardware",
+          "file": "seeed-hardware.md",
+          "title": "硬件手册"
+        },
+        {
+          "slug": "seeed-architecture",
+          "file": "seeed-architecture.md",
+          "title": "系统架构"
+        },
+        {
+          "slug": "seeed-led-status",
+          "file": "seeed-led-status.md",
+          "title": "LED 状态灯说明"
+        },
+        {
+          "slug": "seeed-onvif-guide",
+          "file": "seeed-onvif-guide.md",
+          "title": "ONVIF 协议指南"
+        },
+        {
+          "slug": "seeed-port-separation-design",
+          "file": "seeed-port-separation-design.md",
+          "title": "端口分离设计"
+        },
+        {
+          "slug": "seeed-troubleshooting",
+          "file": "seeed-troubleshooting.md",
+          "title": "故障排除"
+        },
+        {
+          "slug": "seeed-api-overview",
+          "file": "seeed-api-overview.md",
+          "title": "API 概述"
+        },
+        {
+          "slug": "seeed-api-wifi",
+          "file": "seeed-api-wifi.md",
+          "title": "WiFi 扫描接口"
+        },
+        {
+          "slug": "seeed-api-stream",
+          "file": "seeed-api-stream.md",
+          "title": "MJPEG 视频流"
+        },
+        {
+          "slug": "seeed-api-control",
+          "file": "seeed-api-control.md",
+          "title": "设备控制接口"
+        },
+        {
+          "slug": "seeed-api-config",
+          "file": "seeed-api-config.md",
+          "title": "配置接口"
+        },
+        {
+          "slug": "seeed-api-status",
+          "file": "seeed-api-status.md",
+          "title": "设备状态接口"
+        },
+        {
+          "slug": "seeed-api-files",
+          "file": "seeed-api-files.md",
+          "title": "文件管理接口"
+        },
+        {
+          "slug": "seeed-api-examples",
+          "file": "seeed-api-examples.md",
+          "title": "完整示例"
+        }
+      ]
+    },
+    {
+      "title": "树莓派相机 rpi-cam（并列子集）",
+      "items": [
+        {
+          "slug": "rpicam-architecture",
+          "file": "rpicam-architecture.md",
+          "title": "系统架构"
+        },
+        {
+          "slug": "rpicam-configuration",
+          "file": "rpicam-configuration.md",
+          "title": "配置文档"
+        },
+        {
+          "slug": "rpicam-config-reference",
+          "file": "rpicam-config-reference.md",
+          "title": "配置参考"
+        },
+        {
+          "slug": "rpicam-config-examples",
+          "file": "rpicam-config-examples.md",
+          "title": "配置示例"
+        },
+        {
+          "slug": "rpicam-deployment",
+          "file": "rpicam-deployment.md",
+          "title": "部署指南"
+        },
+        {
+          "slug": "rpicam-gb28181",
+          "file": "rpicam-gb28181.md",
+          "title": "GB28181 接入"
+        },
+        {
+          "slug": "rpicam-onvif-compliance",
+          "file": "rpicam-onvif-compliance.md",
+          "title": "ONVIF 合规性参考"
+        },
+        {
+          "slug": "rpicam-troubleshooting",
+          "file": "rpicam-troubleshooting.md",
+          "title": "故障排除"
+        },
+        {
+          "slug": "rpicam-troubleshooting-media",
+          "file": "rpicam-troubleshooting-media.md",
+          "title": "流媒体故障排除"
+        },
+        {
+          "slug": "rpicam-research",
+          "file": "rpicam-research.md",
+          "title": "调研记录"
+        }
+      ]
+    },
+    {
+      "title": "相机生态共享组件",
+      "items": [
+        {
+          "slug": "webui-spec",
+          "file": "webui-spec.md",
+          "title": "MiBee 相机 Web API 统一规范（SPEC v1）"
+        }
+      ]
+    }
+  ]
+}

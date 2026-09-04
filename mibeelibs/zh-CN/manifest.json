@@ -1,0 +1,186 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBee 库总文档",
+  "sections": [
+    {
+      "title": "总览",
+      "items": [
+        {
+          "slug": "libs-overview",
+          "file": "libs-overview.md",
+          "title": "MiBee 库总览"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Go",
+      "items": [
+        {
+          "slug": "gb28181-go-platform",
+          "file": "gb28181-go-platform.md",
+          "title": "平台端（UAS）：SIP 服务器一侧"
+        },
+        {
+          "slug": "gb28181-go-device",
+          "file": "gb28181-go-device.md",
+          "title": "设备端（UAC）：把摄像头注册到平台"
+        },
+        {
+          "slug": "gb28181-go-cascade",
+          "file": "gb28181-go-cascade.md",
+          "title": "级联客户端：注册到上级平台"
+        },
+        {
+          "slug": "gb28181-go-manscdp",
+          "file": "gb28181-go-manscdp.md",
+          "title": "MANSCDP XML 编解码"
+        },
+        {
+          "slug": "gb28181-go-psmux",
+          "file": "gb28181-go-psmux.md",
+          "title": "PS 封装与 RTP 打包"
+        }
+      ]
+    },
+    {
+      "title": "GB28181 · Rust",
+      "items": [
+        {
+          "slug": "gb28181-rs-server",
+          "file": "gb28181-rs-server.md",
+          "title": "服务器生命周期：启动、停机与传输层"
+        },
+        {
+          "slug": "gb28181-rs-configuration",
+          "file": "gb28181-rs-configuration.md",
+          "title": "配置参考"
+        },
+        {
+          "slug": "gb28181-rs-live-streaming",
+          "file": "gb28181-rs-live-streaming.md",
+          "title": "直播推流：FrameSource 接缝"
+        },
+        {
+          "slug": "gb28181-rs-recording-playback",
+          "file": "gb28181-rs-recording-playback.md",
+          "title": "录像、录像查询与回放"
+        },
+        {
+          "slug": "gb28181-rs-manscdp",
+          "file": "gb28181-rs-manscdp.md",
+          "title": "MANSCDP 消息、字符集与设备 ID"
+        },
+        {
+          "slug": "gb28181-rs-psmux",
+          "file": "gb28181-rs-psmux.md",
+          "title": "PS 封装与 RTP：独立使用"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Go",
+      "items": [
+        {
+          "slug": "onvif-go-architecture",
+          "file": "onvif-go-architecture.md",
+          "title": "架构"
+        },
+        {
+          "slug": "onvif-go-v2-architecture",
+          "file": "onvif-go-v2-architecture.md",
+          "title": "v2 架构（破坏性版本）"
+        },
+        {
+          "slug": "onvif-go-discovery",
+          "file": "onvif-go-discovery.md",
+          "title": "设备发现"
+        },
+        {
+          "slug": "onvif-go-authentication",
+          "file": "onvif-go-authentication.md",
+          "title": "鉴权与安全"
+        },
+        {
+          "slug": "onvif-go-media",
+          "file": "onvif-go-media.md",
+          "title": "媒体与码流"
+        },
+        {
+          "slug": "onvif-go-events",
+          "file": "onvif-go-events.md",
+          "title": "事件"
+        },
+        {
+          "slug": "onvif-go-server",
+          "file": "onvif-go-server.md",
+          "title": "ONVIF 服务端"
+        },
+        {
+          "slug": "onvif-go-cli",
+          "file": "onvif-go-cli.md",
+          "title": "CLI 工具"
+        },
+        {
+          "slug": "onvif-go-concurrency",
+          "file": "onvif-go-concurrency.md",
+          "title": "并发模型"
+        },
+        {
+          "slug": "onvif-go-testing",
+          "file": "onvif-go-testing.md",
+          "title": "测试"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · Rust",
+      "items": [
+        {
+          "slug": "onvif-rs-discovery",
+          "file": "onvif-rs-discovery.md",
+          "title": "WS-Discovery：让设备可被发现"
+        },
+        {
+          "slug": "onvif-rs-media",
+          "file": "onvif-rs-media.md",
+          "title": "媒体服务：Profile、取流地址与快照"
+        },
+        {
+          "slug": "onvif-rs-ptz",
+          "file": "onvif-rs-ptz.md",
+          "title": "PTZ 服务：虚拟云台状态机"
+        },
+        {
+          "slug": "onvif-rs-imaging",
+          "file": "onvif-rs-imaging.md",
+          "title": "成像服务：ImagingParams 接缝"
+        },
+        {
+          "slug": "onvif-rs-handlers",
+          "file": "onvif-rs-handlers.md",
+          "title": "动作 handler 模型"
+        },
+        {
+          "slug": "onvif-rs-security",
+          "file": "onvif-rs-security.md",
+          "title": "认证与加固"
+        },
+        {
+          "slug": "onvif-rs-configuration",
+          "file": "onvif-rs-configuration.md",
+          "title": "配置参考"
+        }
+      ]
+    },
+    {
+      "title": "指纹规则引擎",
+      "items": [
+        {
+          "slug": "fingerprints-overview",
+          "file": "fingerprints-overview.md",
+          "title": "mibee-fingerprints-go"
+        }
+      ]
+    }
+  ]
+}
