@@ -59,5 +59,7 @@ flowchart LR
 | `team/espcam` | esp-cam 团队 | `mibeecam/` 的 `espcam-` `aicam-` `n16r8-` `luatos-` `seeed-` |
 | `team/rpi-webui` | 树莓派 + webui 团队 | `mibeecam/` 的 `rpicam-` `webui-`（及后续新集合） |
 | `team/libs` | 库团队 | `mibeelibs/` 全部前缀 |
+| `team/steward` | steward 团队 | `mibeesteward/` 全部 |
+| `team/hive` | hive 团队 | `mibeehive/` 全部 |
 
 新团队接入：从 `main` 创建 `team/<名称>` → 在本文件登记（PR 修改本表）→ 按 [README](README.md) 规范提交。
