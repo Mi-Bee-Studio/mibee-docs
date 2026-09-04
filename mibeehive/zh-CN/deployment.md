@@ -36,19 +36,23 @@ go vet ./...                                        # 静态分析
 
 ## 设备上的部署布局
 
-```
-/opt/mibeehive/
-├── bin/mibeehive
-├── config.yaml
-├── mibeehive.db
-├── mibeehive.log
-├── backup-*.tar.gz
-└── backups/
-
-/var/lib/mibeehive/
-├── oss/            # 第一阶段：下载的二进制文件（采蜜）
-├── os-install/     # 第二阶段：操作系统安装文件（哺育）
-└── webdav/         # 第三阶段：WebDAV 共享文件（分享）
+```mermaid
+flowchart TB
+  subgraph OPT["/opt/mibeehive/"]
+    direction TB
+    BIN["bin/mibeehive"]
+    CFG["config.yaml"]
+    DB["mibeehive.db"]
+    LOG["mibeehive.log"]
+    BAK["backup-*.tar.gz"]
+    BKD["backups/"]
+  end
+  subgraph VAR["/var/lib/mibeehive/"]
+    direction TB
+    OSS["oss/ — 第一阶段：下载的二进制文件（采蜜）"]
+    OSI["os-install/ — 第二阶段：操作系统安装文件（哺育）"]
+    WDV["webdav/ — 第三阶段：WebDAV 共享文件（分享）"]
+  end
 ```
 
 ## 部署与重启
