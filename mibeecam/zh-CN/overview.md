@@ -47,3 +47,5 @@ flowchart LR
 - 遇到故障先查：[ESP-Cam 开发知识库](espcam-kb.md)（EMFILE 重启循环、自愈误杀等家族级坑）与各板故障排除页
 - 深度长文精选：[ESP32-CAM / ESP-IDF 开发中绕不开的那些坑](aicam-esp32-cam-performance.md) · [端口分离设计](seeed-port-separation-design.md) · [rpi-cam ONVIF 合规说明](rpicam-onvif-compliance.md)
 - 接入录像平台：[接入 MiBee NVR](nvr-integration.md)
+
+- test: http://192.168.63.99:9090/dav
