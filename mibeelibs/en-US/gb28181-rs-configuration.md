@@ -32,7 +32,7 @@ config.transport = Transport::Tcp;
 | `device_id` | `String` | `"34020000001320000001"` | 20-digit GB/T 28181 device ID (spec-example default). |
 | `channel_id` | `String` | `"34020000001320000001"` | 20-digit channel ID reported in the catalog. |
 | `sip_domain` | `String` | `"3402000000"` | SIP domain (usually the platform's center code). |
-| `password` | `String` | `"12345678"` | SIP digest-auth password shared with the platform. |
+| `password` | `String` | `"mibeecam2026"` | SIP digest-auth password shared with the platform. |
 | `local_sip_port` | `u16` | `5060` | Local SIP listening port (UDP socket or TCP listener). |
 | `register_interval_secs` | `u64` | `60` | REGISTER refresh interval. |
 | `heartbeat_interval_secs` | `u64` | `60` | Keepalive (MESSAGE) interval. |
@@ -83,7 +83,7 @@ defaults.
 
 ## The example-default warning
 
-The spec-documentation defaults (`192.168.1.1`, `12345678`, the example
+The spec-documentation defaults (`192.168.1.1`, `mibeecam2026`, the example
 device ID) are kept for wire-format stability with existing host configs.
 If a running server still sees them, `warn_on_example_defaults()` logs a
 warning — the server calls it automatically after binding. Two devices

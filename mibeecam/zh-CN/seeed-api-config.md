@@ -22,7 +22,7 @@
     "device_name": "MiBee Cam",
     "upload_method": 1,
     "upload_base_path": "/MiBee Cam",
-    "webdav_url": "http://192.0.2.31:9090/dav",
+    "webdav_url": "http://192.168.1.31:9090/dav",
     "webdav_user": "admin",
     "webdav_enabled": true,
     "http_upload_url": "",

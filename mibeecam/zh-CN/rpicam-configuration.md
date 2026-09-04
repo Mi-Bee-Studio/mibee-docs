@@ -201,7 +201,7 @@ gb28181:
   channel_id: "34020000001320000001"
 
   # 接入密码（与平台一致）
-  password: "12345678"
+  password: "mibeecam2026"
 
   # 本地 SIP 监听端口（与平台同机部署时必须改端口）
   local_sip_port: 5060

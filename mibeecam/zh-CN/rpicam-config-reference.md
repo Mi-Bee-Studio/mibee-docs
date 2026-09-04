@@ -65,7 +65,7 @@
 | | sip_domain | `"3402000000"` | string | 国标域（10 位） |
 | | device_id | `"34020000001320000001"` | string | 设备编码（20 位） |
 | | channel_id | `"34020000001320000001"` | string | 通道编码（20 位） |
-| | password | `"12345678"` | string | 接入密码 |
+| | password | `"mibeecam2026"` | string | 接入密码 |
 | | local_sip_port | `5060` | int | 本地 SIP 监听端口 |
 | | register_interval_secs | `60` | int | 注册周期（秒） |
 | | heartbeat_interval_secs | `60` | int | 保活周期（秒） |

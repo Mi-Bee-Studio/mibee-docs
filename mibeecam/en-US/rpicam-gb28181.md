@@ -47,7 +47,7 @@ gb28181:
   sip_domain: "3402000000"             # GB domain (10 digits)
   device_id: "34020000001320000001"    # Device ID (20 digits)
   channel_id: "34020000001320000001"   # Channel ID (20 digits)
-  password: "12345678"                 # Access password (must match platform)
+  password: "mibeecam2026"                 # Access password (must match platform)
   local_sip_port: 5060                 # Local SIP listening port
   register_interval_secs: 60           # Registration interval (seconds)
   heartbeat_interval_secs: 60          # Keep-alive interval (seconds)
@@ -67,7 +67,7 @@ platform_sip_port = 5060
 sip_domain = "3402000000"
 device_id = "34020000001320000001"
 channel_id = "34020000001320000001"
-password = "12345678"
+password = "mibeecam2026"
 local_sip_port = 5060
 register_interval_secs = 60
 heartbeat_interval_secs = 60

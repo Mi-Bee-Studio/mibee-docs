@@ -4,7 +4,7 @@ All four boards expose **one REST contract**: identical where undifferentiated, 
 
 ## Envelope & Auth
 
-All JSON endpoints share one envelope: success `{"ok":true,"data":...}` + HTTP 200; failure `{"ok":false,"error":"<msg>"}` + 400/401/404/500/503. Writes authenticate with the `X-Password` header. The family-wide default password is `mibeecam2026` (a documented public default; local builds may override it via the git-ignored sdkconfig. Empty and <6-char passwords are rejected). Password changes go through `POST /api/config` with `{"web_password":"..."}` (the old password is verified implicitly via `X-Password`). Password fields are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
+Writes authenticate with the `X-Password` header. The family-wide default password is `mibeecam2026` (a public default, overridable locally via the gitignored sdkconfig; change it right after first setup — empty and <6-char passwords are rejected). Password changes go through `POST /api/config` with `{"web_password":"..."}` (the old password is verified implicitly via `X-Password`). Password fields are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
 
 MJPEG streams live on the separate port `:81/stream`; viewer limits per board are ai-thinker 1 / n16r8 2 / luatos 2 / seeed 3, advertised via `status.stream_clients_max`.
 
