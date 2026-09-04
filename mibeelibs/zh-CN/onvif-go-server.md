@@ -13,7 +13,7 @@ go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
 
 ## 传输层架构
 
-```
+```http
 POST /onvif/device_service
         │
         ▼

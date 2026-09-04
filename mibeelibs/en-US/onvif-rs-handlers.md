@@ -5,7 +5,8 @@ SOAP body is the action (`GetProfiles`, `GetStreamUri`, …). Each action
 maps to one handler:
 
 ```rust
-use onvif_device_rs::{OnvifServer, OnvifActionHandler, RequestInfo, OnvifError};
+use onvif_device_rs::server::{OnvifActionHandler, OnvifServer};
+use onvif_device_rs::types::{OnvifError, RequestInfo};
 
 #[async_trait::async_trait]
 impl OnvifActionHandler for MyHandler {
@@ -60,7 +61,8 @@ register the actions you want:
 
 ```rust
 use std::sync::Arc;
-use onvif_device_rs::device::{DeviceConfig, DeviceHandler, DeviceServiceHandlers};
+use onvif_device_rs::device::{DeviceHandler, DeviceServiceHandlers};
+use onvif_device_rs::DeviceConfig;
 
 // Device service: five actions, one shared state
 let device = Arc::new(DeviceServiceHandlers::new(device_config, port, device_ip));

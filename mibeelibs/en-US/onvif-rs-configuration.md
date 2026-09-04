@@ -46,7 +46,7 @@ choice is then in your code, not an accident of defaults.
 Identity returned by GetDeviceInformation:
 
 ```rust
-use onvif_device_rs::device::DeviceConfig;
+use onvif_device_rs::DeviceConfig;
 
 let device = DeviceConfig {
     name: "Front gate camera".into(),

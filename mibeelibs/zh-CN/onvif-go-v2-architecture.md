@@ -41,7 +41,7 @@ type Caller interface {
 
 ## 目标布局
 
-```
+```text
 github.com/mickeyzzc/onvif-go/v2
 ├── onvif/               客户端包（包标识符仍为 `onvif`）
 │   ├── client.go        NewClient + Client（实现 api.Caller）+ 选项

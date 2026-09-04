@@ -4,6 +4,29 @@
 [gosip] 构建，处理 REGISTER/保活/目录/INVITE 全生命周期；持久化
 由你注入，事件由你消费。
 
+
+## 平台交互时序
+
+从平台一侧看，设备生命周期的典型消息流（方向与注册/保活周期参数由设备侧决定，平台应答）：
+
+```mermaid
+sequenceDiagram
+    participant D as 设备（UAC）
+    participant P as platform/sip
+    D->>P: REGISTER（摘要认证）
+    P-->>D: 401（challenge）/ 200 OK
+    loop 保活周期
+        D->>P: MESSAGE Keepalive
+        P-->>D: 200 OK
+    end
+    P->>D: MESSAGE Catalog / DeviceInfo 查询
+    D-->>P: MESSAGE 响应（经持久化补全）
+    P->>D: INVITE（点播 / 回放）
+    D-->>P: 200 OK（SDP answer）
+    P->>D: BYE
+    D-->>P: 200 OK
+```
+
 ## 安装
 
 ```bash

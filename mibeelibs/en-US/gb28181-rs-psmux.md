@@ -13,7 +13,7 @@ cargo add gb28181-rs@0.7.0
 ## Mux
 
 ```rust
-use gb28181_rs::{mux_h264_to_ps, mux_h265_to_ps};
+use gb28181_rs::ps::{mux_h264_to_ps, mux_h265_to_ps};
 
 // NALU payloads WITHOUT Annex-B start codes; PTS/DTS on the 90 kHz clock.
 let ps: Vec<u8> = mux_h264_to_ps(&[&sps, &pps, &idr], true, 90_000, 90_000);

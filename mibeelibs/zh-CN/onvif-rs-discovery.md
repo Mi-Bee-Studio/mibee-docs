@@ -3,6 +3,23 @@
 客户端经 WS-Discovery 探测发现 ONVIF 设备。本库应答真实客户端的两条
 探测路径：**UDP 组播**（239.255.255.250:3702）与 **HTTP POST** 探测。
 
+
+## 探测交互时序
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端（NVR）
+    participant D as onvif-rs 设备
+    C->>D: UDP Probe（239.255.255.250:3702）
+    D-->>C: ProbeMatches（XAddrs/Scopes/Types）
+    C->>D: HTTP POST Probe（/onvif/device_service）
+    D-->>C: ProbeMatches（同构 XML）
+    C->>D: GetCapabilities / GetProfiles
+    D-->>C: 能力与 Profile 描述
+```
+
+两条路径返回同构的 ProbeMatches——本地名逐字节稳定，客户端（如 MiBeeNvr）做裸 SOAP local-name 匹配。
+
 ## 安装
 
 ```bash

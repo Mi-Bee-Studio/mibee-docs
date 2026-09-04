@@ -95,7 +95,7 @@ catches.
 
 `device_id` and `channel_id` are 20-digit codes:
 
-```
+```text
 [8-digit region (GB/T 2260)][2-digit industry][3-digit type][7-digit serial]
 ```
 

@@ -48,7 +48,7 @@ type Caller interface {
 
 ## Target layout
 
-```
+```text
 github.com/mickeyzzc/onvif-go/v2
 ├── onvif/               the client package (package identifier stays `onvif`)
 │   ├── client.go        NewClient + Client (implements api.Caller) + options

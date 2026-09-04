@@ -1,5 +1,31 @@
 # Server lifecycle: start, shutdown, transports
 
+This page covers constructing, starting, and gracefully shutting down `Gb28181Server`, plus transport selection, with an overview of the device-side protocol exchange. Configuration details live in [configuration](gb28181-rs-configuration.md); live streaming and playback in [live streaming](gb28181-rs-live-streaming.md) and [recording playback](gb28181-rs-recording-playback.md).
+
+## Protocol Exchange at a Glance
+
+Typical interaction after the device comes online: REGISTER (digest auth) → periodic keep-alive → Catalog / DeviceInfo queries → INVITE for live → PS over RTP media → BYE.
+
+```mermaid
+sequenceDiagram
+    participant P as SIP platform
+    participant S as Gb28181Server
+    S->>P: REGISTER (digest auth)
+    P-->>S: 200 OK (expiry)
+    loop every heartbeat_interval_secs
+        S->>P: MESSAGE Keepalive
+        P-->>S: 200 OK
+    end
+    P->>S: MESSAGE Catalog / DeviceInfo query
+    S-->>P: MESSAGE response
+    P->>S: INVITE (SDP offer)
+    S-->>P: 200 OK (SDP answer)
+    P->>S: ACK
+    S->>P: RTP (PS stream)
+    P->>S: BYE
+    S-->>P: 200 OK
+```
+
 ## Install
 
 ```bash
@@ -12,7 +38,8 @@ Constructors only store configuration — no sockets, no panics:
 
 ```rust
 use std::sync::Arc;
-use gb28181_rs::{Gb28181Config, Gb28181Server, MockFrameHub};
+use gb28181_rs::mock::MockFrameHub;
+use gb28181_rs::{Gb28181Config, Gb28181Server};
 
 let server = Gb28181Server::new(config, Arc::new(MockFrameHub::new()));
 let server = Gb28181Server::with_recording_index(

@@ -90,7 +90,7 @@ assert_eq!(cfg.effective_device_name(), format!("Camera {}", cfg.device_id));
 
 `device_id` 与 `channel_id` 是 20 位编码：
 
-```
+```text
 [8 位行政区划（GB/T 2260）][2 位行业][3 位类型][7 位序号]
 ```
 

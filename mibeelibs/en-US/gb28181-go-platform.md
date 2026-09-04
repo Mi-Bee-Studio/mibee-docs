@@ -4,6 +4,29 @@
 Built on [gosip], it handles the REGISTER/keepalive/catalog/INVITE
 lifecycle; you inject persistence and consume events.
 
+
+## Platform Exchange
+
+The typical message flow of a device lifecycle as seen from the platform side (the device drives registration and keep-alive timing; the platform answers):
+
+```mermaid
+sequenceDiagram
+    participant D as Device (UAC)
+    participant P as platform/sip
+    D->>P: REGISTER (digest auth)
+    P-->>D: 401 (challenge) / 200 OK
+    loop keep-alive period
+        D->>P: MESSAGE Keepalive
+        P-->>D: 200 OK
+    end
+    P->>D: MESSAGE Catalog / DeviceInfo query
+    D-->>P: MESSAGE response (persistence-backed)
+    P->>D: INVITE (live / playback)
+    D-->>P: 200 OK (SDP answer)
+    P->>D: BYE
+    D-->>P: 200 OK
+```
+
 ## Install
 
 ```bash

@@ -4,6 +4,23 @@ Clients find ONVIF devices via WS-Discovery probes. This crate answers
 both probe paths real clients use: **UDP multicast** (239.255.255.250:3702)
 and **HTTP POST** probes.
 
+
+## Probe Exchange
+
+```mermaid
+sequenceDiagram
+    participant C as Client (NVR)
+    participant D as onvif-rs device
+    C->>D: UDP Probe (239.255.255.250:3702)
+    D-->>C: ProbeMatches (XAddrs/Scopes/Types)
+    C->>D: HTTP POST Probe (/onvif/device_service)
+    D-->>C: ProbeMatches (same-shaped XML)
+    C->>D: GetCapabilities / GetProfiles
+    D-->>C: Capabilities and profiles
+```
+
+Both paths return same-shaped ProbeMatches — element local names are byte-stable, so clients doing raw SOAP local-name matching keep working.
+
 ## Install
 
 ```bash
