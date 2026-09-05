@@ -1,10 +1,10 @@
-# ESP-Cam Unified API Design (Contract v1.2)
+# ESP-Cam Unified API Design (Contract v1.3)
 
-All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.2; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
+All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.3; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
 
 ## Envelope & Auth
 
-Writes authenticate with the `X-Password` header. The family-wide default password is `mibeecam2026` (a public default, overridable locally via the gitignored sdkconfig; change it right after first setup — empty and <6-char passwords are rejected). Password changes go through `POST /api/config` with `{"web_password":"..."}` (the old password is verified implicitly via `X-Password`). Password fields are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
+All JSON endpoints share one envelope: success `{"ok":true,"data":...}` + HTTP 200; failure `{"ok":false,"error":"<msg>"}` + 400/401/404/500/503. Writes authenticate with the `X-Password` header. The public-firmware family-wide default password is `mibeecam2026` (empty and <6-char passwords are rejected). Password changes go through `POST /api/config` with `{"web_password":"..."}` (the old password is verified implicitly via `X-Password`). Password fields are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
 
 MJPEG streams live on the separate port `:81/stream`; viewer limits per board are ai-thinker 1 / n16r8 2 / luatos 2 / seeed 3, advertised via `status.stream_clients_max`.
 
@@ -33,8 +33,8 @@ Rule: `capabilities.X == true` ⇒ the endpoint exists with identical semantics;
 | `led`: `POST/GET /api/led` | `{"brightness":0-100}` | ✅ | ✅ | — | — |
 | `ai`: `POST /api/ai` + `GET /api/ai/status` | `{face,motion,qr}` toggles + results | — | ✅ | — | — |
 | Recording: `POST /api/record` + `GET /api/record` | `?action=start\|stop` + status | ✅ | — | — | ✅ |
-| `sd`: `/api/files` · `/api/download` · `POST /api/files/batch` · `POST /api/format` | File management | ✅ | — | — | ✅ |
-| `ota`: `/api/ota/info` · `upload` · `spiffs` | Raw-binary-stream OTA | ✅ | in development (capability `false`) | — (single partition) | ✅ |
+| `sd`: `/api/files` · `/api/download` · `POST /api/files/batch` · `POST /api/format` · `GET /api/storage` | File & storage management | ✅ | — | — | ✅ |
+| `ota`: `/api/ota/info` · `upload` · `spiffs` · `POST /api/ota {"url":...}` | Raw-binary-stream OTA + URL trigger (v1.3, http:// only) | ✅ | ✅ | — (single partition, by design) | ✅ |
 | `audio`: `GET /api/audio` | G.711 μ-law 8kHz raw stream | — | — | — | ✅ |
 | `websocket`: `GET /ws` | Event push | — | — | ✅ | ✅ |
 | ONVIF: `/onvif/device_service` etc. | SOAP | ✅ | ✅ | ✅ | ✅ |
@@ -62,7 +62,7 @@ Non-boolean extension keys: `api_version`, `wifi_scan`.
 
 `GET /api/camera` returns `resolution`, `cam_framesize`, `cam_quality`, `supported_resolutions:[{label,value}]` plus whichever tuning fields the board supports (`cam_brightness/contrast/saturation/sharpness`, `cam_hmirror`, `cam_vflip`, `day_night_mode`).
 
-**The `value` scale is board-specific** (ai 0-3 / seeed 0-7 / n16r8 0-15 / luatos 0-3). Frontends must never hardcode a resolution table — populate from `supported_resolutions` and POST only values from that list. On n16r8, AI features lock the resolution to VGA (AI buffers are fixed 640×480), enforced in both directions.
+**Since v1.3 the `value` scale is unified family-wide to the esp32-camera `framesize_t` enum** (QVGA=6, VGA=10, SVGA=11, XGA=12, HD=13, SXGA=14, UXGA=15; the component is md5-identical across all four repos). Legacy per-board scales (ai 0-3 / seeed 0-5 / luatos 0-3) are translated automatically by each repo's one-time config migration on upgrade. Frontends must never hardcode a resolution table — populate from `supported_resolutions` and POST only values from that list. The resolution ceiling is the three-layer intersection min(sensor, board-measured, runtime fb budget), reported via `res_cap_source`. On n16r8, AI features lock the resolution to VGA, enforced in both directions.
 
 ## WebSocket Events (`/ws`)
 
