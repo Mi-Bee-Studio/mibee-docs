@@ -1,6 +1,6 @@
-# ESP-Cam Unified API Design (Contract v1.3)
+# ESP-Cam Unified API Design (Contract v1.5)
 
-All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.3; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
+All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.5; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
 
 ## Envelope & Auth
 
@@ -37,7 +37,8 @@ Rule: `capabilities.X == true` ⇒ the endpoint exists with identical semantics;
 | `ota`: `/api/ota/info` · `upload` · `spiffs` · `POST /api/ota {"url":...}` | Raw-binary-stream OTA + URL trigger (v1.3, http:// only) | ✅ | ✅ | — (single partition, by design) | ✅ |
 | `audio`: `GET /api/audio` | G.711 μ-law 8kHz raw stream | — | — | — | ✅ |
 | `websocket`: `GET /ws` | Event push | — | — | ✅ | ✅ |
-| ONVIF: `/onvif/device_service` etc. | SOAP | ✅ | ✅ | ✅ | ✅ |
+| ONVIF: `/onvif/device_service` etc. | SOAP (config `onvif_enable`) | ✅ | ✅ | ✅ | ✅ |
+| ONVIF events: `/onvif/events_service` | Pull-Point subscription (v1.5: MotionAlarm ← CSI motion, NVR-triggered recording; event generation gated by config `onvif_events`, default off) | — | ✅ | — | ✅ |
 | RTSP `:554/stream` | **digest auth mandatory** | — | ✅ (separate credentials) | — | ✅ (web password) |
 
 Non-boolean extension keys: `api_version`, `wifi_scan`.
@@ -66,7 +67,11 @@ Non-boolean extension keys: `api_version`, `wifi_scan`.
 
 ## WebSocket Events (`/ws`)
 
-Format: `{"type":"<event>","timestamp":<unix_s>,"data":{...}}` — `motion_started`/`motion_cleared` (with `score` 0-100), `recording_started`/`recording_stopped`, `wifi_state_changed`, plus board extensions (`health_warning`, `upload_success/failed`, `wifi_switched_ssid`…).
+Format: `{"type":"<event>","timestamp":<unix_s>,"data":{...}}` — `motion_started`/`motion_cleared` (with `score` 0-100; since v1.4 an optional `source` field, `"csi"` distinguishes CSI from visual frame-diff), `recording_started`/`recording_stopped`, `wifi_state_changed`, plus board extensions. Since v1.4, boards with the `csi_motion` capability also push a ~1 s `csi_status` heartbeat `{"state":"warming|IDLE|MOTION","score":0-1,"thr":0-1}`.
+
+## ONVIF Event Service (v1.5, `onvif_events` boards)
+
+`/onvif/events_service` implements a minimal WS-BaseNotification Pull-Point subset: `CreatePullPointSubscription` → poll `PullMessages` (+ `Renew`/`Unsubscribe`). Single-subscription model (a new subscription replaces the old); `TerminationTime` is a fixed 1 h grant with 120 s no-poll expiry; `PullMessages` returns immediately (never blocks an httpd worker — poll cadence is the NVR's choice). Topic `tns1:VideoSource/MotionAlarm` with Source=CSI, State true/false and Score 0-100 (family scale). The subscription service is always registered; event generation is runtime-gated by the config key `onvif_events` (default off). Test with each repo's `tools/onvif_events_probe.py` (raw SOAP, no third-party deps).
 
 ## SD File Management (`sd` boards)
 

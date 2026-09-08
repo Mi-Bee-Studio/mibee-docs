@@ -1,6 +1,6 @@
-# ESP-Cam 统一 API 设计（契约 v1.3）
+# ESP-Cam 统一 API 设计（契约 v1.5）
 
-四块主板暴露**同一份 REST 契约**：无差异部分完全一致；有差异部分只允许通过"能力门控 + 动态元数据"产生，禁止字段名、数值刻度或语义分叉。`GET /api/capabilities` 的 `api_version` 即契约版本。本文是契约 v1.3 的完整说明；修改任何一块板的 API 前，先改契约源文件（各仓 `docs/api-contract.md`，四仓 md5 一致）。
+四块主板暴露**同一份 REST 契约**：无差异部分完全一致；有差异部分只允许通过"能力门控 + 动态元数据"产生，禁止字段名、数值刻度或语义分叉。`GET /api/capabilities` 的 `api_version` 即契约版本。本文是契约 v1.5 的完整说明；修改任何一块板的 API 前，先改契约源文件（各仓 `docs/api-contract.md`，四仓 md5 一致）。
 
 ## 信封与鉴权
 
@@ -45,9 +45,10 @@ MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / 
 | `audio`：`GET /api/audio` | G.711 μ-law 8 kHz 裸流 | — | — | — | ✅ |
 | `websocket`：`GET /ws` | 事件推送（见下节） | — | — | ✅ | ✅ |
 | ONVIF：`/onvif/device_service` 等 | SOAP（config `onvif_enable` 可关） | ✅ | ✅ | ✅ | ✅ |
+| ONVIF 事件：`/onvif/events_service` | Pull-Point 订阅（v1.5：MotionAlarm ← CSI 运动，NVR 联动录像；事件生成由 config `onvif_events` 门控，默认关） | — | ✅ | — | ✅ |
 | RTSP `:554/stream` | **必须 digest 鉴权**（config `rtsp_user`/`rtsp_pass`，v1.3 起两板同源） | — | ✅ | — | ✅ |
 
-非布尔扩展键：`api_version`、`wifi_scan`。
+非布尔扩展键：`api_version`、`wifi_scan`。编译期能力位：`csi_motion`（v1.4，ESPectre CSI 运动检测，仅 seeed/n16r8——ai/luatos 为 CSI-off 生产形态）、`onvif_events`（v1.5，仅 seeed/n16r8）。
 
 ## `/api/status` 核心字段
 
@@ -79,10 +80,15 @@ MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / 
 
 统一格式 `{"type":"<event>","timestamp":<unix_s>,"data":{...}}`：
 
-- `motion_started` / `motion_cleared`：移动侦测翻转，data 含 `score` 0-100
+- `motion_started` / `motion_cleared`：移动侦测翻转，data 含 `score` 0-100；v1.4 起可选 `source`（`"csi"` 区分 CSI 视觉帧差）
+- `csi_status`（v1.4）：CSI 门控板（`csi_motion:true`）约 1s 心跳 `{"state":"warming|IDLE|MOTION","score":0-1,"thr":0-1}`
 - `recording_started` / `recording_stopped`：录像启停
 - `wifi_state_changed`：`{"state":"connected|..."}`
 - 板级扩展：`health_warning`、`upload_success/failed`、`wifi_switched_ssid` 等
+
+## ONVIF 事件服务（v1.5，`onvif_events` 能力板）
+
+`/onvif/events_service` 实现 WS-BaseNotification Pull-Point 最小子集：`CreatePullPointSubscription` → 循环 `PullMessages`（+ `Renew`/`Unsubscribe`）。单订阅模型（新订阅顶替旧订阅）；`TerminationTime` 固定 1h，120s 无拉取自动过期；`PullMessages` 立即返回不阻塞（轮询节奏由 NVR 决定）。事件主题 `tns1:VideoSource/MotionAlarm`（Source=CSI、State true/false、Score 0-100 家族刻度）；订阅服务常注册，事件生成由 config 键 `onvif_events` 运行时门控。测试：各仓 `tools/onvif_events_probe.py`（raw SOAP，无三方依赖）。
 
 ## SD 文件管理（`sd` 能力板）
 
@@ -115,7 +121,7 @@ curl -X POST http://<ip>/api/ota -H 'X-Password: <pwd>' \
 
 ## 契约治理
 
-- 版本演进：v1.1 统一默认密码与遗留差异收敛；v1.2 统一 SD 批量管理与格式化语义；**v1.3 分辨率刻度统一 framesize_t、配置契约独立成文（config-contract v1.0）、能力值语义条款、OTA URL 触发四板统一、`GET /api/storage` 收编、`POST /api/time` 补齐**。破坏性变更必须 bump `api_version` 并在 `docs/api-contract.md` 记录迁移说明。
+- 版本演进：v1.1 统一默认密码与遗留差异收敛；v1.2 统一 SD 批量管理与格式化语义；v1.3 分辨率刻度统一 framesize_t、配置契约独立成文、OTA URL 触发四板统一；**v1.4（2026-09-07）WS `csi_status` 心跳 + `motion_*` 可选 `source` 字段 + `csi_motion` 能力位；v1.5（2026-09-08）ONVIF Pull-Point 事件服务 `/onvif/events_service`（MotionAlarm ← CSI，NVR 联动）+ `onvif_events` 能力位与 config 门控**。破坏性变更必须 bump `api_version` 并在 `docs/api-contract.md` 记录迁移说明。
 - 任何板的 API/配置/AT 改动先改对应契约文档，四仓同步（三份契约文档四仓 md5 一致是 CI 前的人工检查项）。
 
 相关阅读：[统一前端设计](espcam-webui.md) · [总架构](espcam-architecture.md)
