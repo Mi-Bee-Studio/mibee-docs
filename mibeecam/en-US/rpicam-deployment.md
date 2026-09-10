@@ -3,6 +3,7 @@
 
 This guide covers deployment of the MiBee Eye ONVIF camera server for single-board computers (Raspberry Pi, Banana Pi, Orange Pi), including migration from MediaMTX and integration with NVR systems.
 
+> This page covers the **Go edition** build-from-source deployment; the Rust edition ships pre-built with no source build — see [Rust Edition](rpicam-rs.md).
 ## Prerequisites
 
 ### Target Device Requirements

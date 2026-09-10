@@ -1,6 +1,8 @@
 [中文](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/zh/onvif-compliance.md)\n
 # ONVIF Compliance Reference
 
+> This page documents the **Go edition** ONVIF behavior; the Rust edition consumes the open-source [onvif-rs](https://github.com/mickeyzzc/onvif-rs) with the same semantics — see [Rust Edition](rpicam-rs.md).
+
 This document provides detailed compliance information for the MiBee Eye ONVIF camera service. The implementation provides ONVIF Device/Media/Imaging services, WS-Discovery support, and WS-Security authentication for NVR integration.
 
 ## ONVIF Profile S Compliance
@@ -106,6 +108,26 @@ PTZ service was removed as dead code (state machine tracked position but never a
 
 
 ## WS-Discovery Support
+
+The full discovery-to-stream exchange (NVR's view):
+
+```mermaid
+sequenceDiagram
+    participant N as NVR / ONVIF client
+    participant M as multicast 239.255.255.250:3702
+    participant C as camera (ONVIF server)
+    N->>M: UDP Probe (scope filtering)
+    C-->>N: ProbeMatches (XAddrs = http://<camera-ip>:8080/onvif/device_service)
+    N->>C: GetCapabilities / GetServices (anonymous pre-auth actions)
+    C-->>N: service endpoint list
+    N->>C: GetProfiles (WS-Security auth)
+    C-->>N: profile (H264 VideoEncoder)
+    N->>C: GetStreamUri (ProfileToken=main)
+    C-->>N: trt:MediaUri → rtsp://<camera-ip>:8554/stream
+    N->>C: RTSP DESCRIBE / SETUP / PLAY
+    C-->>N: RTP (H.264)
+```
+
 
 The service supports both WS-Discovery probe methods:
 ### UDP Multicast (239.255.255.250:3702)

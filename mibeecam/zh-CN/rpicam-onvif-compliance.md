@@ -1,6 +1,8 @@
 [English](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go/blob/main/docs/onvif-compliance.md)
 # ONVIF 合规性参考
 
+> 本页以 **Go 版**的 ONVIF 行为为准；Rust 版消费同语义的开源库 [onvif-rs](https://github.com/mickeyzzc/onvif-rs)，见 [Rust 版](rpicam-rs.md)。
+
 本文档提供了 mibee-eye ONVIF 相机服务的详细合规性信息。该实现提供了 ONVIF Device/Media/Imaging 服务、WS-Discovery 支持和 WS-Security 身份验证，用于 NVR 集成。
 
 ## ONVIF Profile S 合规性
@@ -104,6 +106,26 @@ Settings:
 
 PTZ 服务已作为死代码移除（状态机跟踪位置但从未应用到相机 - 无 ScalerCrop 连接）。OV5647 硬件没有 PTZ 电机。
 ## WS-Discovery 支持
+
+从发现到取流的完整交互（NVR 视角）：
+
+```mermaid
+sequenceDiagram
+    participant N as NVR / ONVIF 客户端
+    participant M as 组播 239.255.255.250:3702
+    participant C as 相机（ONVIF 服务）
+    N->>M: UDP Probe（scopes 过滤）
+    C-->>N: ProbeMatches（XAddrs = http://<相机IP>:8080/onvif/device_service）
+    N->>C: GetCapabilities / GetServices（匿名预认证动作）
+    C-->>N: 服务端点列表
+    N->>C: GetProfiles（WS-Security 认证）
+    C-->>N: Profile（H264 VideoEncoder）
+    N->>C: GetStreamUri（ProfileToken=main）
+    C-->>N: trt:MediaUri → rtsp://<相机IP>:8554/stream
+    N->>C: RTSP DESCRIBE / SETUP / PLAY
+    C-->>N: RTP（H.264）
+```
+
 服务支持两种 WS-Discovery 探测方法：
 ### UDP 组播 (239.255.255.250:3702)
 - 在组播地址上侦听 Probe 消息

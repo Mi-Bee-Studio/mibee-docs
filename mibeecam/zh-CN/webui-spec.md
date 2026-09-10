@@ -34,6 +34,23 @@
 - **认证**：会话 cookie + CSRF 双提交（见 §2）。除 §1 公开端点外，一切 API 需认证。静态资源（前端本身）公开。
 - **扩展机制**：Core 端点三端必须实现；Extension 端点仅实现了的设备存在，且**必须**在 `/api/capabilities` 中如实通告。前端一切功能开关以 capabilities 为准，不做设备探测猜测。
 
+### 实现矩阵（Core/Extension × 三端）
+
+| 端点 | raspi-rs | raspi-go | notebook-cam |
+|---|---|---|---|
+| `POST /api/auth/login` · `logout` · `GET /api/auth/session`（Core） | ✅ | ✅ | ✅ |
+| `GET /api/cameras`（Core） | ✅ 单相机（固定 id `"0"`） | ✅ 单相机（固定 id `"0"`） | ✅ 多相机 CRUD（`POST/PUT/DELETE`） |
+| `GET /api/cameras/{id}/snapshot`（Core） | ✅ | ✅ | ✅ |
+| `GET /api/cameras/{id}/stream.mse`（Core） | ✅ | ✅ | 方言：MJPEG `/live`（附录 A4） |
+| `GET /api/capabilities`（Core） | ✅ | ✅ | ✅ |
+| `GET/PUT /api/config`（Core） | ✅ TOML 落地 | ✅ YAML 落地 | ✅ SQLite 落地 |
+| `GET /api/events` SSE（Core） | ✅ 含 `ai_detection` | ✅ 含 `ai_detection` | ✅ 含 `ai_detection` |
+| `GET /api/detections`（Extension：`ai`） | ✅ | ✅ | ✅（配置 opt-in，缺模型时能力如示为无） |
+| `GET /api/protocols/runtime-status`（Extension：`devices`） | — | — | ✅（协议热切换） |
+| §3.2 可观测（Extension：`observability`） | ✅ `/metrics` | ✅ `/metrics` + 独立 :9100 | 未实现（附录 A11） |
+
+方言细节与迁移对照见附录 A/B；前端以 `/api/capabilities` 的实际通告为准。
+
 ## 1. 公开端点
 
 | 方法 | 路径 | 说明 |

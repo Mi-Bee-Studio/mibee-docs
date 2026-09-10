@@ -261,6 +261,11 @@
           "title": "System Architecture"
         },
         {
+          "slug": "rpicam-rs",
+          "file": "rpicam-rs.md",
+          "title": "Rust Edition (Closed-Source)"
+        },
+        {
           "slug": "rpicam-configuration",
           "file": "rpicam-configuration.md",
           "title": "Configuration"

@@ -56,7 +56,7 @@ gb28181:
 
 ### Rust implementation (TOML)
 
-The Rust build (mibee-eye-raspi-rs) uses identical keys in the `[gb28181]` section of its `config.toml`, with the same defaults:
+The Rust edition (closed-source, see [Rust Edition](rpicam-rs.md)) uses identical keys in the `[gb28181]` section of its `config.toml`, with the same defaults:
 
 ```toml
 [gb28181]
@@ -79,6 +79,25 @@ Both implementations accept `MIBEE_EYE_GB28181_*` environment variable overrides
 ## Integration With Local Recording
 
 When [local recording](rpicam-configuration.md) is enabled, the device stores bare H.264 segment files grouped by day / hour (`recordings/YYYY-MM-DD/HH/MMSS.h264`) and maintains an append-only `recordings/index.jsonl`. RecordInfo queries and playback / download INVITEs read from this index; with recording disabled, playback and download queries return empty.
+
+## Platform On-Demand Snapshots (GB/T 28181-2022)
+
+The platform can order captures via a `DeviceControl(SnapShot)` command (A.2.1.24): the device answers 200, captures JPEG frames, POSTs each one **verbatim** to the command's `UploadURL` (the URL already carries the session parameter; the reply JSON's `path` is the file ID), then reports `UploadSnapShotFinished` (A.2.5.7) echoing the SessionID and the file-ID list — an empty list means the capture/upload failed. No configuration needed; both implementations ship it (signaling via the executor seams of gb28181-go ≥ v0.9 / gb28181-rs ≥ 0.11; the JPEG source is shared with the `/snapshot` endpoint).
+
+```mermaid
+sequenceDiagram
+    participant P as SIP platform
+    participant D as MiBee Eye
+    participant U as platform upload endpoint (UploadURL)
+    P->>D: MESSAGE DeviceControl(SnapShot) (SnapNum/Interval/UploadURL/SessionID)
+    D-->>P: 200 OK
+    loop SnapNum frames (>=1s apart)
+        D->>D: capture JPEG
+        D->>U: POST JPEG (URL verbatim, session included)
+        U-->>D: 200 {"path": file ID}
+    end
+    D->>P: MESSAGE UploadSnapShotFinished (SessionID + SnapShotList)
+```
 
 ## Verification
 

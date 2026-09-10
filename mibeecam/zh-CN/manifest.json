@@ -261,6 +261,11 @@
           "title": "系统架构"
         },
         {
+          "slug": "rpicam-rs",
+          "file": "rpicam-rs.md",
+          "title": "Rust 版（闭源发行）"
+        },
+        {
           "slug": "rpicam-configuration",
           "file": "rpicam-configuration.md",
           "title": "配置文档"

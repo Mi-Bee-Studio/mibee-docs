@@ -2,6 +2,7 @@
 
 MiBee Eye 配置采用 YAML 格式，控制摄像头服务的所有方面，包括捕获设置、流媒体协议、GB28181 接入、本地录像和设备标识。全部键的默认值与环境变量覆盖见[配置参考](rpicam-config-reference.md)，可直接套用的完整配置见[配置示例](rpicam-config-examples.md)。
 
+> 本页以 **Go 版（YAML）**为准。Rust 版使用 TOML 且键名一致，见 [Rust 版](rpicam-rs.md)。
 ## 配置文件
 
 ### 文件位置

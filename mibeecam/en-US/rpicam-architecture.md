@@ -4,6 +4,7 @@
 
 MiBee Eye is a lightweight Go application providing ONVIF-compliant camera services for single-board computers (Raspberry Pi, Banana Pi, Orange Pi). A single process hosts capture, RTSP/RTMP/HLS/GB28181 output, local recording, and the web admin UI, at roughly 20MB RAM overall (measured on a Raspberry Pi 3B).
 
+> This page describes the **Go edition**. For the Rust edition (closed-source release), its architecture differences, and the open-source boundary, see [Rust Edition](rpicam-rs.md).
 ## Component Architecture
 
 ```mermaid

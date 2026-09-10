@@ -34,6 +34,23 @@ The reference frontend is a zero-build ES Modules implementation embedded direct
 - **Authentication**: session cookie + CSRF double submit (see §2). Except for the public endpoints in §1, every API requires authentication. Static assets (the frontend itself) are public.
 - **Extension mechanism**: Core endpoints must be implemented by all three devices; Extension endpoints exist only on devices that implement them and **must** be advertised truthfully in `/api/capabilities`. The frontend gates every feature on capabilities and never probes the device.
 
+### Implementation matrix (Core/Extension × three devices)
+
+| Endpoint | raspi-rs | raspi-go | notebook-cam |
+|---|---|---|---|
+| `POST /api/auth/login` · `logout` · `GET /api/auth/session` (Core) | ✅ | ✅ | ✅ |
+| `GET /api/cameras` (Core) | ✅ single camera (fixed id `"0"`) | ✅ single camera (fixed id `"0"`) | ✅ multi-camera CRUD (`POST/PUT/DELETE`) |
+| `GET /api/cameras/{id}/snapshot` (Core) | ✅ | ✅ | ✅ |
+| `GET /api/cameras/{id}/stream.mse` (Core) | ✅ | ✅ | dialect: MJPEG `/live` (Appendix A4) |
+| `GET /api/capabilities` (Core) | ✅ | ✅ | ✅ |
+| `GET/PUT /api/config` (Core) | ✅ TOML-backed | ✅ YAML-backed | ✅ SQLite-backed |
+| `GET /api/events` SSE (Core) | ✅ incl. `ai_detection` | ✅ incl. `ai_detection` | ✅ incl. `ai_detection` |
+| `GET /api/detections` (Extension: `ai`) | ✅ | ✅ | ✅ (config opt-in; capability reflects missing model) |
+| `GET /api/protocols/runtime-status` (Extension: `devices`) | — | — | ✅ (protocol hot-toggle) |
+| §3.2 observability (Extension: `observability`) | ✅ `/metrics` | ✅ `/metrics` + dedicated :9100 | not implemented (Appendix A11) |
+
+Dialect details and the migration table live in Appendices A/B; the frontend trusts whatever `/api/capabilities` actually advertises.
+
 ## 1. Public Endpoints
 
 | Method | Path | Description |

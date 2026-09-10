@@ -2,6 +2,7 @@
 
 Ready-to-adapt complete [MiBee Eye](rpicam-configuration.md) configurations. Field meanings and defaults are in the [configuration guide](rpicam-configuration.md) and [configuration reference](rpicam-config-reference.md). Adjust device paths, credentials, and addresses for your environment in every example.
 
+> Examples use **Go edition (YAML)** syntax; the Rust edition uses TOML with the same keys and slightly different syntax.
 ## Basic Configuration (Default Settings)
 
 ```yaml

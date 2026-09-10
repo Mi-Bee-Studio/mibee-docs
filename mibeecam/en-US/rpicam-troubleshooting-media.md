@@ -1,5 +1,7 @@
 # Streaming Troubleshooting
 
+> This page targets the **Go edition** capture chain (mtxrpicam); the Rust edition captures via native V4L2/libcamera with no mtxrpicam subprocess, so encoder-specific items do not apply. Other diagnostics are shared — see [Rust Edition](rpicam-rs.md).
+
 Symptoms, diagnosis, and solutions for MiBee Eye camera detection, encoder, RTSP, snapshot, and HLS issues. For web UI / ONVIF / NVR / system-resource topics see [troubleshooting](rpicam-troubleshooting.md); for GB28181 see [GB28181 Integration](rpicam-gb28181.md).
 
 ## Camera Detection Issues

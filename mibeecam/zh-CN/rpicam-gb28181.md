@@ -56,7 +56,7 @@ gb28181:
 
 ### Rust 实现（TOML）
 
-树莓派 Rust 版（mibee-eye-raspi-rs）的配置键与 Go 版完全同名，写在 `config.toml` 的 `[gb28181]` 节下，默认值一致：
+Rust 版（闭源发行，见 [Rust 版](rpicam-rs.md)）的配置键与 Go 版完全同名，写在 `config.toml` 的 `[gb28181]` 节下，默认值一致：
 
 ```toml
 [gb28181]
@@ -79,6 +79,25 @@ heartbeat_timeout_count = 3
 ## 与本地录像联动
 
 开启[本地录像](rpicam-configuration.md)后，设备按天 / 小时分段落盘裸 H.264 段文件（`recordings/年-月-日/时/分秒.h264`）并维护追加写的 `recordings/index.jsonl` 索引。平台的 RecordInfo 查询与回放 / 下载 INVITE 从该索引取数据；未开启录像时，回放与下载查询返回空。
+
+## 平台按需抓拍（GB/T 28181-2022）
+
+平台可经 `DeviceControl(SnapShot)` 指令（A.2.1.24）按需抓图：设备应答 200 后逐帧抓取 JPEG，将每帧**原样** POST 到指令携带的 `UploadURL`（URL 已含 session 参数，响应 JSON 的 `path` 即文件 ID），最后以 `UploadSnapShotFinished` 通知（A.2.5.7）回带 SessionID 与文件 ID 列表——空列表表示抓拍/上传失败。无需配置，两版实现均内置（信令走 gb28181-go ≥ v0.9 / gb28181-rs ≥ 0.11 的执行器接缝；快照来源与 `/snapshot` 端点同源）。
+
+```mermaid
+sequenceDiagram
+    participant P as SIP 平台
+    participant D as MiBee Eye
+    participant U as 平台上传端点（UploadURL）
+    P->>D: MESSAGE DeviceControl(SnapShot)（SnapNum/Interval/UploadURL/SessionID）
+    D-->>P: 200 OK
+    loop SnapNum 帧（间隔 ≥1s）
+        D->>D: 抓拍 JPEG
+        D->>U: POST JPEG（URL 原样，含 session）
+        U-->>D: 200 {"path": 文件ID}
+    end
+    D->>P: MESSAGE UploadSnapShotFinished（SessionID + SnapShotList）
+```
 
 ## 验证
 

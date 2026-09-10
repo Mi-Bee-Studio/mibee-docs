@@ -1,5 +1,7 @@
 # 故障排除
 
+> 本页命令示例面向 **Go 版**服务（systemd 单元 `mibee-eye`）；Rust 版见 [Rust 版](rpicam-rs.md)，端口与协议排查方法通用。
+
 mibee-eye（树莓派 ONVIF 相机服务）的常见问题和解决方案。相机 / 编码器 / RTSP / 快照 / HLS 类问题见[流媒体故障排除](rpicam-troubleshooting-media.md)。
 
 ## 快速健康检查
