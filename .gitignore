@@ -1,0 +1,31 @@
+# mibee-docs .gitignore
+
+# AI IDE / agent tool state (never commit; PIT-047)
+.zcode/
+.claude/
+.cursor/
+.cursorrules
+.continue/
+.aider*
+.windsurf/
+.kiro/
+.zed/
+.copilot*
+.gemini/
+.goose/
+.roo/
+.clinerules
+CLAUDE.md
+GEMINI.md
+
+# Internal tool caches
+.omo/
+.codegraph
+.sisyphus/
+.cache/
+
+# OS junk
+.DS_Store
+Thumbs.db
+*~
+*.swp
