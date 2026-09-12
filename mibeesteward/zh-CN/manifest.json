@@ -1,0 +1,96 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBee Steward 用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "产品介绍"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "快速开始"
+        }
+      ]
+    },
+    {
+      "title": "概念与架构",
+      "items": [
+        {
+          "slug": "product-scope",
+          "file": "product-scope.md",
+          "title": "产品范围与边界"
+        },
+        {
+          "slug": "discovery",
+          "file": "discovery.md",
+          "title": "设备发现与识别"
+        },
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "架构总览"
+        }
+      ]
+    },
+    {
+      "title": "部署与配置",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "单机部署"
+        },
+        {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt 路由器部署"
+        },
+        {
+          "slug": "distributed",
+          "file": "distributed.md",
+          "title": "分布式部署"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "配置参考"
+        }
+      ]
+    },
+    {
+      "title": "参考与进阶",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API 参考"
+        },
+        {
+          "slug": "ebpf",
+          "file": "ebpf.md",
+          "title": "eBPF 被动观测"
+        },
+        {
+          "slug": "fingerprint-spec",
+          "file": "fingerprint-spec.md",
+          "title": "指纹库适配器规范"
+        },
+        {
+          "slug": "development",
+          "file": "development.md",
+          "title": "开发与贡献"
+        },
+        {
+          "slug": "changelog",
+          "file": "changelog.md",
+          "title": "更新日志"
+        }
+      ]
+    }
+  ]
+}

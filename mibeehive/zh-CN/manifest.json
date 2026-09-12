@@ -1,0 +1,24 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeHive 用户手册",
+  "sections": [
+    {
+      "title": "概念与架构",
+      "items": [
+        { "slug": "architecture", "file": "architecture.md", "title": "架构文档" }
+      ]
+    },
+    {
+      "title": "部署",
+      "items": [
+        { "slug": "deployment", "file": "deployment.md", "title": "部署指南" }
+      ]
+    },
+    {
+      "title": "参考",
+      "items": [
+        { "slug": "api-reference", "file": "api-reference.md", "title": "API 参考" }
+      ]
+    }
+  ]
+}

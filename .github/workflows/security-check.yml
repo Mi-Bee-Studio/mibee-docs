@@ -1,0 +1,24 @@
+name: security-check
+
+# 合并前泄密扫描（治理规范 §3.6 强制门禁）
+# 焊死级触发：任何分支 push / 任何 PR / 每日定时巡检。
+# main 分支保护已把 scan 设为必需检查 —— 直推被拒，必须 PR 过闸。
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '23 19 * * *'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 泄密扫描
+        run: python3 scripts/security-check.py
+        env:
+          MIBEE_SECURITY_DENYLIST: ${{ secrets.SECURITY_DENYLIST }}
