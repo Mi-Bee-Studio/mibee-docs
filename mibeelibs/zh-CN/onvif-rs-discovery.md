@@ -23,7 +23,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+cargo add onvif-device-rs@0.6.0  # crate 名与仓库(onvif-rs)不同
 ```
 
 ## 基础应答器

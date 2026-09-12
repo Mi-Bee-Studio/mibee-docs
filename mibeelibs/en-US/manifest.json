@@ -16,6 +16,11 @@
       "title": "GB28181 · Go",
       "items": [
         {
+          "slug": "gb28181-go-quickstart",
+          "file": "gb28181-go-quickstart.md",
+          "title": "Quick start: register a camera with a platform"
+        },
+        {
           "slug": "gb28181-go-platform",
           "file": "gb28181-go-platform.md",
           "title": "Platform (UAS): the SIP server side"
@@ -45,6 +50,11 @@
     {
       "title": "GB28181 · Rust",
       "items": [
+        {
+          "slug": "gb28181-rs-quickstart",
+          "file": "gb28181-rs-quickstart.md",
+          "title": "Quick start: a minimal compilable device"
+        },
         {
           "slug": "gb28181-rs-server",
           "file": "gb28181-rs-server.md",
@@ -80,6 +90,11 @@
     {
       "title": "ONVIF · Go",
       "items": [
+        {
+          "slug": "onvif-go-quickstart",
+          "file": "onvif-go-quickstart.md",
+          "title": "Quick start: discover and pull a stream"
+        },
         {
           "slug": "onvif-go-architecture",
           "file": "onvif-go-architecture.md",
@@ -136,6 +151,11 @@
       "title": "ONVIF · Rust",
       "items": [
         {
+          "slug": "onvif-rs-quickstart",
+          "file": "onvif-rs-quickstart.md",
+          "title": "Quick start: a minimal ONVIF device"
+        },
+        {
           "slug": "onvif-rs-discovery",
           "file": "onvif-rs-discovery.md",
           "title": "WS-Discovery: being findable"
@@ -179,6 +199,11 @@
           "slug": "fingerprints-overview",
           "file": "fingerprints-overview.md",
           "title": "mibee-fingerprints-go"
+        },
+        {
+          "slug": "fingerprints-quickstart",
+          "file": "fingerprints-quickstart.md",
+          "title": "Quick start: load rules and classify"
         }
       ]
     }

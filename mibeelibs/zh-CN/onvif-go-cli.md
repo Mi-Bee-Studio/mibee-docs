@@ -14,7 +14,7 @@ go build -o bin/ ./cmd/...
 
 ```bash
 # 或从源码构建(见上)后使用 ./cmd/ 下的二进制
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc4
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc6
 ```
 
 ## discover

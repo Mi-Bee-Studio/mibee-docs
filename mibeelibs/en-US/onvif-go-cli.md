@@ -15,7 +15,7 @@ for them — build from source.
 
 ```bash
 # or build from source (above) and use the ./cmd/ binaries
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc4
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc6
 ```
 
 ## discover

@@ -7,7 +7,7 @@ subscription and pushes whatever arrives into the RTP/PS media path.
 ## Install
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.11.0
 ```
 
 ## Data model

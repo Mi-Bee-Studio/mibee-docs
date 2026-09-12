@@ -7,7 +7,7 @@ charset reality of GB/T 28181 deployments.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/gb28181-go@v0.3.0
+go get github.com/mickeyzzc/gb28181-go@v0.9.0
 ```
 
 ## Message types

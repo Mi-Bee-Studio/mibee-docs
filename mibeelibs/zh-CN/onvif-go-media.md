@@ -25,7 +25,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
 ```
 
 ## 选对 Profile

@@ -7,7 +7,7 @@ INVITE-driven RTP/PS streaming — over UDP, TCP, or SIPS (TLS).
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/gb28181-go@v0.3.0
+go get github.com/mickeyzzc/gb28181-go@v0.9.0
 ```
 
 ## Config reference

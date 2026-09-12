@@ -29,7 +29,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.11.0
 ```
 
 ## 构造不做 I/O

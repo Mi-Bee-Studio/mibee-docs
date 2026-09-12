@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/gb28181-go@v0.3.0
+go get github.com/mickeyzzc/gb28181-go@v0.9.0
 ```
 
 ## 消息类型
