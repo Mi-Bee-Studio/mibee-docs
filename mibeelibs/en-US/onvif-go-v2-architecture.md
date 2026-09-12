@@ -10,7 +10,7 @@ v2 is a deliberately breaking release. Two forces drive it:
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
 ```
 
 ## Module versioning

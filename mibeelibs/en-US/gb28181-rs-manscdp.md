@@ -7,7 +7,7 @@ helpers, so hosts can build tooling on it without running a server.
 ## Install
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.11.0
 ```
 
 ## Message types

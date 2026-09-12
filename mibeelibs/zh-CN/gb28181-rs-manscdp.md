@@ -7,7 +7,7 @@ MESSAGE 层（MANSCDP-XML：目录查询、保活、设备信息/状态、录像
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.11.0
 ```
 
 ## 消息类型

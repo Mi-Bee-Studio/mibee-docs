@@ -24,7 +24,7 @@ Both paths return same-shaped ProbeMatches — element local names are byte-stab
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## Basic responder
