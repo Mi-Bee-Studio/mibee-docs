@@ -17,6 +17,23 @@ long-polls `PullMessages`, delivers every notification to your handler,
 renews the subscription before it expires, and stops cleanly when you
 unsubscribe or the context dies.
 
+```mermaid
+sequenceDiagram
+    participant C as Client (SubscribeEvents)
+    participant D as ONVIF device
+    C->>D: CreatePullPointSubscription (InitialTerminationTime)
+    D-->>C: SubscriptionReference + TerminationTime
+    loop long polling (PullTimeout, transient failures back off)
+        C->>D: PullMessages (Timeout, MessageLimit)
+        D-->>C: NotificationMessage list (Topic / UtcTime / Data)
+    end
+    Note over C: auto-Renew inside the renew margin; renewal failure terminates the loop
+    C->>D: Renew
+    D-->>C: new TerminationTime
+    C->>D: Unsubscribe (or context cancel — best-effort unsubscribe)
+    D-->>C: 200 OK
+```
+
 ```go
 sub, err := client.Events().SubscribeEvents(ctx,
     func(msg onvif.NotificationMessage) {

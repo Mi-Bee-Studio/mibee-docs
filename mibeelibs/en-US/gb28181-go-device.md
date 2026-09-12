@@ -100,6 +100,29 @@ srv.Stop()
 cancellation; `Stop` tears them down. Registration retries with backoff
 and re-REGISTERs on expiry.
 
+## Registration and streaming exchange
+
+```mermaid
+sequenceDiagram
+    participant D as device (UAC)
+    participant P as Platform (UAS)
+    D->>P: REGISTER (no auth)
+    P-->>D: 401 (WWW-Authenticate digest challenge)
+    D->>P: REGISTER (Authorization: Digest response)
+    P-->>D: 200 OK
+    loop keep-alive period (HeartbeatIntervalSecs)
+        D->>P: MESSAGE Keepalive (MANSCDP)
+        P-->>D: 200 OK
+    end
+    P->>D: MESSAGE Catalog / DeviceInfo query
+    D-->>P: MESSAGE response (catalog / device info)
+    P->>D: INVITE (SDP: s=Play, media port, SSRC)
+    D-->>P: 200 OK (SDP answer)
+    Note over D,P: the server subscribes the FrameSource and pushes RTP/PS to the platform media port
+    P->>D: BYE
+    D-->>P: 200 OK
+```
+
 ## Device IDs
 
 ```go
