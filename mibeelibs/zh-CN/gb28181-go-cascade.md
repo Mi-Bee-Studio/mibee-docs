@@ -68,5 +68,27 @@ svc.Start(ctx)
   同一条媒体路径。
 - **信令**——BYE/SUBSCRIBE/MESSAGE/INFO/OPTIONS 全部应答。
 
+```mermaid
+sequenceDiagram
+    participant U as 上级平台
+    participant C as cascade（下级平台）
+    participant L as CameraSource / Store（宿主）
+    C->>U: REGISTER（摘要认证，LocalDeviceID）
+    U-->>C: 401（challenge）/ 200 OK
+    C->>U: MESSAGE Catalog 上报（通道 ID 首见后保持稳定）
+    U-->>C: 200 OK
+    U->>C: INVITE（点播通道）
+    C->>L: Hub(cameraID) 订阅实时帧
+    C-->>U: 200 OK（SDP 应答）
+    C->>U: RTP/PS 上行（psmux，UDP 或 TCP）
+    U->>C: MESSAGE RecordInfo（回放查询）
+    C->>L: ListRecordings(filter)
+    C-->>U: MESSAGE 应答（录像清单）
+    U->>C: INVITE（回放）
+    C->>U: RTP/PS（录像段，同一媒体路径）
+    U->>C: BYE
+    C-->>U: 200 OK
+```
+
 支持多个上级平台（`upstreams` 配置）；每个是共享 listener 上的独立
 注册会话。

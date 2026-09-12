@@ -67,6 +67,23 @@ extracted from):
    clamped to a sane range) — you do not manage timestamps.
 5. `BYE` (or shutdown) unsubscribes; your channel close propagates.
 
+```mermaid
+sequenceDiagram
+    participant P as Platform
+    participant S as Gb28181Server
+    participant H as FrameSource (host)
+    P->>S: INVITE (SDP: s=Play, media port, SSRC)
+    S-->>P: 200 OK (SDP answer)
+    S->>H: subscribe_with_capacity() (bounded channel)
+    loop while streaming
+        H->>S: AccessUnit (NAL without start codes + capture time)
+        S->>P: RTP/PS (MPEG-PS mux, 90 kHz PTS)
+    end
+    P->>S: BYE
+    S->>H: unsubscribe(id) (closes the channel, media task exits)
+    S-->>P: 200 OK
+```
+
 A ready-made `MockFrameHub` (bounded, drop-on-full) exists for wiring
 tests and demos before a real pipeline exists.
 

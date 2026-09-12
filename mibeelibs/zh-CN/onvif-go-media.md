@@ -3,6 +3,25 @@
 媒体服务门面（`client.Media()`）覆盖 profile、流/快照 URI、编码配置。本文讲
 其中经过真机验证的语义部分：profile 选择、StreamSetup 参数化、响应解析。
 
+## 客户端引导时序
+
+从设备发现到拿到可拉流地址的典型握手（WS-Discovery 探测见
+[发现](onvif-go-discovery.md)）：
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端（client.Media()）
+    participant D as ONVIF 设备
+    C->>D: GetCapabilities / GetServices（定位媒体服务 XAddr）
+    D-->>C: Media XAddr
+    C->>D: GetProfiles
+    D-->>C: Profile 列表（token + 分辨率）
+    Note over C: SelectMainProfile / SelectSubProfile（像素数优先，命名线索仅裁决平手）
+    C->>D: GetStreamUri（StreamSetup: RTP-Unicast + RTSP）
+    D-->>C: rtsp://…（MediaUri/Uri）
+    Note over C,D: 之后媒体走 RTSP/RTP——不在 ONVIF 信令内
+```
+
 ## 安装
 
 ```bash

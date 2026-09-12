@@ -75,6 +75,26 @@ let aus = read_segment(std::path::Path::new("recordings/20260831-10.h264"))?;
 - **SIP INFO 回放控制**——暂停、恢复、按绝对时间拖动、倍速以 INFO
   到达，驱动节奏化推流器。
 
+```mermaid
+sequenceDiagram
+    participant P as 平台
+    participant S as Gb28181Server
+    participant R as RecordingSource（宿主）
+    P->>S: MESSAGE RecordInfo（时间范围）
+    S->>R: lookup(start_ms, end_ms)
+    R-->>S: SegmentMeta 列表
+    S-->>P: MESSAGE 应答（录像段清单）
+    P->>S: INVITE（SDP: s=Playback，u=起止时间）
+    S-->>P: 200 OK
+    loop 按时间戳节奏推流
+        S->>P: RTP/PS（回放节奏，非全速）
+    end
+    P->>S: INFO 回放控制（暂停 / 恢复 / 拖动 / 倍速）
+    S-->>P: 200 OK
+    P->>S: BYE
+    S-->>P: 200 OK
+```
+
 ## 录像状态
 
 `DeviceStatus` 用一个共享标志回答 `<Record>ON/OFF`，由你的录像写入

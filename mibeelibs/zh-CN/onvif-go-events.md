@@ -14,6 +14,23 @@ go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
 `SubscribeEvents` 包办整个生命周期：后台 goroutine 长轮询 `PullMessages`、
 把每条通知交给你的 handler、到期前自动续订、退订或上下文取消时干净收尾。
 
+```mermaid
+sequenceDiagram
+    participant C as 客户端（SubscribeEvents）
+    participant D as ONVIF 设备
+    C->>D: CreatePullPointSubscription（InitialTerminationTime）
+    D-->>C: SubscriptionReference + TerminationTime
+    loop 长轮询（PullTimeout，瞬时失败退避重试）
+        C->>D: PullMessages（Timeout、MessageLimit）
+        D-->>C: NotificationMessage 列表（Topic / UtcTime / Data）
+    end
+    Note over C: 距到期不足续订提前量时自动 Renew；Renew 失败即终止循环
+    C->>D: Renew
+    D-->>C: 新 TerminationTime
+    C->>D: Unsubscribe（或上下文取消——尽力退订）
+    D-->>C: 200 OK
+```
+
 ```go
 sub, err := client.Events().SubscribeEvents(ctx,
     func(msg onvif.NotificationMessage) {

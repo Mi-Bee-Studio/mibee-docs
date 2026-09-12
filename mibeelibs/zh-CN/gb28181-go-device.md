@@ -95,6 +95,29 @@ srv.Stop()
 
 注册失败带退避重试，到期自动重注册。
 
+## 注册与点播时序
+
+```mermaid
+sequenceDiagram
+    participant D as device（UAC）
+    participant P as 平台（UAS）
+    D->>P: REGISTER（无认证）
+    P-->>D: 401（WWW-Authenticate 摘要挑战）
+    D->>P: REGISTER（Authorization: Digest 响应）
+    P-->>D: 200 OK
+    loop 心跳周期（HeartbeatIntervalSecs）
+        D->>P: MESSAGE Keepalive（MANSCDP）
+        P-->>D: 200 OK
+    end
+    P->>D: MESSAGE Catalog / DeviceInfo 查询
+    D-->>P: MESSAGE 应答（目录 / 设备信息）
+    P->>D: INVITE（SDP: s=Play、媒体端口、SSRC）
+    D-->>P: 200 OK（SDP 应答）
+    Note over D,P: 服务器订阅 FrameSource，RTP/PS 推往平台媒体端口
+    P->>D: BYE
+    D-->>P: 200 OK
+```
+
 ## 设备 ID
 
 ```go

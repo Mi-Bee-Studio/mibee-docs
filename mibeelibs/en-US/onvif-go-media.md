@@ -5,6 +5,25 @@ snapshot URIs, and encoder configuration. This document covers the parts with
 field-tested semantics: profile selection, stream-setup parameterization,
 and response parsing.
 
+## Client bootstrap exchange
+
+The typical handshake from device discovery to a streamable URI
+(for the WS-Discovery probe see [discovery](onvif-go-discovery.md)):
+
+```mermaid
+sequenceDiagram
+    participant C as Client (client.Media())
+    participant D as ONVIF device
+    C->>D: GetCapabilities / GetServices (locate the media service XAddr)
+    D-->>C: Media XAddr
+    C->>D: GetProfiles
+    D-->>C: profile list (token + resolution)
+    Note over C: SelectMainProfile / SelectSubProfile (pixel count first, naming hints settle exact ties only)
+    C->>D: GetStreamUri (StreamSetup: RTP-Unicast + RTSP)
+    D-->>C: rtsp://… (MediaUri/Uri)
+    Note over C,D: media then flows over RTSP/RTP — outside ONVIF signaling
+```
+
 ## Install
 
 ```bash
