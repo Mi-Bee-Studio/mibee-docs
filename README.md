@@ -1,6 +1,6 @@
 # MiBee Docs — Mi&Bee Studio 官网文档中心
 
-本仓库是官网（[mlsbs.top/docs](https://www.mlsbs.top/docs)）文档中心的**唯一文档源**。各项目手册按下方规范提交到本仓库固定位置，官网每小时自动同步（私有信息过滤 + 镜像），**文档更新不需要网站侧发版**。
+本仓库是官网（[mickeyzzc.tech/docs](https://www.mickeyzzc.tech/docs)）文档中心的**唯一文档源**。各项目手册按下方规范提交到本仓库固定位置，官网每小时自动同步（私有信息过滤 + 镜像），**文档更新不需要网站侧发版**。
 
 ## 目录规范
 
