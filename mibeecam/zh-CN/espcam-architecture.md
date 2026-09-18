@@ -32,7 +32,7 @@ flowchart LR
     SEN[摄像头传感器] --> CAP[取帧任务<br/>独占 esp_camera_fb_get]
     CAP --> PUB[发布帧<br/>互斥锁保护订阅表]
     PUB --> M1[MJPEG 客户端 ×N<br/>:81/stream]
-    PUB --> M2[RTSP 会话<br/>:554 digest]
+    PUB --> M2[RTSP 会话<br/>:554 开放]
     PUB --> M3[录像段写入<br/>seeed AVI]
     PUB --> M4[AI 流水线<br/>n16r8 专用核]
     PUB --> M5[移动侦测<br/>帧差打分]
@@ -48,7 +48,7 @@ flowchart LR
 | 层 | 实现 | 说明 |
 |----|------|------|
 | 浏览器预览 | `:81/stream` MJPEG | 独立 TCP 服务器（与 :80 的 httpd 隔离），`multipart/x-mixed-replace`，超限返回 503 |
-| 标准客户端 | `:554/stream` RTSP | 仅 n16r8 / seeed；**强制 digest 鉴权**（401 于错误凭证） |
+| 标准客户端 | `:554/stream` RTSP | 仅 n16r8 / seeed；无鉴权（契约 v1.9，2026-09-18 起移除） |
 | NVR 发现 | ONVIF WS-Discovery + SOAP | UDP 3702 组播应答 + `:80/onvif/*_service`，四板全有 |
 
 MJPEG 走独立端口是刻意设计：httpd 的 socket 表和 worker 池很小，视频流的长连接会把它打满，管理页面就会跟着失联。

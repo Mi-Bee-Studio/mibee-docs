@@ -32,7 +32,7 @@ flowchart LR
     SEN[Camera sensor] --> CAP[Capture task<br/>owns esp_camera_fb_get]
     CAP --> PUB[Publish frame<br/>mutex-guarded subscriber table]
     PUB --> M1[MJPEG clients ×N<br/>:81/stream]
-    PUB --> M2[RTSP sessions<br/>:554 digest]
+    PUB --> M2[RTSP sessions<br/>:554 open]
     PUB --> M3[Recording segments<br/>seeed AVI]
     PUB --> M4[AI pipeline<br/>n16r8, dedicated core]
     PUB --> M5[Motion detection<br/>frame-diff scoring]
@@ -48,7 +48,7 @@ This design dictates two family behaviors:
 | Layer | Implementation | Notes |
 |--------|----------------|-------|
 | Browser preview | `:81/stream` MJPEG | Separate TCP server (isolated from the :80 httpd), `multipart/x-mixed-replace`, 503 when full |
-| Standard clients | `:554/stream` RTSP | n16r8 / seeed only; **digest auth mandatory** (401 on bad credentials) |
+| Standard clients | `:554/stream` RTSP | n16r8 / seeed only; no authentication (removed in contract v1.9, 2026-09-18) |
 | NVR discovery | ONVIF WS-Discovery + SOAP | UDP 3702 multicast + `:80/onvif/*_service`; all four boards |
 
 The separate MJPEG port is deliberate: the httpd socket table and worker pool are tiny, and long-lived video connections would starve the management UI.

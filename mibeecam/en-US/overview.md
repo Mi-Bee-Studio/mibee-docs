@@ -16,7 +16,7 @@ Collections currently hosted:
 | [Seeed XIAO ESP32-S3 Sense](https://github.com/Mi-Bee-Studio/seeed-esp32s3-cam) | ESP32-S3 + OV2640/OV5640 | MJPEG, RTSP (MJPEG + G.711 audio), AVI segmented recording, NAS upload (WebDAV/HTTP), dynamic timelapse, OTA | Balanced surveillance cam |
 | [Luatos ESP32-S3 A10](https://github.com/Mi-Bee-Studio/luatos-esp32s3-a10-camera) | ESP32-S3 + OV2640 | MJPEG, motion detection, WebSocket events, webhooks, ONVIF, AT commands | Event-driven compact cam (no PSRAM) |
 | [AI-Thinker ESP32-CAM](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam) | ESP32 + OV2640 | MJPEG, motion detection, SD timelapse/burst, ONVIF, dual WiFi, file manager, OTA, lightweight MPA | Low-cost entry |
-| [ESP32-S3-N16R8](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) | ESP32-S3 + OV3660 (3MP) | MJPEG, RTSP (digest), ONVIF, face/motion/QR detection, web OTA | HD + standard protocols + AI |
+| [ESP32-S3-N16R8](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) | ESP32-S3 + OV3660 (3MP) | MJPEG, RTSP, ONVIF, face/motion/QR detection, web OTA | HD + standard protocols + AI |
 | [rpi-cam](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go) | Raspberry Pi (Go) | ONVIF Device/Media/PTZ/Imaging, RTSP, RTMP/SRT push, WS-Discovery | Raspberry Pi software camera |
 
 ## Ecosystem

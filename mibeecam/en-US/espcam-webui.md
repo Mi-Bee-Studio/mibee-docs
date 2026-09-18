@@ -44,9 +44,7 @@ The cost is contract discipline instead of shared code: the MPA follows the unif
 
 ## Auth UX (both frontends)
 
-- Password stored in `sessionStorage`; writes automatically attach `X-Password`
-- 401 routes the user to the system page; first use pre-validates via `GET /api/auth`
-- Change-password modal: old + new + confirm (the server verifies the old one implicitly)
+None since contract v1.9 (2026-09-18): the web admin password, `X-Password` header and `GET /api/auth` were removed. The frontends no longer prompt for or attach a password; the trust boundary is the router's WPA2.
 
 ## Build Coupling (frontend changes require a reflash)
 

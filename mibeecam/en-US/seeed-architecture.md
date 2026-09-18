@@ -121,7 +121,7 @@ The system has 27 modules, all located in the `main/` directory, each module wit
 | Audio Noise Suppressor | `audio_ns.c` | 256-pt FFT spectral subtraction, Wiener gain, min-statistics noise estimation | `audio_ns_init()`, `audio_ns_process()` |
 | Audio Broadcaster | `audio_broadcaster.c` | Audio frame pub/sub (mirrors frame_broadcaster) | `abroadcast_publish()`, `abroadcast_subscribe()` |
 | G.711 Codec | `g711_codec.c` | G.711 μ-law encoder/decoder (ITU-T standard) | `g711_encode()`, `g711_decode()` |
-| RTSP Server | `rtsp_server.cpp` | RTSP server (MJPEG+G.711 dual-track, digest auth, port 554) | `rtsp_server_init()`, `rtsp_server_start()` |
+| RTSP Server | `rtsp_server.cpp` | RTSP server (MJPEG+G.711 dual-track, no auth, port 554) | `rtsp_server_init()`, `rtsp_server_start()` |
 | SD Log | `sd_log.c` | SD card structured event logging with rotation | `sd_log_init()`, `sd_log_write()` |
 | SHA-256 | `sha256.c` | Standalone SHA-256 for firmware hash verification | `sha256_hash()`, `sha256_verify()` |
 | JSON Parser | `cJSON.c` | Third-party JSON library (vendored for IDF v6.0) | — |
@@ -150,7 +150,6 @@ uint16_t segment_sec;     // Segment duration (seconds)
 uint8_t jpeg_quality;     // 1-63
 bool vflip;               // Vertical flip
 bool hmirror;             // Horizontal mirror
-char web_password[32];    // Web management password
 char device_name[32];     // Device name
 bool allow_ap_fallback;   // Allow fallback to AP mode when WiFi fails
 uint16_t timelapse_interval_sec; // Timelapse interval (0=continuous, >0=timelapse)
@@ -241,7 +240,6 @@ Browser real-time rendering
 RTSP Server (port 554) ← frame_broadcaster + audio_broadcaster
   → MJPEG video track (RTP payload type 26)
   → G.711 μ-law audio track (RTP payload type 0, PCMU)
-  → Digest authentication
 
 
 ## 5. FreeRTOS Task Table
@@ -293,28 +291,28 @@ From `partitions.csv`, using custom dual-OTA partition table:
 
 Server runs on port 80, with additional ONVIF SOAP endpoints:
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
+| Method | Path | Description |
+|--------|------|-------------|
 | GET | `/api/status` | No | Device status (recording, WiFi, storage, camera, temperature) |
 | GET | `/api/config` | No | Current config (password fields return `****`) |
-| POST | `/api/config` | Yes | Modify config |
+| POST | `/api/config` | | Modify config |
 | GET | `/api/files` | No | Recording file list |
-| POST | `/api/files/batch` | Yes | Batch delete files |
-| DELETE | `/api/files` | Yes | Delete specified file |
+| POST | `/api/files/batch` | | Batch delete files |
+| DELETE | `/api/files` | | Delete specified file |
 | GET | `/api/download?name=xxx` | No | Download recording file |
 | GET | `/api/scan` | No | WiFi AP scan |
-| POST | `/api/time` | Yes | Manually set time |
-| POST | `/api/record?action=start\|stop` | Yes | Recording control |
-| POST | `/api/ota` | Yes | Firmware OTA update via URL |
-| POST | `/api/format` | Yes | Format SD card (requires confirmation) |
-| POST | `/api/reset` | Yes | Factory reset |
+| POST | `/api/time` | | Manually set time |
+| POST | `/api/record?action=start\|stop` | | Recording control |
+| POST | `/api/ota` | | Firmware OTA update via URL |
+| POST | `/api/format` | | Format SD card (requires confirmation) |
+| POST | `/api/reset` | | Factory reset |
 | GET | `/metrics` | No | Prometheus metrics (text format) |
 | POST | `/onvif/device_service` | No | ONVIF Device Service (SOAP) |
 | POST | `/onvif/media_service` | No | ONVIF Media Service (SOAP) |
 | OPTIONS | `/*` | No | CORS preflight |
 | GET | `/*` | No | Static files (Web UI) |
 
-Authentication: Pass management password via `X-Password` request header or `?password=xxx` query parameter.
+Authentication: None — contract v1.9 (2026-09-18) removed the device-level web password; endpoints are open on the trusted LAN (boundary is the router's WPA2).
 
 ---
 

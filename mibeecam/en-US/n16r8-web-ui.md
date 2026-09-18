@@ -116,15 +116,11 @@ The MiBee Cam web UI is a responsive, browser-based interface for device control
 ### Streaming Section
 
 **Controls**:
-- RTSP Username (text input)
-- RTSP Password (password input)
 - ONVIF Discovery (toggle)
 - Save button
 
 **Behavior**:
-- RTSP credentials saved without reboot
 - ONVIF toggle saved without reboot
-- Changes applied to RTSP server immediately
 
 ### System Section
 

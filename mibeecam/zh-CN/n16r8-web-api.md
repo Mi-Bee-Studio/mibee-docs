@@ -1,6 +1,6 @@
 # N16R8 Web API
 
-本板完整实现家族统一契约（v1.2）——核心端点、信封、鉴权与字段命名见 [统一 API 设计](espcam-api.md)，本页只讲 N16R8 的能力矩阵与板级端点细节。所有端点在 `:80`，写操作带 `X-Password` 头。
+本板完整实现家族统一契约（v1.9）——核心端点、信封、鉴权与字段命名见 [统一 API 设计](espcam-api.md)，本页只讲 N16R8 的能力矩阵与板级端点细节。所有端点在 `:80`，契约 v1.9（2026-09-18）起无任何端点需要鉴权。
 
 ## 能力矩阵（`GET /api/capabilities`）
 
@@ -8,7 +8,7 @@
 |---|---|---|
 | `ai` | `true` | 人脸/移动/QR 流水线（本板独有） |
 | `led` / `flash_led` | `true` | 补光灯 PWM 亮度 0-100 |
-| `onvif` / `rtsp` / `mdns` | `true` | ONVIF SOAP + WS-Discovery、RTSP digest |
+| `onvif` / `rtsp` / `mdns` | `true` | ONVIF SOAP + WS-Discovery、RTSP |
 | `sd` / `audio` / `mic` / `websocket` | `false` | 无 SD 卡槽、无音频、无 WS 推送 |
 | `ota` | `false`（开发中） | 双 OTA 分区已备，Web 端点未注册 |
 
@@ -55,11 +55,11 @@ AI 流水线未运行时 404。前端 500 ms 轮询（仅 AI 开启时），`seq
 
 ### RTSP
 
-`rtsp://<ip>:554/stream`，**强制 digest 鉴权**（凭证 `rtsp_user/rtsp_pass`，默认 admin/admin，经 `POST /api/config` 修改）。错误凭证 401。
+`rtsp://<ip>:554/stream`——契约 v1.9（2026-09-18）起免鉴权，原 digest 凭证 `rtsp_user`/`rtsp_pass` 已移除。
 
 ## 配置键（`GET/POST /api/config`）
 
-本板在家族通用键之外的管理键：`ai_face_enable` / `ai_motion_enable` / `ai_qr_enable` / `rtsp_user` / `rtsp_pass` / `onvif_enable`。
+本板在家族通用键之外的管理键：`ai_face_enable` / `ai_motion_enable` / `ai_qr_enable` / `onvif_enable`。
 
 注意 `POST /api/config` 是**白名单校验**：响应里没出现的键发送会被拒绝——前端按 `GET /api/config` 返回的键集构造请求体。
 

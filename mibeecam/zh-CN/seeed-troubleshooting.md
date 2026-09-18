@@ -331,8 +331,7 @@ sdspi_device_config_t dev_cfg = SDSPI_DEVICE_CONFIG_DEFAULT();
 ### 方法二：API 恢复出厂
 
 ```bash
-curl -X POST http://<设备IP>/api/reset \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://<设备IP>/api/reset
 ```
 
 ### 方法三：擦除 Flash

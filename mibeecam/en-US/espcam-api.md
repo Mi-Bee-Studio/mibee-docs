@@ -1,28 +1,27 @@
-# ESP-Cam Unified API Design (Contract v1.5)
+# ESP-Cam Unified API Design (Contract v1.9)
 
-All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.5; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
+All four boards expose **one REST contract**: identical where undifferentiated, and where they differ, differences may only surface through capability gating + dynamic metadata — never through divergent field names, scales or semantics. `GET /api/capabilities` returns the `api_version` string. This page documents contract v1.9; the machine-copy source of truth is each repo's `docs/api-contract.md` (md5-identical across the four repos).
 
 ## Envelope & Auth
 
-All JSON endpoints share one envelope: success `{"ok":true,"data":...}` + HTTP 200; failure `{"ok":false,"error":"<msg>"}` + 400/401/404/500/503. Writes authenticate with the `X-Password` header. The public-firmware family-wide default password is `mibeecam2026` (empty and <6-char passwords are rejected). Password changes go through `POST /api/config` with `{"web_password":"..."}` (the old password is verified implicitly via `X-Password`). Password fields are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
+All JSON endpoints share one envelope: success `{"ok":true,"data":...}` + HTTP 200; failure `{"ok":false,"error":"<msg>"}` + 400/404/500/503. Since contract v1.9 (2026-09-18) there is **no device-level password**: the web admin password (`X-Password` header, `web_password` config key, `GET /api/auth`) and the RTSP digest credentials (`rtsp_user`/`rtsp_pass`) were removed — every HTTP/RTSP endpoint is open on the trusted LAN, and the trust boundary is the router's WPA2. Remaining password-type config fields (WiFi credentials) are masked `"****"` in GET responses; posting the mask back means "unchanged". CORS is fully open (`OPTIONS /*` → 204).
 
 MJPEG streams live on the separate port `:81/stream`; viewer limits per board are ai-thinker 1 / n16r8 2 / luatos 2 / seeed 3, advertised via `status.stream_clients_max`.
 
 ## Core Endpoints (100% identical on all four)
 
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| GET | `/api/status` | open | Device status (fields below) |
-| GET | `/api/config` | open | Current config (passwords masked) |
-| POST | `/api/config` | write | Partial update; WiFi changes persist to NVS, applied on reboot |
-| GET | `/api/capabilities` | open | Capability matrix + `api_version` |
-| GET | `/api/capture` | open | Single-frame JPEG |
-| GET | `/api/scan` | open | WiFi scan `{networks:[{ssid,rssi,auth}]}`, RSSI-descending |
-| POST | `/api/time` | write | Set time manually |
-| POST | `/api/reset` | write | Factory reset + reboot |
-| POST | `/api/reboot` | write | Reboot |
-| GET | `/api/auth` | open | Validate password |
-| GET | `/metrics` | open | Prometheus text |
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/status` | Device status (fields below) |
+| GET | `/api/config` | Current config (passwords masked) |
+| POST | `/api/config` | Partial update; WiFi changes persist to NVS, applied on reboot |
+| GET | `/api/capabilities` | Capability matrix + `api_version` |
+| GET | `/api/capture` | Single-frame JPEG |
+| GET | `/api/scan` | WiFi scan `{networks:[{ssid,rssi,auth}]}`, RSSI-descending |
+| POST | `/api/time` | Set time manually |
+| POST | `/api/reset` | Factory reset + reboot |
+| POST | `/api/reboot` | Reboot |
+| GET | `/metrics` | Prometheus text |
 
 ## Capability Gating
 
@@ -39,7 +38,7 @@ Rule: `capabilities.X == true` ⇒ the endpoint exists with identical semantics;
 | `websocket`: `GET /ws` | Event push | — | — | ✅ | ✅ |
 | ONVIF: `/onvif/device_service` etc. | SOAP (config `onvif_enable`) | ✅ | ✅ | ✅ | ✅ |
 | ONVIF events: `/onvif/events_service` | Pull-Point subscription (v1.5: MotionAlarm ← CSI motion, NVR-triggered recording; event generation gated by config `onvif_events`, default off) | — | ✅ | — | ✅ |
-| RTSP `:554/stream` | **digest auth mandatory** | — | ✅ (separate credentials) | — | ✅ (web password) |
+| RTSP `:554/stream` | No authentication (v1.9) | — | ✅ | — | ✅ |
 
 Non-boolean extension keys: `api_version`, `wifi_scan`.
 
@@ -85,7 +84,7 @@ Format: `{"type":"<event>","timestamp":<unix_s>,"data":{...}}` — `motion_start
 Consumes a **raw binary stream**, not multipart:
 
 ```bash
-curl -X POST http://<ip>/api/ota/upload -H 'X-Password: <pwd>' \
+curl -X POST http://<ip>/api/ota/upload \
      -H 'Content-Type: application/octet-stream' \
      --data-binary @build/mibee_cam.bin
 ```
@@ -94,6 +93,6 @@ The image must fit the OTA slot; a failed SPIFFS upload leaves the partition era
 
 ## Contract Governance
 
-v1.1 unified the default password and converged legacy divergences; v1.2 unified SD batch management and format semantics. Breaking changes must bump `api_version` and record migration notes in `docs/api-contract.md` — and that file stays md5-identical across all four repos.
+v1.1 unified the default password and converged legacy divergences; v1.2 unified SD batch management and format semantics; v1.9 (2026-09-18) removed device-level passwords entirely (web admin password + RTSP digest credentials). Breaking changes must bump `api_version` and record migration notes in `docs/api-contract.md` — and that file stays md5-identical across all four repos.
 
 Related: [Unified frontend design](espcam-webui.md) · [Unified architecture](espcam-architecture.md)

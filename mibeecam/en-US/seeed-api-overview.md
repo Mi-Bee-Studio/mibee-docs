@@ -17,16 +17,7 @@ This firmware API documentation is based on `web_server.c`, `mjpeg_streamer.c`, 
 
 ## Authentication
 
-Some endpoints require password authentication. Two methods are supported:
-
-| Method | Format | Example |
-|--------|--------|---------|
-| Request Header | `X-Password: <password>` | `X-Password: mibeecam2026` |
-| Query Parameter | `?password=<password>` | `?password=mibeecam2026` |
-
-- **Default Password**: `mibeecam2026` (can be modified via `POST /api/config` by changing `web_password` field)
-- Authentication logic first checks `X-Password` request header, then checks `password` query parameter
-- Authentication failure returns `401 Unauthorized` with response body: `{"ok": false, "error": "Unauthorized"}`
+Firmware with contract v1.9 (2026-09-18) has no device-level password — the web admin password (`X-Password` header / `?password=` query / `web_password` config key) was removed. All HTTP endpoints are open on the trusted LAN; the trust boundary is the router's WPA2.
 
 ## Unified Response Format
 
@@ -57,28 +48,28 @@ All HTTP responses (including error responses and static files) include the foll
 ```
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS
-Access-Control-Allow-Headers: Content-Type, X-Password
+Access-Control-Allow-Headers: Content-Type
 ```
 
 `OPTIONS` requests (preflight requests) return the above CORS headers and empty response body with status code 200.
 
 #MJ|## Endpoint Overview
 #JQ|
-#HT|| # | Method | Path | Auth | Description |
-#MN||---|--------|------|------|-------------|
+#HT|| # | Method | Path | Description |
+#MN||---|--------|------|-------------|
 #XB|| 1 | GET | `/api/status` | No | Get device status |
 #RZ|| 2 | GET | `/api/config` | No | Get current configuration |
-#PV|| 3 | POST | `/api/config` | **Yes** | Update configuration |
+#PV|| 3 | POST | `/api/config` | Update configuration |
 #PW|| 4 | GET | `/api/files` | No | Get recording file list |
-#BZ|| 5 | DELETE | `/api/files?name=xxx` | **Yes** | Delete specified file |
-#SW|| 6 | POST | `/api/files/batch` | **Yes** | Batch delete files |
+#BZ|| 5 | DELETE | `/api/files?name=xxx` | Delete specified file |
+#SW|| 6 | POST | `/api/files/batch` | Batch delete files |
 #XN|| 7 | GET | `/api/download?name=xxx` | No | Download specified file |
 #YS|| 8 | GET | `/api/scan` | No | Scan WiFi networks |
-#VZ|| 9 | POST | `/api/time` | **Yes** | Manually set system time |
-#JR|| 10 | POST | `/api/record?action=start\|stop` | **Yes** | Control recording |
-#ZH|| 11 | POST | `/api/reset` | **Yes** | Factory reset |
-#HT|| 12 | POST | `/api/ota` | **Yes** | Trigger OTA firmware update from URL |
-#XP|| 13 | POST | `/api/format` | **Yes** | Format SD card |
+#VZ|| 9 | POST | `/api/time` | Manually set system time |
+#JR|| 10 | POST | `/api/record?action=start\|stop` | Control recording |
+#ZH|| 11 | POST | `/api/reset` | Factory reset |
+#HT|| 12 | POST | `/api/ota` | Trigger OTA firmware update from URL |
+#XP|| 13 | POST | `/api/format` | Format SD card |
 #XB|| 14 | GET | `/metrics` | No | Prometheus metrics (text format) |
 #RR|| 15 | GET | `/setup` | No | First-time WiFi setup wizard page |
 #PP|| 16 | GET | `/ota` | No | OTA firmware update web page |
@@ -87,7 +78,7 @@ Access-Control-Allow-Headers: Content-Type, X-Password
 #SQ|| 19 | POST | `/onvif/device_service` | No | ONVIF Device Service (SOAP) |
 #BJ|| 20 | POST | `/onvif/media_service` | No | ONVIF Media Service (SOAP) |
 #HX|
-| RTSP | `rtsp://<IP>:554/stream` | Digest | MJPEG+G.711 dual-track stream |
+| RTSP | `rtsp://<IP>:554/stream` | No | MJPEG+G.711 dual-track stream |
 | MJPEG | `http://<IP>:81/stream` | No | MJPEG live stream (video only) |
 | Audio | `http://<IP>/api/audio` | No | HTTP chunked G.711 μ-law audio stream (for Web preview) |
 
@@ -169,7 +160,6 @@ Delete multiple recording files in a single request.
 
 ### `/api/files/batch` - Batch File Operations
 
-**Authentication**: Required (X-Password header or ?password= query param)
 
 ---
 
@@ -184,7 +174,6 @@ Trigger firmware update from a URL.
 
 **Response:** `{"ok": true, "data": {"message": "OTA update started, device will reboot..."}}`
 
-**Authentication:** Required
 
 ### WebSocket Real-time Push
 
@@ -206,7 +195,7 @@ Expose device metrics in Prometheus text exposition format for external monitori
 
 **Request**: `GET /metrics`
 
-**Response**: `text/plain` (no authentication required)
+**Response**: `text/plain`
 
 **Available Metrics**:
 
@@ -287,7 +276,6 @@ scrape_configs:
 |-------------|---------|------------------|
 | 200 | Success | Request processed successfully |
 | 400 | Bad Request | Missing parameters, JSON format error, path traversal detected |
-| 401 | Unauthorized | Wrong password or no password provided (for authenticated endpoints) |
 | 404 | Not Found | File does not exist, static file not found |
 | 500 | Internal Server Error | WiFi scan failed, time setting failed |
 | 503 | Service Unavailable | MJPEG stream client connection limit reached |
@@ -298,9 +286,7 @@ scrape_configs:
 
 | Purpose | Path |
 |---------|------|
-| Recording files | `/sdcard/recordings/` |
-| WiFi configuration override | `/sdcard/config/wifi.txt` |
-| NAS configuration override | `/sdcard/config/nas.txt` |
+| Recording files | `/sdcard/recordings/` | WiFi configuration override | `/sdcard/config/wifi.txt` | NAS configuration override | `/sdcard/config/nas.txt` |
 
 ### Configuration Priority
 

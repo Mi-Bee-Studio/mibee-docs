@@ -1,33 +1,32 @@
-# ESP-Cam 统一 API 设计（契约 v1.5）
+# ESP-Cam 统一 API 设计（契约 v1.9）
 
-四块主板暴露**同一份 REST 契约**：无差异部分完全一致；有差异部分只允许通过"能力门控 + 动态元数据"产生，禁止字段名、数值刻度或语义分叉。`GET /api/capabilities` 的 `api_version` 即契约版本。本文是契约 v1.5 的完整说明；修改任何一块板的 API 前，先改契约源文件（各仓 `docs/api-contract.md`，四仓 md5 一致）。
+四块主板暴露**同一份 REST 契约**：无差异部分完全一致；有差异部分只允许通过"能力门控 + 动态元数据"产生，禁止字段名、数值刻度或语义分叉。`GET /api/capabilities` 的 `api_version` 即契约版本。本文是契约 v1.9 的完整说明；修改任何一块板的 API 前，先改契约源文件（各仓 `docs/api-contract.md`，四仓 md5 一致）。
 
 ## 信封与鉴权
 
 所有 JSON 端点用统一信封：
 
 - 成功：`{"ok":true,"data":...}` + HTTP 200
-- 失败：`{"ok":false,"error":"<消息>"}` + 400/401/404/500/503
+- 失败：`{"ok":false,"error":"<消息>"}` + 400/404/500/503
 
-写操作鉴权用 `X-Password` 请求头。**公开固件家族统一默认密码 `mibeecam2026`**（服务端拒绝空密码与少于 6 位的密码）；修改密码走 `POST /api/config` 携带 `{"web_password":"..."}`，旧密码经 `X-Password` 隐式验证。密码字段在 GET 响应中掩码为 `"****"`，POST 回传掩码值视为"未修改"。CORS 全开（`OPTIONS /*` → 204）。
+契约 v1.9（2026-09-18）起**没有设备级密码**：Web 管理密码（`X-Password` 请求头、`web_password` 配置键、`GET /api/auth`）与 RTSP digest 凭证（`rtsp_user`/`rtsp_pass`）均已移除——全部 HTTP/RTSP 端点在可信局域网内开放，信任边界是路由器的 WPA2。遗留的密码类字段（WiFi 凭据）在 GET 响应中仍掩码为 `"****"`，POST 回传掩码值视为"未修改"。CORS 全开（`OPTIONS /*` → 204）。
 
 MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / n16r8 2 / luatos 2 / seeed 3，通过 `status.stream_clients_max` 下发。
 
 ## 核心端点（四板 100% 一致）
 
-| Method | Path | Auth | 说明 |
-|---|---|---|---|
-| GET | `/api/status` | open | 设备状态（字段见下节） |
-| GET | `/api/config` | open | 当前配置（密码掩码） |
-| POST | `/api/config` | write | 部分更新；WiFi 变更写 NVS、重启生效 |
-| GET | `/api/capabilities` | open | 能力矩阵 + `api_version` |
-| GET | `/api/capture` | open | 单帧 JPEG |
-| GET | `/api/scan` | open | WiFi 扫描 `{networks:[{ssid,rssi,auth}]}`，RSSI 降序 |
-| POST | `/api/time` | write | 手动设时间 `{year,month,day,hour,min,sec}`（v1.3 补齐 ai-thinker） |
-| POST | `/api/reset` | write | 恢复出厂并重启 |
-| POST | `/api/reboot` | write | 重启 |
-| GET | `/api/auth` | open | 校验密码 `{auth,password_set}` |
-| GET | `/metrics` | open | Prometheus 文本 |
+| Method | Path | 说明 |
+|---|---|---|
+| GET | `/api/status` | 设备状态（字段见下节） |
+| GET | `/api/config` | 当前配置（密码掩码） |
+| POST | `/api/config` | 部分更新；WiFi 变更写 NVS、重启生效 |
+| GET | `/api/capabilities` | 能力矩阵 + `api_version` |
+| GET | `/api/capture` | 单帧 JPEG |
+| GET | `/api/scan` | WiFi 扫描 `{networks:[{ssid,rssi,auth}]}`，RSSI 降序 |
+| POST | `/api/time` | 手动设时间 `{year,month,day,hour,min,sec}`（v1.3 补齐 ai-thinker） |
+| POST | `/api/reset` | 恢复出厂并重启 |
+| POST | `/api/reboot` | 重启 |
+| GET | `/metrics` | Prometheus 文本 |
 
 ## 能力门控
 
@@ -46,7 +45,7 @@ MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / 
 | `websocket`：`GET /ws` | 事件推送（见下节） | — | — | ✅ | ✅ |
 | ONVIF：`/onvif/device_service` 等 | SOAP（config `onvif_enable` 可关） | ✅ | ✅ | ✅ | ✅ |
 | ONVIF 事件：`/onvif/events_service` | Pull-Point 订阅（v1.5：MotionAlarm ← CSI 运动，NVR 联动录像；事件生成由 config `onvif_events` 门控，默认关） | — | ✅ | — | ✅ |
-| RTSP `:554/stream` | **必须 digest 鉴权**（config `rtsp_user`/`rtsp_pass`，v1.3 起两板同源） | — | ✅ | — | ✅ |
+| RTSP `:554/stream` | 无需鉴权（v1.9 移除 digest 凭证） | — | ✅ | — | ✅ |
 
 非布尔扩展键：`api_version`、`wifi_scan`。编译期能力位：`csi_motion`（v1.4，ESPectre CSI 运动检测，仅 seeed/n16r8——ai/luatos 为 CSI-off 生产形态）、`onvif_events`（v1.5，仅 seeed/n16r8）。
 
@@ -103,12 +102,12 @@ MJPEG 流在独立端口 `:81/stream`，客户端上限按板为 ai-thinker 1 / 
 吃**裸二进制流**，不是 multipart：
 
 ```bash
-curl -X POST http://<ip>/api/ota/upload -H 'X-Password: <pwd>' \
+curl -X POST http://<ip>/api/ota/upload \
      -H 'Content-Type: application/octet-stream' \
      --data-binary @build/mibee_cam.bin      # 固件 → 备用槽 → 自动重启
-curl -X POST http://<ip>/api/ota/spiffs -H 'X-Password: <pwd>' \
+curl -X POST http://<ip>/api/ota/spiffs \
      --data-binary @build/spiffs.bin         # UI → 整擦 SPIFFS → 自动重启
-curl -X POST http://<ip>/api/ota -H 'X-Password: <pwd>' \
+curl -X POST http://<ip>/api/ota \
      -H 'Content-Type: application/json' \
      -d '{"url":"http://192.168.1.10:8000/mibee_cam.bin"}'   # v1.3：URL 触发（仅 http://）
 ```
@@ -121,7 +120,7 @@ curl -X POST http://<ip>/api/ota -H 'X-Password: <pwd>' \
 
 ## 契约治理
 
-- 版本演进：v1.1 统一默认密码与遗留差异收敛；v1.2 统一 SD 批量管理与格式化语义；v1.3 分辨率刻度统一 framesize_t、配置契约独立成文、OTA URL 触发四板统一；**v1.4（2026-09-07）WS `csi_status` 心跳 + `motion_*` 可选 `source` 字段 + `csi_motion` 能力位；v1.5（2026-09-08）ONVIF Pull-Point 事件服务 `/onvif/events_service`（MotionAlarm ← CSI，NVR 联动）+ `onvif_events` 能力位与 config 门控**。破坏性变更必须 bump `api_version` 并在 `docs/api-contract.md` 记录迁移说明。
+- 版本演进：v1.1 统一默认密码与遗留差异收敛；v1.2 统一 SD 批量管理与格式化语义；v1.3 分辨率刻度统一 framesize_t、配置契约独立成文、OTA URL 触发四板统一；**v1.4（2026-09-07）WS `csi_status` 心跳 + `motion_*` 可选 `source` 字段 + `csi_motion` 能力位；v1.5（2026-09-08）ONVIF Pull-Point 事件服务 `/onvif/events_service`（MotionAlarm ← CSI，NVR 联动）+ `onvif_events` 能力位与 config 门控；v1.9（2026-09-18）彻底移除设备级密码（Web 管理密码 + RTSP digest 凭证）**。破坏性变更必须 bump `api_version` 并在 `docs/api-contract.md` 记录迁移说明。
 - 任何板的 API/配置/AT 改动先改对应契约文档，四仓同步（三份契约文档四仓 md5 一致是 CI 前的人工检查项）。
 
 相关阅读：[统一前端设计](espcam-webui.md) · [总架构](espcam-architecture.md)

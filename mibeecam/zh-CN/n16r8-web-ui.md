@@ -9,7 +9,7 @@ N16R8 使用家族统一 SPA（三 S3 仓共享的四文件前端，见 [统一�
 | 预览（MJPEG + AI 叠加） | ✅ | 恒有 |
 | AI 检测 | ✅ | `capabilities.ai == true` |
 | 相机设置 | ✅ | 恒有（分辨率表动态拉取） |
-| 系统设置（WiFi/密码/RTSP/ONVIF） | ✅ | 恒有 |
+| 系统设置（WiFi/ONVIF） | ✅ | 恒有 |
 | 存储 | ❌ 隐藏 | `capabilities.sd == false` |
 | 录像 | ❌ 隐藏 | `capabilities.recording` 缺省 |
 | 音频 | ❌ 隐藏 | `capabilities.audio == false` |
@@ -37,16 +37,14 @@ MPEG 图像之上叠一块画布，`GET /api/ai/status` 每 500 ms 轮询（仅 
 
 ## 系统设置页的板级字段
 
-- RTSP 凭证（`rtsp_user`/`rtsp_pass`，独立于 Web 管理密码）
 - ONVIF 开关
 - AI 三个特性的总开关
-- 修改密码模态（家族统一流程：旧密码 + 新密码 + 确认）
 
 WiFi 区块只显示单网络表单——本板无双 WiFi 字段（`wifi_ssid_2` 不在 `GET /api/config` 响应里，控件随之缺省）。
 
 ## 鉴权与会话
 
-密码存 `sessionStorage`，写操作自动附 `X-Password`；401 引导到系统页。详见[统一前端设计](espcam-webui.md)。
+契约 v1.9（2026-09-18）起无鉴权：前端不再附加密码头。详见[统一前端设计](espcam-webui.md)。
 
 ## 界面
 

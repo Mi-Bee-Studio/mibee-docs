@@ -1,6 +1,6 @@
 # N16R8 Web API
 
-This board fully implements the family contract (v1.2) — core endpoints, envelope, auth and field naming are documented in [Unified API design](espcam-api.md). This page covers only the N16R8 capability matrix and board-specific endpoint details. Everything is on `:80`; writes take the `X-Password` header.
+This board fully implements the family contract (v1.9) — core endpoints, envelope, auth and field naming are documented in [Unified API design](espcam-api.md). This page covers only the N16R8 capability matrix and board-specific endpoint details. Everything is on `:80`; since contract v1.9 (2026-09-18) no endpoint requires authentication.
 
 ## Capability Matrix (`GET /api/capabilities`)
 
@@ -8,7 +8,7 @@ This board fully implements the family contract (v1.2) — core endpoints, envel
 |---|---|---|
 | `ai` | `true` | Face/motion/QR pipeline (unique to this board) |
 | `led` / `flash_led` | `true` | Flash LED PWM brightness 0-100 |
-| `onvif` / `rtsp` / `mdns` | `true` | ONVIF SOAP + WS-Discovery, RTSP digest |
+| `onvif` / `rtsp` / `mdns` | `true` | ONVIF SOAP + WS-Discovery, RTSP |
 | `sd` / `audio` / `mic` / `websocket` | `false` | No SD slot, no audio, no WS push |
 | `ota` | `false` (in development) | Dual OTA partitions reserved; web endpoint not registered |
 
@@ -55,11 +55,11 @@ Returns 404 when the AI pipeline is not running. The frontend polls at 500ms (on
 
 ### RTSP
 
-`rtsp://<ip>:554/stream`, **digest auth mandatory** (credentials `rtsp_user/rtsp_pass`, default admin/admin, changed via `POST /api/config`). Bad credentials get 401.
+`rtsp://<ip>:554/stream` — no authentication since contract v1.9 (2026-09-18); the former digest credentials `rtsp_user`/`rtsp_pass` were removed.
 
 ## Config Keys (`GET/POST /api/config`)
 
-Management keys beyond the family-common set: `ai_face_enable` / `ai_motion_enable` / `ai_qr_enable` / `rtsp_user` / `rtsp_pass` / `onvif_enable`.
+Management keys beyond the family-common set: `ai_face_enable` / `ai_motion_enable` / `ai_qr_enable` / `onvif_enable`.
 
 `POST /api/config` validates against a **whitelist**: keys that never appear in the GET response are rejected — build request bodies from the `GET /api/config` key set.
 

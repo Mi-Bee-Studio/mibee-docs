@@ -492,8 +492,7 @@ curl -X POST http://192.168.1.100/api/storage/init
 2. **清理空间**：
    ```bash
    # 删除旧照片
-   curl -X POST "http://192.168.1.100/api/files/cleanup?keep_days=7" \
-     -H "X-Password: mibeecam2026"
+   curl -X POST "http://192.168.1.100/api/files/cleanup?keep_days=7"
    ```
 
 3. **文件系统修复**：
@@ -534,8 +533,7 @@ curl -X POST http://192.168.1.100/api/storage/init
 2. **手动清理**：
    ```bash
    # 删除所有运动检测照片
-   curl -X POST "http://192.168.1.100/api/files/cleanup?type=motion" \
-     -H "X-Password: mibeecam2026"
+   curl -X POST "http://192.168.1.100/api/files/cleanup?type=motion"
    ```
 
 3. **使用更大的 SD 卡**：
@@ -612,7 +610,6 @@ curl -X POST http://192.168.1.100/api/storage/init
 # 通过 Web 界面启用调试
 curl -X POST "http://192.168.1.100/api/config/update" \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"system":{"debug_level":3}}'
 ```
 
@@ -636,8 +633,7 @@ curl -X POST "http://192.168.1.100/api/config/update" \
 # 发送：reset full
 
 # 或通过 API
-curl -X POST "http://192.168.1.100/api/reset?mode=full" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/reset?mode=full"
 ```
 
 #### 手动固件重刷

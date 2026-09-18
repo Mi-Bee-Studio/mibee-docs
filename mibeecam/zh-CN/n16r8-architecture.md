@@ -13,7 +13,7 @@ N16R8 完整实现了 [ESP-Cam 总架构](espcam-architecture.md) 的约定，�
 | mjpeg_streamer | mjpeg_streamer.c/h | `:81` MJPEG 独立 TCP 服务器 |
 | ai_pipeline | ai_pipeline.cpp/h | 人脸/移动/QR 检测（Core 1，640×480 固定缓冲） |
 | web_server | web_server.c/h | `:80` REST + SPIFFS 静态兜底 |
-| rtsp_server | rtsp_server.cpp/h | `:554` RTSP，MJPEG 负载，**digest 鉴权** |
+| rtsp_server | rtsp_server.cpp/h | `:554` RTSP，MJPEG 负载，无鉴权 |
 | onvif_service / onvif_discovery | *.c/h | SOAP 端点 + WS-Discovery（mDNS 宣告） |
 | device_id | device_id.c/h | eFuse MAC 派生的序列号/UUID |
 | at_command | at_command.c/h | UART0 串口 AT 配置 |
@@ -57,7 +57,6 @@ flowchart LR
 - **实时 vs 持久分离**：传感器微调（亮度/对比度/饱和度/锐度/镜像/翻转）经寄存器即时生效；分辨率/质量需要协调重配；AI 开关经 `ai_enable()` 即时生效并持久化；WiFi 改动保存后重启生效。
 - **AI ↔ VGA 联动**：AI 缓冲固定 640×480，任何 AI 特性开启时非 VGA 档位不可用（后端 400，前端双向强制）。
 - **esp32-camera 补丁**：上游组件改动走 `patches/` + 根 CMake 拷贝步骤（本仓不 vendor 到 `components/`），见 [开发指南](n16r8-development.md)。
-- **RTSP 独立凭证**：`rtsp_user/rtsp_pass`（默认 admin/admin），与 Web 管理密码分离，digest 挑战强制。
 
 ## 内存布局
 

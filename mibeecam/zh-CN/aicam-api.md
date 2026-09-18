@@ -1,4 +1,4 @@
-[![ESP32](https://img.shields.io/badge/ESP32-Esp32--cam-blue.svg)](https://github.com/espressif/esp-idf) [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v6.0.1-green.svg)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/) [![OV2640](https://img.shields.io/badge/Camera-OV2640-orange.svg)](https://www.ovt.com/products/ov2640.html) [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) 
+[![ESP32](https://img.shields.io/badge/ESP32-Esp32--cam-blue.svg)](https://github.com/espressif/esp-idf) [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v6.0.1-green.svg)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/) [![OV2640](https://img.shields.io/badge/Camera-OV2640-orange.svg)](https://www.ovt.com/products/ov2640.html) [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 > 🌐 [English Documentation](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam/blob/main/docs/en/api.md)
 
@@ -30,10 +30,7 @@ MiBee Cam 提供 RESTful API 接口，允许通过 HTTP 请求控制和监控系
 
 ### 认证
 
-某些需要身份验证的操作：
-```http
-X-Password: mibeecam2026
-```
+契约 v1.9（2026-09-18）起的固件**没有设备级密码**：Web 管理密码（`X-Password` 头与 `/api/auth` 流程）已移除。所有 HTTP 端点在可信局域网内开放，信任边界是路由器的 WPA2。
 
 ### 响应格式
 - **成功响应**：HTTP 200 + JSON 数据
@@ -46,7 +43,6 @@ X-Password: mibeecam2026
 |------|-------------|
 | 200 | 成功 |
 | 400 | 请求参数错误 |
-| 401 | 认证失败 |
 | 404 | 资源未找到 |
 | 500 | 服务器内部错误 |
 
@@ -146,7 +142,6 @@ Host: 192.168.1.100
   "resolution": 0,
   "fps": 15,
   "jpeg_quality": 12,
-  "web_password": "",
   "timezone": "CST-8",
   "motion_threshold": 30,
   "motion_cooldown": 5,
@@ -165,13 +160,12 @@ Host: 192.168.1.100
 
 ### `/api/config` - 更新配置
 
-更新系统配置（需要认证）。
+更新系统配置。
 
 **请求**
 ```http
 POST /api/config
 Host: 192.168.1.100
-X-Password: mibeecam2026
 Content-Type: application/json
 
 {
@@ -189,7 +183,6 @@ Content-Type: application/json
 - `resolution`: 分辨率 (0=VGA, 1=SVGA, 2=XGA, 3=UXGA)
 - `fps`: 帧率目标
 - `jpeg_quality`: JPEG 质量 (0-63，数字越小质量越高)
-- `web_password`: Web 访问密码
 - `timezone`: 时区字符串
 - `motion_threshold`: 运动检测阈值 (1-100)
 - `motion_cooldown`: 运动检测冷却时间（秒）
@@ -205,25 +198,6 @@ Content-Type: application/json
   "success": true,
   "message": "Configuration updated successfully",
   "needs_reboot": true
-}
-```
-
-### `/api/auth` - 验证密码
-
-验证 Web 访问密码。
-
-**请求**
-```http
-GET /api/auth
-Host: 192.168.1.100
-X-Password: mibeecam2026
-```
-
-**响应**
-```json
-{
-  "success": true,
-  "message": "Password verified"
 }
 ```
 
@@ -317,13 +291,12 @@ Host: 192.168.1.100
 
 ### `/api/files` - 删除文件
 
-删除 SD 卡上的照片文件（需要认证）。
+删除 SD 卡上的照片文件。
 
 **请求**
 ```http
 DELETE /api/files?name=2024-12-30_14-35-42.jpg
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **参数**
@@ -364,13 +337,12 @@ Content-Length: 45232
 
 ### `/api/record` - 启动/停止录像
 
-启动或停止视频录制（需要认证）。
+启动或停止视频录制。
 
 **请求**
 ```http
 POST /api/record?action=start
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **参数**
@@ -388,12 +360,10 @@ X-Password: mibeecam2026
 **Curl 示例**
 ```bash
 # 启动连续录像
-curl -X POST "http://192.168.1.100/api/record?action=start" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=start"
 
 # 停止录像
-curl -X POST "http://192.168.1.100/api/record?action=stop" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=stop"
 ```
 
 ### `/api/record` - 获取录像状态
@@ -453,13 +423,12 @@ Host: 192.168.1.100
 
 ### `/api/timelapse/start` - 启动延时摄影
 
-启动延时摄影（需要认证）。
+启动延时摄影。
 
 **请求**
 ```http
 POST /api/timelapse/start
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **响应**
@@ -474,13 +443,12 @@ X-Password: mibeecam2026
 
 ### `/api/timelapse/stop` - 停止延时摄影
 
-停止延时摄影（需要认证）。
+停止延时摄影。
 
 **请求**
 ```http
 POST /api/timelapse/stop
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **响应**
@@ -517,13 +485,12 @@ Host: 192.168.1.100
 
 ### `/api/flash` - 控制闪光灯
 
-控制 LED 闪光灯（需要认证）。
+控制 LED 闪光灯。
 
 **请求**
 ```http
 POST /api/flash
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **响应**
@@ -537,13 +504,12 @@ X-Password: mibeecam2026
 
 ### `/api/reboot` - 重启设备
 
-重启设备（需要认证）。
+重启设备。
 
 **请求**
 ```http
 POST /api/reboot
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **响应**
@@ -557,7 +523,7 @@ X-Password: mibeecam2026
 
 ### `/api/reset` - 恢复出厂设置
 
-恢复出厂设置（需要认证）。
+恢复出厂设置。
 
 **注意**：BOOT 按钮工厂重置功能已禁用，因为 GPIO0 被用作摄像头 XCLK 引脚。请使用此 API 端点进行重置。
 
@@ -565,7 +531,6 @@ X-Password: mibeecam2026
 ```http
 POST /api/reset
 Host: 192.168.1.100
-X-Password: mibeecam2026
 ```
 
 **响应**
@@ -636,11 +601,7 @@ curl -s http://192.168.1.100/api/config | jq .
 # 更新配置
 curl -X POST http://192.168.1.100/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"wifi_ssid":"MyNetwork","wifi_pass":"MyPass","resolution":1}'
-
-# 验证密码
-curl -H "X-Password: mibeecam2026" http://192.168.1.100/api/auth
 ```
 
 ### 摄像头控制
@@ -661,19 +622,16 @@ curl -s "http://192.168.1.100/api/files?limit=5" | jq .
 curl -o photo.jpg "http://192.168.1.100/api/download?name=2024-12-30_14-35-42.jpg"
 
 # 删除文件
-curl -X DELETE "http://192.168.1.100/api/files?name=2024-12-30_14-35-42.jpg" \
-  -H "X-Password: mibeecam2026"
+curl -X DELETE "http://192.168.1.100/api/files?name=2024-12-30_14-35-42.jpg"
 ```
 
 ### 录像控制
 ```bash
 # 启动录像
-curl -X POST "http://192.168.1.100/api/record?action=start" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=start"
 
 # 停止录像
-curl -X POST "http://192.168.1.100/api/record?action=stop" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=stop"
 
 # 查看录像状态
 curl -s http://192.168.1.100/api/record | jq .
@@ -682,12 +640,10 @@ curl -s http://192.168.1.100/api/record | jq .
 ### 延时摄影
 ```bash
 # 启动延时摄影
-curl -X POST http://192.168.1.100/api/timelapse/start \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/timelapse/start
 
 # 停止延时摄影
-curl -X POST http://192.168.1.100/api/timelapse/stop \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/timelapse/stop
 
 # 查看延时状态
 curl -s http://192.168.1.100/api/timelapse/status | jq .
@@ -696,16 +652,13 @@ curl -s http://192.168.1.100/api/timelapse/status | jq .
 ### 系统管理
 ```bash
 # 控制闪光灯
-curl -X POST http://192.168.1.100/api/flash \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/flash
 
 # 重启设备
-curl -X POST http://192.168.1.100/api/reboot \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/reboot
 
 # 恢复出厂设置
-curl -X POST http://192.168.1.100/api/reset \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/reset
 
 # 获取 Prometheus 指标
 curl -s http://192.168.1.100/api/metrics
@@ -718,10 +671,6 @@ curl -s http://192.168.1.100/api/metrics
 **400 Bad Request**
 - 原因：请求参数错误
 - 解决：检查请求格式和参数
-
-**401 Unauthorized**
-- 原因：认证失败
-- 解决：检查 `X-Password` 头部
 
 **404 Not Found**
 - 原因：端点不存在
@@ -743,7 +692,7 @@ curl -s http://192.168.1.100/api/metrics
 
 ## 安全注意事项
 
-- **Web 密码**：在生产环境中更改默认密码
+- **信任边界**：契约 v1.9（2026-09-18）起设备无 Web 密码，边界在路由器的 WPA2
 - **HTTPS**：当前不支持，建议在专用网络中使用
 - **网络隔离**：将设备放在专用网络中
 - **访问控制**：限制 API 访问 IP 范围
@@ -762,7 +711,6 @@ curl -s http://192.168.1.100/api/metrics
 | `/api/status` | GET | 设备状态和传感器数据 |
 | `/api/config` | GET | 当前配置 JSON |
 | `/api/config` | POST | 更新配置 |
-| `/api/auth` | GET | 验证密码 |
 | `/api/flash` | POST | 控制 LED 闪光灯 |
 | `/api/reboot` | POST | 重启设备 |
 | `/api/reset` | POST | 恢复出厂设置 |
