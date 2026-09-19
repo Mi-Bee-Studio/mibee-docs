@@ -1,6 +1,6 @@
 # API 概览
 
-> 适用于 MiBeeNvr v0.11.0 · 完整接口文档见仓库 [docs/zh/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/zh/api)
+> 适用于 MiBeeNvr v0.12.0 · 完整接口文档见仓库 [docs/zh/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/zh/api)
 
 MiBee NVR 的全部功能都可通过 REST API 驱动（Web UI 本身就是这套路 API 的消费者），并提供 SSE 实时事件流。本页是认证方式与核心端点速查。
 
@@ -42,15 +42,45 @@ curl -H "Authorization: Bearer mbv_xxx" http://localhost:9090/api/recordings
 
 | 组 | 端点 | 说明 |
 |----|------|------|
-| 摄像头 | `GET/POST /api/cameras`、`GET/PUT/DELETE /api/cameras/{id}` | 摄像头 CRUD |
+| 摄像头 | `GET/POST /api/cameras`、`GET/PUT/DELETE /api/cameras/{id}`、`POST /api/cameras/{id}/adaptive/trigger`、`PUT/GET /api/cameras/{id}/storage-root` | 摄像头 CRUD、自适应录制外部触发、按相机存储根 |
 | 实时流 | `GET /api/cameras/{id}/stream.flv`、HLS / WebRTC / MJPEG 端点 | 拉流（FLV 需 BasicAuth） |
 | 录像 | `GET /api/recordings` | 列表 / 筛选 / 分页 |
 | 回放 | `GET /api/cameras/{id}/playback/playlist.m3u8` | 按录像回放 |
-| AI 事件 | `POST /api/ai/events`、`GET /api/ai/events`、`GET /api/ai/stats` | 外部 AI 后端写入（Bearer）与查询统计 |
+| AI 事件 | `POST /api/ai/events`、`GET /api/ai/events`、`GET /api/ai/events/{id}`、`GET /api/ai/events/{id}/snapshot` | 外部 AI 后端写入（Bearer）与查询统计；事件快照图片 |
 | 设置 | `GET/PUT /api/settings`、`POST /api/settings/api-keys` | 运行配置与密钥 |
-| 存储 | `GET /api/storage`（含 `candidates`） | 存储统计与可用卷 |
+| 存储 | `GET /api/storage`、`GET/POST/DELETE /api/storage/candidates`、`POST /api/storage/migrate` | 存储统计、候选卷管理、批量迁移（[存储管理](storage-management.md)） |
 | GB28181 | `/api/gb28181/*` | 设备 / 通道 / PTZ / 回放 |
 | 系统 | `GET /api/version`、`GET /api/capabilities`、`GET /api/stats` | 版本 / 能力 / 统计 |
+
+## AI 事件快照
+
+`GET /api/ai/events/{id}/snapshot` 返回该事件的快照 JPEG（外部 AI 后端在事件里上报的
+`snapshot_path`，相对 NVR 存储 root，如同机部署写入 `<存储根>/ai-snapshots/`）：
+
+```bash
+curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_…"
+```
+
+- 鉴权与其它 AI 查询端点一致（BasicAuth 会话 / Bearer API key / `?api_key=`）
+- **一切「无图可用」情形统一 404**（事件无 `snapshot_path`、文件不存在、事件不存在），
+  客户端无需解析错误体即可回退占位图；非法 id 返回 400
+- 响应带 `Cache-Control: private, max-age=86400`（快照不可变），支持 Range 与
+  条件请求
+- 路径在存储 root 内解析，穿越或根外路径一律 404——不会读到存储树之外的文件
+
+远程部署的外部 AI 后端无法直写 NVR 存储树时，先 POST 事件拿到 id，再把
+快照 JPEG 原始字节上传到同一资源路径（`Content-Type: image/jpeg`，API Key
+鉴权）：
+
+```bash
+curl -X POST -H "Authorization: Bearer mbv_…" -H "Content-Type: image/jpeg"   --data-binary @snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot"
+```
+
+- 上限 4MB；非 JPEG 魔数返回 400；文件落地 `<存储根>/ai-snapshots/` 并回填
+  事件的 `snapshot_path`（原子写），成功后 GET 立即可服务
+- 同机（sidecar）部署无需上传——直接写 `ai-snapshots/` 子目录并在事件里带
+  相对路径即可，两种形态收敛到同一 GET 端点
+
 
 ## SSE 事件流
 

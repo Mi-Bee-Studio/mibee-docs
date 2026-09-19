@@ -42,6 +42,8 @@
       "title": "Features",
       "items": [
       { "slug": "recording-playback", "file": "recording-playback.md", "title": "Recording & Playback" },
+      { "slug": "adaptive-recording", "file": "adaptive-recording.md", "title": "Adaptive Recording" },
+      { "slug": "sub-stream", "file": "sub-stream.md", "title": "Sub-Streams" },
       { "slug": "streaming", "file": "streaming.md", "title": "Streaming Protocol Selection" },
       { "slug": "relay", "file": "relay.md", "title": "Live Relay" },
       { "slug": "audio", "file": "audio.md", "title": "Audio" },
@@ -56,14 +58,18 @@
       "title": "Integrations",
       "items": [
       { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT Integration" },
-      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP Storage" }
+      { "slug": "webhook-integration", "file": "webhook-integration.md", "title": "Webhook Triggers" },
+      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP Storage" },
+      { "slug": "home-assistant", "file": "home-assistant.md", "title": "Home Assistant" }
       ]
     },
     {
       "title": "Maintenance",
       "items": [
       { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "Upgrade Guide" },
-      { "slug": "observability", "file": "observability.md", "title": "Observability Guide" }
+      { "slug": "storage-management", "file": "storage-management.md", "title": "Storage Management" },
+      { "slug": "observability", "file": "observability.md", "title": "Observability Guide" },
+      { "slug": "performance", "file": "performance.md", "title": "Performance Tuning" }
       ]
     },
     {

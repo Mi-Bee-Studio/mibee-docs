@@ -1,6 +1,6 @@
 # CLI Reference
 
-> For MiBeeNvr v0.11.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
+> For MiBeeNvr v0.12.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
 
 MiBee NVR follows a "single binary + subcommands" design: **running it without a subcommand starts the server**, while subcommands run an administrative tool and exit.
 
@@ -33,8 +33,10 @@ mibee-nvr -config mibee-nvr.yaml
 | [`encrypt-config`](#encrypt-config-encrypt-sensitive-fields) | Encrypt plaintext secrets in the config |
 | [`download-model`](#download-model-download-the-ai-model) | Download the browser-side AI model |
 | [`merge-cameras`](#merge-cameras-merge-cameras) | Merge two duplicate camera entries |
-| [`repair`](#repair-data-repair) | Data repair toolkit (7 subcommands) |
+| [`timelapse-merge`](#timelapse-merge-convert-recordings-to-timelapse) | Batch-convert recordings of any period/camera into timelapse merges |
+| [`repair`](#repair-data-repair) | Data repair toolkit (8 subcommands) |
 | [`cleanup`](#cleanup-recording-cleanup) | Delete recordings by date / orphan files |
+| [`gen-gb35114-certs`](#gen-gb35114-certs-issue-gb35114-pilot-certificates) | Issue GB35114 level-A pilot certificates (`-tags gb35114` builds only) |
 
 ---
 
@@ -122,6 +124,44 @@ Steps performed: back up the database → re-tag recordings/events and rewrite f
 | `--force` | Proceed even if orphan records exist |
 | `--config <path>` | Config file path (default `mibee-nvr.yaml`) |
 
+## timelapse-merge — Convert Recordings to Timelapse
+
+Batch-converts existing video recordings (H264/H265/AVI/MJPEG) of **any camera over any date range** into periodic timelapse merges — the CLI counterpart of `POST /api/timelapse/{id}/merge`, executed in-process against the storage DB. Sampling interval, output fps and source deletion are **per-run overrides that never mutate the camera config**:
+
+```bash
+# Preview: all JPEG cameras, everything since 2026-08-26
+mibee-nvr timelapse-merge --camera all --encoding jpeg --start 2026-08-26
+
+# Execute: 1-second sampling + delete sources after a successful merge
+mibee-nvr timelapse-merge --camera all --encoding jpeg --start 2026-08-26 \
+  --interval 1s --delete-sources --execute
+```
+
+Behavior notes:
+
+- Windows (default `natural-day`) are enumerated across the date range and merged one by one; windows with an existing completed merge are skipped (safe to re-run and resume), open windows are skipped.
+- `--delete-sources` deletes source recordings (DB rows + files) only after the window's merge **succeeded**; recordings being processed by MiBeeVision are always skipped.
+- The command may run while the NVR is live (WAL concurrency, same as cleanup/repair); cameras with timelapse enabled are refused though — their windows belong to the server's merge scheduler (use `--force` or stop the server).
+- **Self-downgrades on execute** (nice 19 + lowest best-effort IO class; `--no-throttle` disables): merges at the NVR's default priority starve online recording (2026-09-12 incident: load 8-13 for 4.5h, recordings dropped 17→10; renicing after the fact could not undo the storm).
+- **Directory-form source deletion is rate-limited** (pause every 200 files, `--delete-throttle`): unlinking the millions of small files in MJPEG/timelapse frame directories saturates the ext4 journal (jbd2) for tens of minutes and slows all disk IO.
+- Merge intermediates (frame extract/copy dirs) are written under the **storage root** at `<root>/periodic-merge/tmp/`, never the system `/tmp` (a 1s-sampled natural-day window needs ~3.5-7GB and small root partitions hit ENOSPC); merge output is generated streaming (#747), so memory use is independent of window size. Intermediates left behind by an interrupted run (Ctrl-C/crash) are reclaimed by the NVR server's startup sweep (grace period `storage.periodic_temp_grace_s`, default 24h — see [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/configuration.md)).
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--camera <ids\|all>` | (required) | Comma-separated camera IDs or `all` |
+| `--encoding <enc>` | — | With `--camera all`: filter by encoding (e.g. `jpeg`) |
+| `--start <YYYY-MM-DD>` | (required) | First window date (config timezone) |
+| `--end <YYYY-MM-DD>` | yesterday | Last window date (inclusive) |
+| `--duration <label>` | `natural-day` | Window size: `8h` / `12h` / `24h` / `7d` / `30d` … |
+| `--interval <dur>` | camera `timelapse.interval`, else 30s | Frame sampling interval (e.g. `1s`) |
+| `--fps <n>` | camera `merge_output_fps`, else 10 | Output playback fps |
+| `--delete-sources` / `--no-delete-sources` | camera `delete_recordings_after_merge` | Override source deletion for this run |
+| `--delete-throttle <dur>` | `200ms` | Pause between chunks when deleting directory-form sources; `0` disables |
+| `--execute` | dry-run | Actually execute |
+| `--force` | — | Process timelapse-enabled cameras while the NVR is running |
+| `--no-throttle` | — | Skip the automatic self-downgrade (nice 19 + IO best-effort) |
+| `--config <path>` | `mibee-nvr.yaml` | Config file path |
+
 ## repair — Data Repair
 
 A set of repair tools for runtime data issues. They **touch the database directly**. Prefer running with the server stopped (running is also safe — WAL mode allows concurrent readers — but stop for large repairs).
@@ -141,6 +181,7 @@ Every subcommand **defaults to dry-run** (reports what would change); add `--exe
 | `prune-intermediate-mp4` | Remove per-segment rolling-merge .mp4 outputs already folded into periodic (8h/24h/7d/30d) merges |
 | `reclaim-orphan-merges` | Reclaim merged .mp4 files left on disk after their recording row was deleted via the web UI (touches only unreferenced outputs) |
 | `normalize-endpoints` | Canonicalize ONVIF endpoints (elide default ports, lowercase, strip trailing slash) so dedup queries match |
+| `mjpeg-containerize` | Convert legacy dir-form MJPEG segments (one JPEG file per frame) into single-file AVI containers (#761); per segment "convert → verify → commit → remove source", and a failed verify leaves the row untouched |
 
 Examples:
 
@@ -150,6 +191,26 @@ mibee-nvr repair duration
 
 # execute, deleting unrecoverable files as well
 mibee-nvr repair duration --execute --prune
+```
+
+`mjpeg-containerize` specific flags:
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--camera <id>` | all | Convert only this camera's segments |
+| `--limit N` | all | Convert at most N segments |
+| `--keep-old` | off | Keep the source frame directory after conversion |
+| `--busy-retries N` | `3` | Retry attempts on `SQLITE_BUSY` for the DB row flip (`0` = single attempt, no retry) |
+| `--busy-wait <dur>` | `2s` | Linear backoff base between BUSY retries (Go duration, e.g. `500ms`, `5s`) |
+
+The CLI shares the WAL DB with the live NVR — under disk saturation the server's merge transactions can outlast busy_timeout (raise both values then); on fast disks the default 3-attempt worst case is pure waste (lower them). Mirrors the `timelapse-merge --delete-throttle` precedent.
+
+```bash
+# preview (dry-run by default)
+mibee-nvr repair mjpeg-containerize --camera yard-esp32
+
+# execute; relax BUSY retries under disk saturation
+mibee-nvr repair mjpeg-containerize --execute --busy-retries 5 --busy-wait 5s
 ```
 
 ## cleanup — Recording Cleanup
@@ -176,6 +237,16 @@ mibee-nvr cleanup --orphans
 | `--config <path>` | Config file path (default `mibee-nvr.yaml`; locates the storage root and database) |
 
 > For day-to-day cleanup prefer the [retention policy](recording-playback.md) (`cleanup.retention_days`); this command is for post-migration slimming and incident cleanup.
+
+## gen-gb35114-certs — Issue GB35114 Pilot Certificates
+
+Only present in `-tags gb35114` builds (a default build explains the rebuild instead). Issues self-signed pilot material for GB35114 level-A secure registration: an SM2 platform identity plus device identities signed by the platform, laid out to match the three path keys of `gb28181.security35114`. See the [GB28181 guide — GB35114 Security](gb28181.md).
+
+```bash
+mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
+  --device-id 34020000001320000001,34020000001320000002 \
+  --out-dir gb35114-certs [--days 3650]
+```
 
 ## Environment Variables
 

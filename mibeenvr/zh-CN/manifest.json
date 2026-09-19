@@ -42,6 +42,8 @@
       "title": "功能使用",
       "items": [
       { "slug": "recording-playback", "file": "recording-playback.md", "title": "录制与回放" },
+      { "slug": "adaptive-recording", "file": "adaptive-recording.md", "title": "自适应录制" },
+      { "slug": "sub-stream", "file": "sub-stream.md", "title": "子码流" },
       { "slug": "streaming", "file": "streaming.md", "title": "播放协议选择" },
       { "slug": "relay", "file": "relay.md", "title": "直播转推" },
       { "slug": "audio", "file": "audio.md", "title": "音频" },
@@ -56,14 +58,18 @@
       "title": "集成",
       "items": [
       { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT 集成" },
-      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP 存储" }
+      { "slug": "webhook-integration", "file": "webhook-integration.md", "title": "Webhook 触发" },
+      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP 存储" },
+      { "slug": "home-assistant", "file": "home-assistant.md", "title": "Home Assistant" }
       ]
     },
     {
       "title": "维护",
       "items": [
       { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "升级指南" },
-      { "slug": "observability", "file": "observability.md", "title": "可观测性手册" }
+      { "slug": "storage-management", "file": "storage-management.md", "title": "存储管理" },
+      { "slug": "observability", "file": "observability.md", "title": "可观测性手册" },
+      { "slug": "performance", "file": "performance.md", "title": "性能调优" }
       ]
     },
     {

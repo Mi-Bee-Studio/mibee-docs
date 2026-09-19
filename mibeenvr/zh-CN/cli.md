@@ -1,6 +1,6 @@
 # CLI 用户手册
 
-> 适用于 MiBeeNvr v0.11.0 · 命令名 `mibee-nvr`（预编译包可能带架构后缀，如 `mibee-nvr-amd64`）
+> 适用于 MiBeeNvr v0.12.0 · 命令名 `mibee-nvr`（预编译包可能带架构后缀，如 `mibee-nvr-amd64`）
 
 MiBee NVR 是「单二进制 + 子命令」形态：**不带子命令直接运行即启动服务器**，带子命令则执行对应的管理工具后退出。
 
@@ -33,8 +33,10 @@ mibee-nvr -config mibee-nvr.yaml
 | [`encrypt-config`](#encrypt-config-加密敏感字段) | 加密配置中的明文密码 |
 | [`download-model`](#download-model-下载-ai-模型) | 下载浏览器端 AI 检测模型 |
 | [`merge-cameras`](#merge-cameras-合并摄像头) | 合并两个重复的摄像头条目 |
-| [`repair`](#repair-数据修复) | 数据修复工具集（7 个子命令） |
+| [`timelapse-merge`](#timelapse-merge-录像转延时合并) | 把任意时段的录像批量转成延时合并产物 |
+| [`repair`](#repair-数据修复) | 数据修复工具集（8 个子命令） |
 | [`cleanup`](#cleanup-录像清理) | 按日期 / 孤儿文件清理录像 |
+| [`gen-gb35114-certs`](#gen-gb35114-certs-签发-gb35114-试点证书) | 签发 GB35114 A 级试点证书（仅 `-tags gb35114` 构建） |
 
 ---
 
@@ -122,6 +124,44 @@ mibee-nvr merge-cameras --source cam-old --target cam-new --execute
 | `--force` | 存在孤儿记录时仍然继续 |
 | `--config <path>` | 配置文件路径（默认 `mibee-nvr.yaml`） |
 
+## timelapse-merge — 录像转延时合并
+
+把**任意时段、任意摄像头**的既有录像（H264 / H265 / AVI / MJPEG）批量转成周期延时合并产物 —— `POST /api/timelapse/{id}/merge` 的 CLI 版，进程内直连数据库执行。采样间隔、输出帧率、源录像删除都是**本次运行覆盖值，不改摄像头配置**：
+
+```bash
+# 预览：所有 JPEG 摄像头、2026-08-26 起的全部录像
+mibee-nvr timelapse-merge --camera all --encoding jpeg --start 2026-08-26
+
+# 执行：1 秒采样 + 合并成功后删除源录像
+mibee-nvr timelapse-merge --camera all --encoding jpeg --start 2026-08-26 \
+  --interval 1s --delete-sources --execute
+```
+
+行为要点：
+
+- 按窗口（默认 `natural-day`，即自然日）枚举日期范围，逐窗口执行；已完成的窗口自动跳过（可安全重跑续传），尚未闭合的窗口跳过。
+- `--delete-sources` 仅在对应窗口合并**成功后**删除源录像（DB 行 + 文件），MiBeeVision 处理中的录像始终跳过。
+- 命令可在 NVR 运行中执行（WAL 并发模型，与 cleanup/repair 一致）；但 timelapse 已启用的摄像头会被拒绝 —— 其窗口归服务器合并调度器所有，需 `--force` 或停服后运行。
+- **执行时自动自降级**（nice 19 + IO best-effort 最低档，`--no-throttle` 关闭）：大窗口合并与在线录像平权竞争会拖垮录像（2026-09-12 事故：load 8-13 持续 4.5h，录像 17→10 台），事后 renice 无法挽回。
+- **目录形源删除自动限速**（每 200 个文件暂停 `--delete-throttle`）：MJPEG/延时帧目录的百万级小文件 unlink 会让 ext4 日志（jbd2）饱和数十分钟，拖慢所有磁盘 IO。
+- 合并中间产物（帧提取/复制目录）写在**存储根** `<root>/periodic-merge/tmp/` 下，不再用系统 `/tmp`（1s 采样全天窗口约需 3.5-7GB，小根分区会 ENOSPC）；合并输出采用流式生成（#747），内存占用与窗口大小无关。中断（Ctrl-C/崩溃）遗留的中间目录由 NVR 服务端启动清扫回收（宽限期 `storage.periodic_temp_grace_s`，默认 24h，见 [配置](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/configuration.md)）。
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--camera <ids\|all>` | （必填） | 逗号分隔摄像头 ID 或 `all` |
+| `--encoding <enc>` | — | 配合 `--camera all` 按编码过滤（如 `jpeg`） |
+| `--start <YYYY-MM-DD>` | （必填） | 起始窗口日期（配置时区） |
+| `--end <YYYY-MM-DD>` | 昨天 | 结束窗口日期（含） |
+| `--duration <label>` | `natural-day` | 窗口大小：`8h` / `12h` / `24h` / `7d` / `30d` 等 |
+| `--interval <dur>` | 摄像头 `timelapse.interval`，缺省 30s | 帧采样间隔（如 `1s`） |
+| `--fps <n>` | 摄像头 `merge_output_fps`，缺省 10 | 输出播放帧率 |
+| `--delete-sources` / `--no-delete-sources` | 摄像头 `delete_recordings_after_merge` | 覆盖本次运行的源录像删除开关 |
+| `--delete-throttle <dur>` | `200ms` | 删除目录形源（MJPEG/延时帧目录）时的分块暂停，`0` 关闭 |
+| `--execute` | dry-run | 真正执行 |
+| `--force` | — | NVR 运行中仍处理 timelapse 已启用的摄像头 |
+| `--no-throttle` | — | 跳过启动时自动自降级（nice 19 + IO best-effort） |
+| `--config <path>` | `mibee-nvr.yaml` | 配置文件路径 |
+
 ## repair — 数据修复
 
 针对运行期数据问题的一组修复工具，**直接操作数据库**。建议优先在服务停止时运行（运行中也安全 —— WAL 模式支持并发读，但大修停服更稳）。
@@ -141,6 +181,7 @@ mibee-nvr repair <子命令> [--dry-run | --execute] [--config mibee-nvr.yaml]
 | `prune-intermediate-mp4` | 清理已并入周期合并产物（8h/24h/7d/30d）的滚动合并中间 .mp4 |
 | `reclaim-orphan-merges` | 回收 Web UI 删除录像后遗留的孤儿合并 .mp4（只动无引用产物，不碰源段） |
 | `normalize-endpoints` | 规范化 ONVIF endpoint（省略默认端口 / 小写 / 去尾斜杠），修复去重查询不匹配 |
+| `mjpeg-containerize` | 把旧版目录形态 MJPEG 段（每帧一个 JPEG 文件）转成单文件 AVI 容器（#761）；逐段「转换 → 校验 → 落库 → 删源」，校验失败则行不动 |
 
 示例：
 
@@ -150,6 +191,26 @@ mibee-nvr repair duration
 
 # 执行修复，并删除探测失败的坏文件
 mibee-nvr repair duration --execute --prune
+```
+
+`mjpeg-containerize` 专用参数：
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `--camera <id>` | 全部 | 只转换该摄像头的段 |
+| `--limit N` | 全部 | 最多转换 N 段 |
+| `--keep-old` | 关 | 转换后保留源帧目录 |
+| `--busy-retries N` | `3` | DB 行翻转遇 `SQLITE_BUSY` 的重试次数（`0` = 单次尝试，不重试） |
+| `--busy-wait <dur>` | `2s` | BUSY 重试的线性退避基数（Go 时长格式，如 `500ms`、`5s`） |
+
+CLI 与运行中的 NVR 共享 WAL 库——磁盘饱和时服务端合并事务可能拖过 busy_timeout，此时调大这两个值；快盘上默认 3 次的最坏等待是纯浪费，可调小（照 `timelapse-merge --delete-throttle` 先例）。
+
+```bash
+# 预览（默认 dry-run）
+mibee-nvr repair mjpeg-containerize --camera yard-esp32
+
+# 执行；磁盘饱和时放宽 BUSY 重试
+mibee-nvr repair mjpeg-containerize --execute --busy-retries 5 --busy-wait 5s
 ```
 
 ## cleanup — 录像清理
@@ -176,6 +237,16 @@ mibee-nvr cleanup --orphans
 | `--config <path>` | 配置文件路径（默认 `mibee-nvr.yaml`，用于定位存储根目录和数据库） |
 
 > 日常清理请优先使用[保留策略](recording-playback.md)（`cleanup.retention_days`）；本命令适合迁移后瘦身、异常善后等场景。
+
+## gen-gb35114-certs — 签发 GB35114 试点证书
+
+仅存在于 `-tags gb35114` 构建（默认构建运行会提示重建方式）。为 GB35114 A 级安全注册签发自签试点材料：SM2 平台身份 + 由平台签发的设备身份，输出布局直接对应 `gb28181.security35114` 的三个路径键。详见 [GB28181 指南 — GB35114 安全增强](gb28181.md)。
+
+```bash
+mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
+  --device-id 34020000001320000001,34020000001320000002 \
+  --out-dir gb35114-certs [--days 3650]
+```
 
 ## 环境变量速查
 
