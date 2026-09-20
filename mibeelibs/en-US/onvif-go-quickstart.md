@@ -7,11 +7,11 @@ pick the main / sub streams with the built-in heuristics.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
-> v2 is still at rc stage; the API may shift slightly — pin the exact
-> version in production.
+> v2 is stable (v2.0.0 shipped 2026-09-17; the current line is v2.1.0) —
+> still pin the exact version in production.
 
 ## Minimal example
 
@@ -49,9 +49,18 @@ Notes:
   `StreamSetup` for RTSP / HTTP transports ([media](onvif-go-media.md)).
 - Event subscriptions are one call:
   `client.Events().SubscribeEvents` ([events](onvif-go-events.md)).
+- H.265/AV1 configuration lives in the Media2 model:
+  `client.Media2().GetVideoEncoderConfigurationOptions` reports one entry
+  per supported codec with a free-name `Encoding`
+  ([media](onvif-go-media.md#media2-h265av1)).
+- Profile M surfaces: `client.Analytics()` (rule/analytics-module
+  configuration) and the `metadata` package (parsing the analytics
+  output stream).
 
 ## Next steps
 
+- [CLI tools](onvif-go-cli.md): probe a camera with `discover` /
+  `onvif-quick` / `onvif-diagnostics` before writing any code.
 - [Discovery](onvif-go-discovery.md): WS-Discovery probes for cameras on
   the network.
 - [Media](onvif-go-media.md): profile-selection heuristics and stream URIs.

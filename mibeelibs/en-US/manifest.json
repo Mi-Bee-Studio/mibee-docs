@@ -136,6 +136,26 @@
           "title": "CLI Tools"
         },
         {
+          "slug": "onvif-go-cli-discover",
+          "file": "onvif-go-cli-discover.md",
+          "title": "CLI: discover"
+        },
+        {
+          "slug": "onvif-go-cli-quick",
+          "file": "onvif-go-cli-quick.md",
+          "title": "CLI: onvif-quick"
+        },
+        {
+          "slug": "onvif-go-cli-diagnostics",
+          "file": "onvif-go-cli-diagnostics.md",
+          "title": "CLI: onvif-diagnostics"
+        },
+        {
+          "slug": "onvif-go-cli-server",
+          "file": "onvif-go-cli-server.md",
+          "title": "CLI: onvif-server"
+        },
+        {
           "slug": "onvif-go-concurrency",
           "file": "onvif-go-concurrency.md",
           "title": "Concurrency Model"

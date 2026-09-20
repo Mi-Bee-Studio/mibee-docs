@@ -28,7 +28,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
 ## 主动：组播探测

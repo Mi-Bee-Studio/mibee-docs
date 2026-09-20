@@ -7,7 +7,7 @@ usually want.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
 ## Managed subscriptions
@@ -100,3 +100,17 @@ When you need full control, the primitives remain: `CreatePullPointSubscription`
 `PullMessages`, `RenewSubscription`, `Unsubscribe`, `Seek`,
 `SetEventSynchronizationPoint`, `GetEventProperties`, event-broker
 management, and `GetEventServiceCapabilities`.
+
+## Topic filters are honored (v2.1.0)
+
+`CreatePullPointSubscription` accepts a topic expression, and since
+v2.1.0 the library's own server means it: subscriptions in the
+**Concrete** dialect (exact local topic path, prefix-independent, e.g.
+`tns1:VideoSource/MotionAlarm`) and **ConcreteSet** (`|`-alternatives
+with `*` segment wildcards) receive exactly what the filter selects.
+Unsupported dialects and empty expressions fault — the server no longer
+accepts a filter and then silently ignores it. `GetEventProperties`
+answers the spec-complete form (topic namespace location, the two
+mandatory topic-expression dialects, the spec-blessed empty
+message-content dialect); message-content filtering is not applied and
+not advertised.

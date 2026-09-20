@@ -9,7 +9,7 @@ byte-predictable XML output.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
 ## Transport architecture
@@ -168,9 +168,35 @@ The SOAP handlers are stateless translators now; `Server.Handle*`
 signatures, the exported model types, and the domain error sentinels
 keep their `server.*` spellings via aliases.
 
-## What's next
+## TLS transport (Profile T baseline)
 
-M3 (#23) turns the simulator's in-memory state into pluggable provider
-interfaces (DeviceInfo / StreamURI / Snapshot / Imaging / PTZ), so the same
-transport can front a real camera stack. See
-[v2-architecture.md](onvif-go-v2-architecture.md).
+Since v2.1.0 the server serves HTTPS when `Config.TLSCertFile` and
+`Config.TLSKeyFile` are set (both, or neither — a lone one fails
+validation). No separate start call: TLS is decided inside `Start`.
+`Start` binds its listener explicitly, so `Server.ListenAddr()` reports
+the bound address as soon as it runs — observable with `Port: 0`
+(kernel-assigned) for tests:
+
+```go
+config := server.DefaultConfig()
+config.TLSCertFile = "cert.pem"
+config.TLSKeyFile = "key.pem"
+
+srv, _ := server.New(config)
+go srv.Start(ctx)                           // https://…/onvif/device_service
+fmt.Println(srv.ListenAddr())               // e.g. 0.0.0.0:8443
+```
+
+Scope: plain TLS transport (the Profile T baseline). Advanced
+onboarding — PKI, 802.1X, WS-Security beyond UsernameToken — is
+deliberately out of scope.
+
+The runnable `onvif-server` binary speaks plain HTTP only; TLS is the
+embedded package's surface ([onvif-server CLI](onvif-go-cli-server.md)).
+
+## Where to go next
+
+Pluggable providers (above) front real camera stacks; the pull-point
+events service (`SupportEvents` + the `PublishEvent` seam) is covered in
+the events manual. See [v2-architecture.md](onvif-go-v2-architecture.md)
+for the layering.

@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
 ## 托管订阅
@@ -92,3 +92,13 @@ if errors.Is(err, onvif.ErrEventsNotSupported) {
 `RenewSubscription`、`Unsubscribe`、`Seek`、`SetEventSynchronizationPoint`、
 `GetEventProperties`、事件代理（event broker）管理与
 `GetEventServiceCapabilities`。
+
+## 主题过滤说到做到（v2.1.0）
+
+`CreatePullPointSubscription` 接受主题表达式，v2.1.0 起本库自家服务端
+说到做到：**Concrete** 方言（精确局部主题路径、与前缀无关，如
+`tns1:VideoSource/MotionAlarm`）与 **ConcreteSet**（`|` 备选 + `*`
+段通配）的订阅收到的正是过滤所选。不支持的方言与空表达式报 Fault
+——服务端不再「收下过滤条件然后静默无视」。`GetEventProperties`
+应答规范完整形态（主题命名空间位置、两个强制主题表达式方言、规范
+认可的空消息内容方言）；消息内容过滤未实现亦不宣告。

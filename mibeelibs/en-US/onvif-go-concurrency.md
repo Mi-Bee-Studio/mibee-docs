@@ -6,7 +6,7 @@ explains what backs that guarantee and how to use it.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
 ```
 
 ## The contract
