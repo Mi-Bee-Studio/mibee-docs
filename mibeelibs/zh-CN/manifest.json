@@ -181,6 +181,11 @@
           "title": "WS-Discovery：让设备可被发现"
         },
         {
+          "slug": "onvif-rs-events",
+          "file": "onvif-rs-events.md",
+          "title": "事件（服务端，pull-point）"
+        },
+        {
           "slug": "onvif-rs-media",
           "file": "onvif-rs-media.md",
           "title": "媒体服务：Profile、取流地址与快照"

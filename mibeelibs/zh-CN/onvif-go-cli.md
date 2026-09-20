@@ -29,16 +29,16 @@ darwin/amd64、darwin/arm64、windows/amd64）及 `SHA256SUMS`——下载即用
 无需 Go 工具链：
 
 ```bash
-gh release download v2.1.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
+gh release download v2.2.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
 ```
 
 或按版本锚定从源码安装：
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
 ```
 
 或在检出目录构建（`make build` 会连开发者工具 `generate-tests`

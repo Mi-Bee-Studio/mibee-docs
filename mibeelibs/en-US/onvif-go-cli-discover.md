@@ -8,7 +8,7 @@ script-friendly starting point before any credentials are known.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
 # or grab the prebuilt binary from the release assets (six platforms)
 ```
 

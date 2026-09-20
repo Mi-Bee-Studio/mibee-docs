@@ -6,7 +6,7 @@ the library translates one small trait into three ONVIF actions.
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## The seam

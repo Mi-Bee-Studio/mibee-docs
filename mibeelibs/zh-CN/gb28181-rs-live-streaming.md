@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.11.0
+cargo add gb28181-rs@0.12.0
 ```
 
 ## 数据模型

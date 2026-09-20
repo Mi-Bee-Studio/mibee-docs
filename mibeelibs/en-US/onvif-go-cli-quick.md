@@ -9,7 +9,7 @@ to my camera at all?" in under a minute.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
 ```
 
 ## Usage

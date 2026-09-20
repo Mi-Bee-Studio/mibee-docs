@@ -37,7 +37,7 @@ scenario).
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## Anonymous (pre-auth) actions
@@ -90,3 +90,12 @@ than full SOAP parsing.
 server, asserts anonymous actions answer `200`, asserts credentialed
 actions answer `401` without a token, and exits 0 — use it as the
 template for your own bootstrap.
+
+## SystemReboot (v0.7.0)
+
+The Device service answers a `SystemReboot` action with the WSDL
+`SystemRebootResponse/Message` form ("Device rebooting"). It is a
+protocol answer only — the library never performs the reboot side
+effect; hook a real one in your own handler layer if the hardware
+supports it. The action stays credential-protected, matching the go
+twin's policy for write-style actions.

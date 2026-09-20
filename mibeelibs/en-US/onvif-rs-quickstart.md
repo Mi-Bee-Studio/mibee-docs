@@ -7,7 +7,7 @@ This page is the minimal compilable example.
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 The example also needs an async runtime:

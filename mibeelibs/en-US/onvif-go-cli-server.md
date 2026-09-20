@@ -11,7 +11,7 @@ loopback tests drive.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
 ```
 
 ## Usage

@@ -24,7 +24,7 @@ Both paths return same-shaped ProbeMatches — element local names are byte-stab
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## Basic responder
@@ -77,3 +77,12 @@ let (status, body) = handle_http_probe(&discovery, &http_body, &server_ip);
 
 Byte layout of ProbeMatches is golden-tested — see
 `src/discovery.rs` tests for the exact pinned envelope.
+
+## Hello / Bye announcements (v0.7.0)
+
+`start()` multicasts a WS-Discovery **Hello** on the group, and the
+responder sends **Bye** when it stops (`shutdown()` or dropping the
+handle) — the same envelope family and announcement fields as
+ProbeMatches, so clients that track membership see the device appear
+and disappear without probing. Both are best effort: a lost
+announcement never stops Probe answering.

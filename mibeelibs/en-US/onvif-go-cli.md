@@ -32,16 +32,16 @@ darwin/amd64, darwin/arm64, and windows/amd64, with `SHA256SUMS` —
 download and run, no Go toolchain needed:
 
 ```bash
-gh release download v2.1.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
+gh release download v2.2.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
 ```
 
 Or install from source at a pinned version:
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.1.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
 ```
 
 Or build from a checkout (`make build` compiles everything including

@@ -181,6 +181,11 @@
           "title": "WS-Discovery: being findable"
         },
         {
+          "slug": "onvif-rs-events",
+          "file": "onvif-rs-events.md",
+          "title": "Events (server side, pull-point)"
+        },
+        {
           "slug": "onvif-rs-media",
           "file": "onvif-rs-media.md",
           "title": "Media service: profiles, stream URIs, snapshots"

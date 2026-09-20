@@ -7,14 +7,14 @@ and the skeleton for INVITE-driven streaming.
 ## Install
 
 ```bash
-cargo add gb28181-rs@0.11.0
+cargo add gb28181-rs@0.12.0
 ```
 
 The example also needs an async runtime (the server is async):
 
 ```toml
 [dependencies]
-gb28181-rs = "=0.11.0"
+gb28181-rs = "=0.12.0"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 ```
 

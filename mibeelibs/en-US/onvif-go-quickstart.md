@@ -7,10 +7,10 @@ pick the main / sub streams with the built-in heuristics.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
-> v2 is stable (v2.0.0 shipped 2026-09-17; the current line is v2.1.0) —
+> v2 is stable (v2.0.0 shipped 2026-09-17; the current line is v2.2.0) —
 > still pin the exact version in production.
 
 ## Minimal example

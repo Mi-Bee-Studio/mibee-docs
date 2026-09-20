@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 契约

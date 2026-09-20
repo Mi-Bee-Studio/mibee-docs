@@ -9,7 +9,7 @@ byte-predictable XML output.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## Transport architecture
@@ -167,6 +167,15 @@ No options = full simulator behavior (CLI and examples are unchanged).
 The SOAP handlers are stateless translators now; `Server.Handle*`
 signatures, the exported model types, and the domain error sentinels
 keep their `server.*` spellings via aliases.
+
+**Preset store (v2.2.0):** `PTZProvider` keeps serving moves/status/
+GotoPreset; the optional `PTZPresetReader` upgrades GetPresets beyond
+the static configuration, and `PTZPresetWriter` unlocks SetPreset /
+RemovePreset — the simulator implements both with a mutable per-profile
+store (set → list → goto → remove works end to end out of the box).
+`GetConfigurations` and `GetNodes` answer from the profile
+configuration with WSDL-correct namespaces.
+
 
 ## TLS transport (Profile T baseline)
 

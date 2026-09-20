@@ -8,7 +8,7 @@ Media、PTZ、Imaging 服务的虚拟摄像头模拟器。v2 传输层（`server
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.1.0
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 传输层架构
@@ -158,7 +158,13 @@ srv, err := server.New(config,
 
 不传选项 = 完整模拟器行为（CLI 与示例零改动）。SOAP handler 现在是
 无状态的翻译层；`Server.Handle*` 签名、导出的模型类型、领域错误哨兵
-都通过别名保持 `server.*` 拼写不变。
+保持 `server.*` 拼写（别名兼容）。
+
+**预置位存储（v2.2.0）：** `PTZProvider` 继续负责移动/状态/GotoPreset；
+可选的 `PTZPresetReader` 让 GetPresets 超越静态配置，`PTZPresetWriter`
+解锁 SetPreset / RemovePreset——模拟器两者都实现了，带每 profile 可变
+存储（set → list → goto → remove 开箱即用）。GetConfigurations 与
+GetNodes 按档案配置以 WSDL 正确命名空间应答。
 
 ## TLS 传输（Profile T 基线）
 

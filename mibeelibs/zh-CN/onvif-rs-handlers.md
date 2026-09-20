@@ -35,7 +35,7 @@ pub struct RequestInfo {
 ## 安装
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate 名与仓库(onvif-rs)不同
+cargo add onvif-device-rs@0.7.0  # crate 名与仓库(onvif-rs)不同
 ```
 
 ## 匿名（免认证）动作
@@ -82,3 +82,10 @@ handler 返回**完整 SOAP 信封**（不是片段）。内置构造器产出�
 `examples/device_demo.rs` 是自检式接线：起服务器、断言匿名动作回
 `200`、断言无 token 的认证动作回 `401`、退出码 0——把它当自己
 bootstrap 的模板。
+
+## SystemReboot（v0.7.0）
+
+Device 服务以 WSDL `SystemRebootResponse/Message` 形式（"Device
+rebooting"）应答 `SystemReboot` 动作。这只是协议应答——库本身绝不
+执行重启副作用；硬件支持的话，在宿主自己的 handler 层挂真实现。
+该动作保持凭证保护，与 go 孪生对写型动作的策略一致。

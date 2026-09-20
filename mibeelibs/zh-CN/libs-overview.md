@@ -30,9 +30,9 @@ flowchart TB
 | 库 | 语言 | 定位 | 典型使用方 |
 |----|------|------|-----------|
 | [gb28181-go](gb28181-go-platform.md) | Go | GB/T 28181 信令库：平台（UAC）与设备（UAS）、级联、MANSCDP、PS 流封装 | MiBeeNvr |
-| [gb28181-rs](gb28181-rs-server.md) | Rust | GB/T 28181 设备侧实现：注册/保活、直播、录像回放、MANSCDP/PS 封装 | rpi-cam |
+| [gb28181-rs](gb28181-rs-server.md) | Rust | GB/T 28181 设备侧实现：注册/保活、直播、录像回放、MANSCDP/PS、2022 控制与对讲 | rpi-cam |
 | [onvif-go](onvif-go-architecture.md) | Go | ONVIF 客户端 + 设备服务端：发现、鉴权、媒体、事件，零第三方依赖 | MiBeeNvr |
-| [onvif-rs](onvif-rs-discovery.md) | Rust | ONVIF Device 服务端：Media/PTZ/Imaging/Discovery/Security 全服务 | rpi-cam |
+| [onvif-rs](onvif-rs-discovery.md) | Rust | ONVIF Device 服务端：Media/PTZ/Imaging/Discovery/Security/Events 全服务，可选 TLS | rpi-cam |
 | [mibee-fingerprints-go](fingerprints-overview.md) | Go | MiBee 指纹库参考引擎：加载 YAML 规则、把采集证据分类为 ServiceIdentity | MiBeeSteward |
 
 ## 选库建议

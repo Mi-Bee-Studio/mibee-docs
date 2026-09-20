@@ -29,7 +29,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.11.0
+cargo add gb28181-rs@0.12.0
 ```
 
 ## 构造不做 I/O
@@ -137,3 +137,41 @@ let server = Gb28181Server::new(config, hub)
   对讲，反之亦然；BYE 走共享的媒体任务清理路径终结接收。
 
 设备麦克风音频的上行（发送侧）不在本修订内。
+
+## 2022 设备侧能力收官（v0.12.0）
+
+自 v0.12.0 起，GB/T 28181-2022 的全部"平台→设备"控制、配置与对讲
+流程都有解码后的线格式路径与宿主接缝。只安装你的硬件能兑现的命令
+——未接线的命令保持历史行为：显式拒绝。
+
+**DeviceControl** —— `with_control_handler` 安装
+`DeviceControlHandler`，命令以类型化值送达：
+
+```rust
+server.with_control_handler(MyControl {
+    // IFrameCmd Send、RecordCmd、Guard/Alarm/TeleBoot……
+    // PTZCmd 已预解码：PtzCommand（move/lens/preset/…）
+    // DragZoom 以 manscdp::DragZoom 送达（六个必选整数）
+});
+```
+
+**DeviceConfig** —— `with_config_handler` 接收 `DeviceConfig`
+（BasicParam 全可选子项、FrameMirror 0–3、AlarmReport 双开关）；
+ConfigDownload 与 HomePosition 按运行配置应答。
+
+**订阅与通知** —— `server.notifier()`（spawn 前取用）暴露
+`DeviceNotifier`：`send_alarm` / `send_catalog_change` /
+`send_mobile_position`，平台未订阅时安全 no-op。
+`with_position_source` 喂入周期 MobilePosition 上报。
+
+**对讲** —— `with_talkback_source(mpsc::Receiver<Vec<u8>>)` 为
+设备→平台上行（20ms G.711 帧，编码律默认 PCMA、按 offer 重协商）；
+AudioTalkbackSink（见上文对讲节）现同样接收语音广播回呼——装上
+sink 即获得全双工对讲 + 广播接收（§9.12.1：notify → 应答 → 音频
+INVITE 回呼 → RTP）。
+
+**生命周期** —— `shutdown_with_deregister()` 在停机前发送
+REGISTER `Expires: 0`（完整摘要认证舞步、2 秒预算，超时回退普通
+停机；TCP 传输保持快停）。`handle.platform_protocol_version()` 报告
+对端 X-GB-Ver；`platform_date_unix()` 暴露 SIP-Date 校时观察接缝
+——是否照校时钟由宿主决定。

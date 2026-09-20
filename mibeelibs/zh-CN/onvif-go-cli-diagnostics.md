@@ -8,7 +8,7 @@
 ## 安装
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.1.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
 ```
 
 ## 用法

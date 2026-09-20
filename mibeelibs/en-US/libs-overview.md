@@ -30,9 +30,9 @@ flowchart TB
 | Library | Language | Positioning | Typical Consumers |
 |---------|----------|-------------|-------------------|
 | [gb28181-go](gb28181-go-platform.md) | Go | GB/T 28181 signaling: platform (UAC) & device (UAS), cascade, MANSCDP, PS muxing | MiBeeNvr |
-| [gb28181-rs](gb28181-rs-server.md) | Rust | GB/T 28181 device side: register/keepalive, live streaming, playback, MANSCDP/PS | rpi-cam |
+| [gb28181-rs](gb28181-rs-server.md) | Rust | GB/T 28181 device side: register/keepalive, live streaming, playback, MANSCDP/PS, 2022 controls & intercom | rpi-cam |
 | [onvif-go](onvif-go-architecture.md) | Go | ONVIF client + device server: discovery, auth, media, events — zero third-party deps | MiBeeNvr |
-| [onvif-rs](onvif-rs-discovery.md) | Rust | ONVIF Device server: Media/PTZ/Imaging/Discovery/Security services | rpi-cam |
+| [onvif-rs](onvif-rs-discovery.md) | Rust | ONVIF Device server: Media/PTZ/Imaging/Discovery/Security/Events services, optional TLS | rpi-cam |
 | [mibee-fingerprints-go](fingerprints-overview.md) | Go | Reference engine for the MiBee fingerprint corpus: YAML rules → ServiceIdentity | MiBeeSteward |
 
 ## Choosing
