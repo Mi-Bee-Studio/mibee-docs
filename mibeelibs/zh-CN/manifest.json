@@ -218,6 +218,16 @@
       ]
     },
     {
+      "title": "ONVIF · C (ESP-IDF)",
+      "items": [
+        {
+          "slug": "onvif-c-quickstart",
+          "file": "onvif-c-quickstart.md",
+          "title": "onvif-c：面向 ESP-IDF 的 ONVIF 设备服务端"
+        }
+      ]
+    },
+    {
       "title": "指纹规则引擎",
       "items": [
         {
