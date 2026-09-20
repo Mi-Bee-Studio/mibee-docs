@@ -4,6 +4,8 @@ A minimal ONVIF Device (server) library in plain C for ESP-IDF: expose an
 ESP32 camera to NVRs over SOAP + WS-Discovery + Pull-Point events with zero
 third-party dependencies and a ~10 KB code footprint. Extracted from the
 production MiBee Cam firmware; response bytes are stable against real NVRs.
+No version has been released yet — the library is in active testing; track
+a commit when vendoring.
 
 Sibling implementations: [onvif-rs](onvif-rs-quickstart.md) (Rust, Linux
 device side) and the Go client [onvif-go](onvif-go-quickstart.md). Choose
@@ -25,7 +27,7 @@ non-blocking and safe from sensor callback context.
 
 ## Quick start
 
-Vendor the tree at the release tag (e.g. `v0.2.0`) as
+Vendor the tree at the commit you are tracking as
 `components/onvif-c`, add `onvif-c` to main's `REQUIRES`, then:
 
 ```c
@@ -39,7 +41,7 @@ void app_onvif_start(httpd_handle_t httpd) {
     onvif_c_config_t cfg = {
         .manufacturer     = "MiBee",
         .model            = "MiBeeCam",
-        .firmware_version = "v0.2.0",
+        .firmware_version = "v0.1.0",
         .serial           = my_serial,        /* stable hex string          */
         .uuid             = my_uuid,          /* no urn:uuid: prefix        */
         .ip               = my_ip,            /* NULL/"0.0.0.0" = not ready */

@@ -3,7 +3,8 @@
 一个用纯 C 写的极简 ONVIF Device（服务端）库：让 ESP32 相机通过
 SOAP + WS-Discovery + Pull-Point 事件暴露给 NVR，零第三方依赖、代码
 占用约 10 KB。抽取自生产环境的 MiBee Cam 固件，响应字节对真实 NVR
-保持稳定。
+保持稳定。**尚未发版**——库处于测试迭代中，vendor 时请锁定具体
+commit。
 
 兄弟实现：[onvif-rs](onvif-rs-quickstart.md)（Rust，Linux 设备端）与
 Go 客户端 [onvif-go](onvif-go-quickstart.md)。设备形态是 ESP-IDF 固件、
@@ -25,7 +26,7 @@ Go 客户端 [onvif-go](onvif-go-quickstart.md)。设备形态是 ESP-IDF 固件
 
 ## 快速开始
 
-按发布 tag（如 `v0.2.0`）把源码树 vendor 进 `components/onvif-c`，
+按你锁定的 commit 把源码树 vendor 进 `components/onvif-c`，
 在 main 的 `REQUIRES` 加 `onvif-c`，然后：
 
 ```c
@@ -39,7 +40,7 @@ void app_onvif_start(httpd_handle_t httpd) {
     onvif_c_config_t cfg = {
         .manufacturer     = "MiBee",
         .model            = "MiBeeCam",
-        .firmware_version = "v0.2.0",
+        .firmware_version = "v0.1.0",
         .serial           = my_serial,        /* 稳定的十六进制串        */
         .uuid             = my_uuid,          /* 无 urn:uuid: 前缀       */
         .ip               = my_ip,            /* NULL/"0.0.0.0" = 未就绪 */
