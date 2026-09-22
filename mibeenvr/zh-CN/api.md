@@ -58,7 +58,7 @@ curl -H "Authorization: Bearer mbv_xxx" http://localhost:9090/api/recordings
 `snapshot_path`，相对 NVR 存储 root，如同机部署写入 `<存储根>/ai-snapshots/`）：
 
 ```bash
-curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_…"
+curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_xxx"
 ```
 
 - 鉴权与其它 AI 查询端点一致（BasicAuth 会话 / Bearer API key / `?api_key=`）
@@ -73,7 +73,7 @@ curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_
 鉴权）：
 
 ```bash
-curl -X POST -H "Authorization: Bearer mbv_…" -H "Content-Type: image/jpeg"   --data-binary @snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot"
+curl -X POST -H "Authorization: Bearer mbv_xxx" -H "Content-Type: image/jpeg"   --data-binary @snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot"
 ```
 
 - 上限 4MB；非 JPEG 魔数返回 400；文件落地 `<存储根>/ai-snapshots/` 并回填

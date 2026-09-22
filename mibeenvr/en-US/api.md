@@ -60,7 +60,7 @@ the NVR storage root — sidecar deployments write into
 `<storage root>/ai-snapshots/`):
 
 ```bash
-curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_…"
+curl -o snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot?api_key=mbv_xxx"
 ```
 
 - Auth matches the other AI query endpoints (BasicAuth session / Bearer API key /
@@ -78,7 +78,7 @@ POST the event first, then upload the snapshot JPEG bytes to the same resource
 path (`Content-Type: image/jpeg`, API-key auth):
 
 ```bash
-curl -X POST -H "Authorization: Bearer mbv_…" -H "Content-Type: image/jpeg"   --data-binary @snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot"
+curl -X POST -H "Authorization: Bearer mbv_xxx" -H "Content-Type: image/jpeg"   --data-binary @snap.jpg "http://localhost:9090/api/ai/events/7141/snapshot"
 ```
 
 - 4MB cap; non-JPEG bodies return 400; the file lands in
