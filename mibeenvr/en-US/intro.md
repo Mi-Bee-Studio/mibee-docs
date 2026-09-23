@@ -1,12 +1,12 @@
 # Product Introduction
 
-> For MiBeeNvr v0.11.0
+> For MiBeeNvr v0.13.0
 
 MiBee NVR is a lightweight, self-hosted Network Video Recorder written in Go. It captures IP camera video streams as MP4 segments and saves them to disk, providing a modern web interface for live viewing, camera management, and recorded footage access.
 
 ![Surveillance grid](images/surveillance.webp)
 
-![AI Events page](images/ai-events.webp)
+![AI Events page](images/dashboard-ai.webp)
 
 ![Dashboard](images/dashboard.webp)
 
@@ -56,7 +56,7 @@ flowchart LR
 | SRT / RTMP | srt / rtmp | Push ingest, cross-network cameras |
 | Timelapse | timelapse | Dedicated timelapse mode |
 
-> **Brand compatibility**: See the [Camera Brand Compatibility Guide](https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/docs/zh/camera-guide.md) for detailed configuration of 20+ brands including Hikvision, Dahua, Uniview, Axis, Reolink, and more.
+> **Brand compatibility**: See the [Camera Brand Compatibility Guide](https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/docs/en/camera-guide.md) for detailed configuration of 20+ brands including Hikvision, Dahua, Uniview, Axis, Reolink, and more.
 
 ## Why MiBee NVR
 

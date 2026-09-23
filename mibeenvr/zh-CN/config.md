@@ -1,6 +1,6 @@
 # 配置参考
 
-> 适用于 MiBeeNvr v0.11.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
+> 适用于 MiBeeNvr v0.13.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
 
 MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速查**；每个键的完整字段说明见仓库中的[完整配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)。
 
@@ -13,7 +13,7 @@ MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速�
 | Web UI → 设置 | 大部分运行参数 | 存储路径、直播、GB28181、AI 检测、录像与处理等分页 |
 | 编辑 YAML | 批量 / 初始化 | 摄像头列表、部署脚本等；改完需重启 |
 
-> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.12.0/docs/zh/cli.md#encrypt-config-加密敏感字段)）。
+> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](cli.md#encrypt-config-加密敏感字段)）。
 
 ## 顶层键速查
 
@@ -24,6 +24,7 @@ server:
 storage:
   root_dir: "/var/lib/mibee-nvr"  # 存储根目录：录像 + 数据库
   segment_duration: "30s"          # MP4 片段时长（树莓派建议 ≤30s）
+  # remote: ...               # S3 对象存储冷备（默认关）——见「对象存储冷备」
 
 auth:
   username: "admin"
@@ -32,11 +33,20 @@ auth:
 
 cameras: []                  # 摄像头列表（推荐 Web UI 维护，见下）
 
+recording:
+  # default_enabled: true    # 全局录像默认开关：未显式设置 recording_enabled 的摄像头继承；false = 纯直播不落盘
+
 cleanup:
   retention_days: 30         # 录像保留天数（1–3650），到期自动清理
 
 merge:
   enabled: false             # 周期性片段合并（8h/24h/7d/30d 产物）
+
+io:
+  # budget_bytes_per_sec: 0  # 后台 I/O 预算（合并/清理/冷备共享令牌桶；0 = 关，默认）
+
+memory:                      # 内存自适应 GOMEMLIMIT：默认自动取 min(物理内存 45%, 1GiB)，一般无需配置
+  # soft_limit_bytes: 0      # 显式覆盖自动启发式（0 = 自动）
 
 ftp:
   enabled: true              # FTP 访问录像（默认端口 2121）
@@ -48,14 +58,20 @@ webdav:
   enabled: true              # WebDAV 访问（/dav）
 
 hls:
-  write_buffer_size: 40      # 每路 HLS 异步写缓冲帧数
+  write_buffer_size: 100     # 每路 HLS 异步写缓冲帧数
+  low_latency: true          # LL-HLS 默认开启；false = 经典分段播放列表
 
 observability:
   log_level: "info"          # debug / info / warn / error
 
 security:
   frame_ancestors: ""        # CSP frame-ancestors（跨域嵌入 Web UI 时配置）
+
+update:
+  # auto_apply: false        # 裸机自动升级（默认关）；版本检查默认开启
 ```
+
+> `storage.remote`（S3 对象存储冷备）的完整配置与 `mibee-nvr offload` 运维命令见[对象存储冷备](storage-offload.md)。
 
 ## cameras 条目结构
 

@@ -5,73 +5,241 @@
     {
       "title": "Getting Started",
       "items": [
-      { "slug": "intro", "file": "intro.md", "title": "Product Introduction" },
-      { "slug": "features", "file": "features.md", "title": "Feature Overview" },
-      { "slug": "quickstart", "file": "quickstart.md", "title": "Quick Start" },
-      { "slug": "wizard", "file": "wizard.md", "title": "Setup Wizard" },
-      { "slug": "web-ui", "file": "web-ui.md", "title": "Web UI Tour" }
+        {
+          "slug": "intro",
+          "file": "intro.md",
+          "title": "Product Introduction"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "Feature Overview"
+        },
+        {
+          "slug": "quickstart",
+          "file": "quickstart.md",
+          "title": "Quick Start"
+        },
+        {
+          "slug": "wizard",
+          "file": "wizard.md",
+          "title": "Setup Wizard"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web UI Tour"
+        },
+        {
+          "slug": "desktop",
+          "file": "desktop.md",
+          "title": "Desktop Edition (Windows / macOS)"
+        }
       ]
     },
     {
       "title": "Playbooks & Choosing",
       "items": [
-      { "slug": "scenarios", "file": "scenarios.md", "title": "Scenario Playbooks" },
-      { "slug": "comparison", "file": "comparison.md", "title": "How It Compares" }
+        {
+          "slug": "scenarios",
+          "file": "scenarios.md",
+          "title": "Scenario Playbooks"
+        },
+        {
+          "slug": "comparison",
+          "file": "comparison.md",
+          "title": "How It Compares"
+        }
       ]
     },
     {
       "title": "Installation",
       "items": [
-      { "slug": "install-docker", "file": "install-docker.md", "title": "Docker Deployment" },
-      { "slug": "install-nas", "file": "install-nas.md", "title": "NAS Deployment" },
-      { "slug": "hw-transcode", "file": "hw-transcode.md", "title": "Docker Hardware Transcoding Guide" }
+        {
+          "slug": "install-docker",
+          "file": "install-docker.md",
+          "title": "Docker Deployment"
+        },
+        {
+          "slug": "install-nas",
+          "file": "install-nas.md",
+          "title": "NAS Deployment"
+        },
+        {
+          "slug": "hw-transcode",
+          "file": "hw-transcode.md",
+          "title": "Docker Hardware Transcoding Guide"
+        }
       ]
     },
     {
       "title": "Cameras",
       "items": [
-      { "slug": "onvif-discovery", "file": "onvif-discovery.md", "title": "ONVIF Auto-discovery" },
-      { "slug": "camera-guide", "file": "camera-guide.md", "title": "Camera Brand Compatibility Guide" },
-      { "slug": "gb28181", "file": "gb28181.md", "title": "MiBee NVR GB/T 28181 Guide" },
-      { "slug": "xiaomi", "file": "xiaomi.md", "title": "Xiaomi Camera Setup" },
-      { "slug": "srt-rtmp", "file": "srt-rtmp.md", "title": "SRT / RTMP Streaming" },
-      { "slug": "raspberrypi", "file": "raspberrypi.md", "title": "Raspberry Pi Camera" }
+        {
+          "slug": "onvif-discovery",
+          "file": "onvif-discovery.md",
+          "title": "ONVIF Auto-discovery"
+        },
+        {
+          "slug": "camera-guide",
+          "file": "camera-guide.md",
+          "title": "Camera Brand Compatibility Guide"
+        },
+        {
+          "slug": "gb28181",
+          "file": "gb28181.md",
+          "title": "MiBee NVR GB/T 28181 Guide"
+        },
+        {
+          "slug": "xiaomi",
+          "file": "xiaomi.md",
+          "title": "Xiaomi Camera Setup"
+        },
+        {
+          "slug": "srt-rtmp",
+          "file": "srt-rtmp.md",
+          "title": "SRT / RTMP Streaming"
+        },
+        {
+          "slug": "raspberrypi",
+          "file": "raspberrypi.md",
+          "title": "Raspberry Pi Camera"
+        }
       ]
     },
     {
       "title": "Features",
       "items": [
-      { "slug": "recording-playback", "file": "recording-playback.md", "title": "Recording & Playback" },
-      { "slug": "streaming", "file": "streaming.md", "title": "Streaming Protocol Selection" },
-      { "slug": "relay", "file": "relay.md", "title": "Live Relay" },
-      { "slug": "audio", "file": "audio.md", "title": "Audio" },
-      { "slug": "timelapse", "file": "timelapse.md", "title": "Timelapse" },
-      { "slug": "ai-detection", "file": "ai-detection.md", "title": "AI Detection Tuning Guide" },
-      { "slug": "vision", "file": "vision.md", "title": "MiBee Vision" },
-      { "slug": "transcoding", "file": "transcoding.md", "title": "Transcoding" },
-      { "slug": "remote-access", "file": "remote-access.md", "title": "Remote Access" }
+        {
+          "slug": "recording-playback",
+          "file": "recording-playback.md",
+          "title": "Recording & Playback"
+        },
+        {
+          "slug": "adaptive-recording",
+          "file": "adaptive-recording.md",
+          "title": "Adaptive Recording"
+        },
+        {
+          "slug": "sub-stream",
+          "file": "sub-stream.md",
+          "title": "Sub-Streams"
+        },
+        {
+          "slug": "streaming",
+          "file": "streaming.md",
+          "title": "Streaming Protocol Selection"
+        },
+        {
+          "slug": "relay",
+          "file": "relay.md",
+          "title": "Live Relay"
+        },
+        {
+          "slug": "audio",
+          "file": "audio.md",
+          "title": "Audio"
+        },
+        {
+          "slug": "timelapse",
+          "file": "timelapse.md",
+          "title": "Timelapse"
+        },
+        {
+          "slug": "ai-detection",
+          "file": "ai-detection.md",
+          "title": "AI Detection Tuning Guide"
+        },
+        {
+          "slug": "vision",
+          "file": "vision.md",
+          "title": "MiBee Vision"
+        },
+        {
+          "slug": "transcoding",
+          "file": "transcoding.md",
+          "title": "Transcoding"
+        },
+        {
+          "slug": "remote-access",
+          "file": "remote-access.md",
+          "title": "Remote Access"
+        }
       ]
     },
     {
       "title": "Integrations",
       "items": [
-      { "slug": "mqtt", "file": "mqtt.md", "title": "MQTT Integration" },
-      { "slug": "webdav-ftp", "file": "webdav-ftp.md", "title": "WebDAV / FTP Storage" }
+        {
+          "slug": "mqtt",
+          "file": "mqtt.md",
+          "title": "MQTT Integration"
+        },
+        {
+          "slug": "webhook-integration",
+          "file": "webhook-integration.md",
+          "title": "Webhook Triggers"
+        },
+        {
+          "slug": "webdav-ftp",
+          "file": "webdav-ftp.md",
+          "title": "WebDAV / FTP Storage"
+        },
+        {
+          "slug": "home-assistant",
+          "file": "home-assistant.md",
+          "title": "Home Assistant"
+        }
       ]
     },
     {
       "title": "Maintenance",
       "items": [
-      { "slug": "upgrade-faq", "file": "upgrade-faq.md", "title": "Upgrade Guide" },
-      { "slug": "observability", "file": "observability.md", "title": "Observability Guide" }
+        {
+          "slug": "upgrade-faq",
+          "file": "upgrade-faq.md",
+          "title": "Upgrade Guide"
+        },
+        {
+          "slug": "storage-management",
+          "file": "storage-management.md",
+          "title": "Storage Management"
+        },
+        {
+          "slug": "observability",
+          "file": "observability.md",
+          "title": "Observability Guide"
+        },
+        {
+          "slug": "performance",
+          "file": "performance.md",
+          "title": "Performance Tuning"
+        },
+        {
+          "slug": "storage-offload",
+          "file": "storage-offload.md",
+          "title": "S3 Offload (Object Storage)"
+        }
       ]
     },
     {
       "title": "Reference",
       "items": [
-      { "slug": "cli", "file": "cli.md", "title": "CLI Reference" },
-      { "slug": "config", "file": "config.md", "title": "Configuration Reference" },
-      { "slug": "api", "file": "api.md", "title": "API Overview" }
+        {
+          "slug": "cli",
+          "file": "cli.md",
+          "title": "CLI Reference"
+        },
+        {
+          "slug": "config",
+          "file": "config.md",
+          "title": "Configuration Reference"
+        },
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API Overview"
+        }
       ]
     }
   ]
