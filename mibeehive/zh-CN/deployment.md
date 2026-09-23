@@ -1,6 +1,6 @@
 # MiBeeHive 部署指南
 
-[English](../en/deployment.md)
+[English](../en-US/deployment.md)
 
 ## 目标设备：ARM64 NAS 设备
 

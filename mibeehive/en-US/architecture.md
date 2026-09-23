@@ -1,6 +1,6 @@
 # MiBeeHive Architecture
 
-[中文](../zh/architecture.md)
+[中文](../zh-CN/architecture.md)
 
 
 ## BeeHive Philosophy
@@ -245,4 +245,4 @@ flowchart LR
 - **Incremental DOM Updates**: Periodic refresh uses targeted DOM patching, never innerHTML
 - **Single Dashboard API**: One aggregated endpoint reduces request count on dashboard
 
-[中文](../zh/architecture.md)
+[中文](../zh-CN/architecture.md)

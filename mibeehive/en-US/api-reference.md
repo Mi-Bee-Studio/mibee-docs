@@ -1,6 +1,6 @@
 # MiBeeHive API Reference
 
-[中文](../zh/api-reference.md)
+[中文](../zh-CN/api-reference.md)
 
 
 ## Authentication Endpoints
