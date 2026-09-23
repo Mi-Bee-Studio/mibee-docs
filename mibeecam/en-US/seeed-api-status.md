@@ -35,6 +35,7 @@ Get current device running status, including recording, storage, WiFi, camera, t
   }
 }
 ```
+```json
 {
   "ok": true,
   "data": {

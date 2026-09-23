@@ -398,6 +398,7 @@ All updates are SHA-256 verified. After update, the device reboots and runs a se
 
 **API trigger** (URL mode only):
 
+```
 ```bash
 curl -X POST http://192.168.4.1/api/ota \
   -H "Content-Type: application/json"  \

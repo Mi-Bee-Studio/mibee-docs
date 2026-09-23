@@ -274,6 +274,7 @@ All three password fields (`wifi_pass`, `webdav_pass`, `http_upload_pass`) follo
 ### Typical Usage Scenarios
 
 **Scenario 1: Echo back after GET without modifying password**
+```
 ```javascript
 // GET returns wifi_pass: "****"
 // Echoing back "****" keeps password unchanged

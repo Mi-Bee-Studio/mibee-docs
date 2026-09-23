@@ -240,6 +240,7 @@ You should see continuous MJPEG live feed. Maximum 2 concurrent clients supporte
 
 ### API Status Check
 
+```
 ```bash
 curl http://<deviceIP>/api/status
 ```
