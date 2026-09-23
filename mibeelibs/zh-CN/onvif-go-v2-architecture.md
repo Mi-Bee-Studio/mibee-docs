@@ -10,7 +10,7 @@ v2 是一次刻意为之的破坏性版本，两大动因：
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 模块版本策略
@@ -55,6 +55,12 @@ github.com/mickeyzzc/onvif-go/v2
 ├── media/               trt：profile、主/子码流选择、StreamSetup、
 │                        编码/音频/OSD 配置
 ├── ptz/   imaging/   events/（含托管订阅）   deviceio/
+├── media2/              tr2：编解码无关的 Media2 配置模型——按编码的
+│                        options、自由名 Encoding（H.265/AV1 的答案）、
+│                        逐字透传的 set（v2.1.0）
+├── analytics/           tan：Profile M 规则/分析模块配置客户端（v2.1.0）
+├── metadata/            tt:MetadataStream 解析器——Profile M 分析输出
+│                        通道（帧、目标、几何）（v2.1.0）
 ├── discovery/           客户端发现（探测/监听/定向/后处理）
 ├── wsdiscovery/         WS-Discovery 报文编解码 leaf——客户端与
 │                        设备端应答器共享（#15）

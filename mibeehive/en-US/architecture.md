@@ -23,27 +23,29 @@ Each module has isolated storage paths under a configurable parent: `{base_path}
 MiBeeHive is a monolithic Go binary that crawls, downloads, and serves binary releases (GitHub, Go, HashiCorp, Grafana, NPM, PyPI) for a resource-constrained ARM64 NAS device (469MB RAM). It embeds a **Preact + HTM** SPA frontend via `go:embed` and includes a web admin panel with dashboard overview and tabbed navigation for managing all three modules plus containers, search, logs, tasks, and backup.
 
 ### Architecture Overview
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    MiBeeHive Application                      │
-├─────────────────────────────────────────────────────────────┤
-│  Go Backend (cmd/mibeehive)                                │
-│  ├── HTTP Handlers (internal/handler/)                     │
-│  ├── Business Logic (internal/service/)                    │
-│  ├── Data Layer (internal/db/)                             │
-│  ├── Configuration (internal/config/)                       │
-│  ├── Middleware (internal/middleware/)                     │
-│  ├── Docker Client (internal/docker/)                      │
-│  ├── Monitor (internal/monitor/)                           │
-│  └── WebDAV (internal/webdav/)                             │
-│                                                             │
-│  Embedded Frontend (web/)                                   │
-│  ├── HTML/CSS (CSS variables, responsive)                  │
-│  └── JavaScript Modules (31 files, 3-tier)                 │
-│                                                             │
-│  SQLite Database                                            │
-│  └── 14 Embedded Migrations                                 │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+  subgraph APP["MiBeeHive Application"]
+    subgraph BE["Go Backend (cmd/mibeehive)"]
+      direction TB
+      H["HTTP Handlers · internal/handler/"]
+      S["Business Logic · internal/service/"]
+      D["Data Layer · internal/db/"]
+      C["Configuration · internal/config/"]
+      M["Middleware · internal/middleware/"]
+      DK["Docker Client · internal/docker/"]
+      MO["Monitor · internal/monitor/"]
+      WV["WebDAV · internal/webdav/"]
+      H --> S --> D
+    end
+    subgraph FE["Embedded Frontend (web/)"]
+      direction TB
+      F1["HTML/CSS (CSS variables, responsive)"]
+      F2["JavaScript Modules (31 files, 3-tier)"]
+    end
+    DB[("SQLite Database<br/>14 Embedded Migrations")]
+    D --> DB
+  end
 ```
 
 ## Frontend Module Structure
@@ -91,8 +93,9 @@ The frontend is a **Preact + HTM** SPA organized into 38 modules across 3 tiers.
 ## Backend Architecture
 
 ### Layer Structure
-```
-HTTP Request → Handler → Service → Repository → Database
+```mermaid
+flowchart LR
+  REQ["HTTP Request"] --> H["Handler"] --> S["Service"] --> R["Repository"] --> DB[("Database")]
 ```
 
 ### Handler Layer (internal/handler/)
@@ -200,28 +203,33 @@ The dashboard provides an aggregated overview of all modules through a single AP
 ## Data Flow
 
 ### Dashboard Flow
-```
-Dashboard UI → Single /admin/dashboard/summary → DashboardHandler → Multiple Repos → Aggregated Response
+```mermaid
+flowchart LR
+  UI["Dashboard UI"] --> API["Single /admin/dashboard/summary"] --> H["DashboardHandler"] --> R["Multiple Repos"] --> RES["Aggregated Response"]
 ```
 
 ### Crawl and Download Flow
-```
-User Request → Admin UI → Crawl Trigger → Crawler → Download Service → File Storage
+```mermaid
+flowchart LR
+  REQ["User Request"] --> UI["Admin UI"] --> T["Crawl Trigger"] --> CR["Crawler"] --> DS["Download Service"] --> FS[("File Storage")]
 ```
 
 ### File Access Flow
-```
-Client Request → File Search → File Service → Download Stream → Client
+```mermaid
+flowchart LR
+  REQ["Client Request"] --> Q["File Search"] --> S["File Service"] --> DS["Download Stream"] --> C["Client"]
 ```
 
 ### WebDAV Flow
-```
-WebDAV Client → Basic Auth → File System → File Operations
+```mermaid
+flowchart LR
+  WC["WebDAV Client"] --> BA["Basic Auth"] --> FS["File System"] --> FO["File Operations"]
 ```
 
 ### OS Installation Flow
-```
-PXE Client → Public Endpoint → Config Generation → Boot Files → Installation
+```mermaid
+flowchart LR
+  PXE["PXE Client"] --> PE["Public Endpoint"] --> CG["Config Generation"] --> BF["Boot Files"] --> IN["Installation"]
 ```
 
 ## Key Design Principles

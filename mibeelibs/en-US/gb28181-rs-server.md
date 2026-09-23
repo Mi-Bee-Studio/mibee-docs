@@ -29,7 +29,7 @@ sequenceDiagram
 ## Install
 
 ```bash
-cargo add gb28181-rs@0.11.0
+cargo add gb28181-rs@0.12.0
 ```
 
 ## Construction is I/O-free
@@ -145,3 +145,46 @@ Behavior:
 
 Sending the device's microphone audio back (the send half) is not part of
 this revision.
+
+## 2022 device-side closure (v0.12.0)
+
+Since v0.12.0 every GB/T 28181-2022 platform→device control, config,
+and intercom flow has a decoded wire path plus a host seam. Install
+only what your hardware honors — unhandled commands keep the
+historical explicit reject.
+
+**DeviceControl** — `with_control_handler` installs a
+`DeviceControlHandler`; decoded commands arrive as typed values:
+
+```rust
+server.with_control_handler(MyControl {
+    // IFrameCmd Send, RecordCmd, Guard/Alarm/TeleBoot …
+    // PTZCmd arrives pre-decoded: PtzCommand (move/lens/preset/…)
+    // DragZoom arrives as manscdp::DragZoom (six required integers)
+});
+```
+
+**DeviceConfig** — `with_config_handler` receives `DeviceConfig`
+(BasicParam all-optional children, FrameMirror 0–3, AlarmReport
+switches); ConfigDownload and HomePosition are answered from the
+running configuration.
+
+**Subscriptions & notifications** — `server.notifier()` (take it
+before spawn) exposes `DeviceNotifier`: `send_alarm` /
+`send_catalog_change` / `send_mobile_position`, safe no-ops while the
+platform has not subscribed. `with_position_source` feeds the periodic
+MobilePosition loop.
+
+**Intercom** — `with_talkback_source(mpsc::Receiver<Vec<u8>>)` is the
+device→platform upstream (20 ms G.711 frames, law defaults to PCMA and
+re-negotiates per offer); the AudioTalkbackSink (see talkback above)
+now also receives the voice-broadcast downcall — installing it enables
+full-duplex intercom plus broadcast reception (§9.12.1: notify → ack →
+audio INVITE back-call → RTP).
+
+**Lifecycle** — `shutdown_with_deregister()` sends REGISTER
+`Expires: 0` with the full digest dance before stopping (2 s budget,
+falls back to a plain shutdown on timeout; TCP transport keeps the
+fast stop). `handle.platform_protocol_version()` reports the peer's
+X-GB-Ver; `platform_date_unix()` exposes the SIP-Date observation
+seam — the host decides whether to act on clock drift.

@@ -8,7 +8,7 @@ Media、PTZ、Imaging 服务的虚拟摄像头模拟器。v2 传输层（`server
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 传输层架构
@@ -158,10 +158,39 @@ srv, err := server.New(config,
 
 不传选项 = 完整模拟器行为（CLI 与示例零改动）。SOAP handler 现在是
 无状态的翻译层；`Server.Handle*` 签名、导出的模型类型、领域错误哨兵
-都通过别名保持 `server.*` 拼写不变。
+保持 `server.*` 拼写（别名兼容）。
 
-## 后续
+**预置位存储（v2.2.0）：** `PTZProvider` 继续负责移动/状态/GotoPreset；
+可选的 `PTZPresetReader` 让 GetPresets 超越静态配置，`PTZPresetWriter`
+解锁 SetPreset / RemovePreset——模拟器两者都实现了，带每 profile 可变
+存储（set → list → goto → remove 开箱即用）。GetConfigurations 与
+GetNodes 按档案配置以 WSDL 正确命名空间应答。
 
-M3（#23）把模拟器的内存状态改造为可插拔的 provider 接口（DeviceInfo /
-StreamURI / Snapshot / Imaging / PTZ），让同一传输层可以直接前接真实
-摄像头栈。见 [v2-architecture.md](onvif-go-v2-architecture.md)。
+## TLS 传输（Profile T 基线）
+
+v2.1.0 起设置 `Config.TLSCertFile` 与 `Config.TLSKeyFile`（两者同设或
+同不设——只设一个会在校验时报错）后，服务端走 HTTPS。没有单独的启动
+调用：TLS 在 `Start` 内部决定。`Start` 显式绑定监听，`Server.ListenAddr()`
+启动即可读——`Port: 0`（内核分配）时也可观察，适合测试：
+
+```go
+config := server.DefaultConfig()
+config.TLSCertFile = "cert.pem"
+config.TLSKeyFile = "key.pem"
+
+srv, _ := server.New(config)
+go srv.Start(ctx)                           // https://…/onvif/device_service
+fmt.Println(srv.ListenAddr())               // 如 0.0.0.0:8443
+```
+
+范围：纯 TLS 传输（Profile T 基线）。高级置备——PKI、802.1X、
+UsernameToken 之外的 WS-Security——刻意不做。
+
+可运行的 `onvif-server` 二进制只说纯 HTTP；TLS 是嵌入包的面
+（[onvif-server CLI](onvif-go-cli-server.md)）。
+
+## 去向
+
+可插拔 provider（上文）直接前接真实相机栈；pull-point 事件服务
+（`SupportEvents` + `PublishEvent` 接缝）见事件手册。分层见
+[v2-architecture.md](onvif-go-v2-architecture.md)。

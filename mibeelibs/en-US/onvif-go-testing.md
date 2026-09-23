@@ -7,7 +7,7 @@ tests exist but are gated behind environment variables and never run in CI.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## Running
@@ -33,6 +33,9 @@ runners) they skip automatically — the suite stays green.
 | Mock-device tests | `*_test.go` next to the code | Full client behavior against `httptest` SOAP devices: auth ladder transitions, fault handling, response-shape variants, lifecycle of managed subscriptions |
 | Raw fixtures | `testdata/captures/*.xml` | Hand-crafted real-shape envelopes replayed through the client (e.g. the GetStreamUri namespace variants behind issue #3) |
 | Parser unit tests | e.g. `TestParseScopes`, `TestLooseExtractURI`, `TestSelectMainProfile` | Pure functions, no I/O |
+| Conformance loopback | client↔simulator suites | The library's own client and server talk real HTTP across the full operation matrix (device, PTZ, imaging — including the GetScopes element round-trip) |
+| Namespace contract suite | wire-namespace tests | Every served response surface marshaled and decoded namespace-strictly — values populate only when elements resolve to the exact WSDL-assigned namespace — plus an explicit-prefix end-to-end check |
+| Fuzz targets | native `FuzzXxx` (device/media/events) | The real per-op response parsers driven against hostile bodies, seeded from the contract wire formats |
 | Concurrency matrix | `concurrency_test.go` | Mixed operations + config mutation on one shared client, meaningful under `-race` |
 | Capture-replay helpers | `internal/onviftesting/` package | Mock server, capture registry, golden files — used by the larger suites |
 

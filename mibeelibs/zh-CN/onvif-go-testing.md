@@ -6,7 +6,7 @@ fixture 上。真机集成测试存在，但由环境变量门控，从不在 CI
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc6
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 运行
@@ -31,6 +31,9 @@ race 测试与构建；三个任务都是必需状态检查。
 | mock 设备测试 | 代码旁的 `*_test.go` | 对 `httptest` SOAP 设备的完整 client 行为：鉴权梯队迁移、Fault 处理、响应形态变体、托管订阅生命周期 |
 | 原始 fixture | `testdata/captures/*.xml` | 把真实形态的信封回放进 client（如 issue #3 背后的 GetStreamUri 命名空间变体） |
 | 解析器单测 | 如 `TestParseScopes`、`TestLooseExtractURI`、`TestSelectMainProfile` | 纯函数、无 I/O |
+| 一致性回环 | client↔simulator 套件 | 本库自己的 client 与 server 走真实 HTTP 跑全操作矩阵（device、PTZ、imaging——含 GetScopes 元素形态往返） |
+| 命名空间契约套件 | wire-namespace 测试 | 每个响应面序列化后按命名空间严格反解——元素解析到 WSDL 指定命名空间才赋值——外加显式前缀端到端检查 |
+| Fuzz 目标 | 原生 `FuzzXxx`（device/media/events） | 真实 per-op 响应解析器对抗恶意报文，种子取自契约线格式 |
 | 并发矩阵 | `concurrency_test.go` | 单个共享 client 上的混合操作 + 配置变更，`-race` 下有实际意义 |
 | 抓包回放助手 | `internal/onviftesting/` 包 | mock server、抓包注册表、golden 文件——大型套件在用 |
 

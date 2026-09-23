@@ -7,7 +7,7 @@ identity reported through GetDeviceInformation.
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.6.0  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## OnvifConfig
@@ -84,3 +84,23 @@ ports, systemd socket activation, test harnesses).
 > store it and call `shutdown()`. Discarding the `Ok` value silently kills
 > the server — both handles are `#[must_use]` since 0.3.1 to catch this at
 > compile time.
+
+## TLS listener (v0.7.0, `tls` feature)
+
+Enable the optional `tls` cargo feature and set both PEM paths to
+serve every connection over HTTPS (ONVIF Profile T's transport
+baseline):
+
+```toml
+[dependencies]
+onvif-device-rs = { version = "0.7", features = ["tls"] }
+```
+
+```rust
+config.tls_cert_file = "/etc/certs/device.pem".into();
+config.tls_key_file = "/etc/certs/device.key".into();
+```
+
+Both-or-neither: exactly one path set is a configuration error, and
+configuring TLS in a build without the feature fails at `start()` —
+there is no silent plain-HTTP fallback.

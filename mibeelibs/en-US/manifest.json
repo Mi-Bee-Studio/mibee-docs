@@ -136,6 +136,26 @@
           "title": "CLI Tools"
         },
         {
+          "slug": "onvif-go-cli-discover",
+          "file": "onvif-go-cli-discover.md",
+          "title": "CLI: discover"
+        },
+        {
+          "slug": "onvif-go-cli-quick",
+          "file": "onvif-go-cli-quick.md",
+          "title": "CLI: onvif-quick"
+        },
+        {
+          "slug": "onvif-go-cli-diagnostics",
+          "file": "onvif-go-cli-diagnostics.md",
+          "title": "CLI: onvif-diagnostics"
+        },
+        {
+          "slug": "onvif-go-cli-server",
+          "file": "onvif-go-cli-server.md",
+          "title": "CLI: onvif-server"
+        },
+        {
           "slug": "onvif-go-concurrency",
           "file": "onvif-go-concurrency.md",
           "title": "Concurrency Model"
@@ -159,6 +179,11 @@
           "slug": "onvif-rs-discovery",
           "file": "onvif-rs-discovery.md",
           "title": "WS-Discovery: being findable"
+        },
+        {
+          "slug": "onvif-rs-events",
+          "file": "onvif-rs-events.md",
+          "title": "Events (server side, pull-point)"
         },
         {
           "slug": "onvif-rs-media",
@@ -189,6 +214,16 @@
           "slug": "onvif-rs-configuration",
           "file": "onvif-rs-configuration.md",
           "title": "Configuration reference"
+        }
+      ]
+    },
+    {
+      "title": "ONVIF · C (ESP-IDF)",
+      "items": [
+        {
+          "slug": "onvif-c-quickstart",
+          "file": "onvif-c-quickstart.md",
+          "title": "onvif-c: ONVIF device server for ESP-IDF"
         }
       ]
     },

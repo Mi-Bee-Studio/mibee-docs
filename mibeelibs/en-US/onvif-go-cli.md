@@ -1,79 +1,63 @@
 # CLI Tools
 
-The `cmd/` directory ships helper binaries. Build them for your platform:
+Four helper binaries ship in `cmd/` — a discovery probe, an interactive
+quick-start tool, a deep diagnostic collector, and the virtual-camera
+simulator in runnable form. They are zero-dependency single binaries
+built for six platforms on every release.
 
-```bash
-make build          # go build ./... (fastest syntax/compile check)
-make cross          # CGO_ENABLED=0 linux/arm64 binaries into build/
-go build -o bin/ ./cmd/...
-```
+## Which tool for which job?
 
-All tools are zero-dependency single binaries; there is no release pipeline
-for them — build from source.
+| You want to… | Run |
+|---|---|
+| See every ONVIF camera on the LAN (script-friendly output) | `discover` |
+| Poke at one camera interactively — connect, PTZ nudge, stream URLs | `onvif-quick` |
+| Collect a full per-operation report of one camera (file an issue, capture fixtures) | `onvif-diagnostics` |
+| Test a recorder/NVR against virtual cameras without hardware | `onvif-server` |
+| Turn captured SOAP exchanges into regression tests (developer) | `generate-tests` |
+
+Per-tool manuals: [discover](onvif-go-cli-discover.md) ·
+[onvif-quick](onvif-go-cli-quick.md) ·
+[onvif-diagnostics](onvif-go-cli-diagnostics.md) ·
+[onvif-server](onvif-go-cli-server.md)
+
+A typical first contact with an unknown camera runs the first three in
+sequence: `discover` finds it, `onvif-quick` proves the library talks to
+it, `onvif-diagnostics -capture-xml` records everything else you need.
 
 ## Install
 
-```bash
-# or build from source (above) and use the ./cmd/ binaries
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.0.0-rc6
-```
-
-## discover
-
-Multicast WS-Discovery probe with interface selection (useful on multi-NIC
-hosts):
+Since **v2.1.0** every [release](https://github.com/mickeyzzc/onvif-go/releases)
+attaches prebuilt binaries for linux/amd64, linux/arm64, linux/arm,
+darwin/amd64, darwin/arm64, and windows/amd64, with `SHA256SUMS` —
+download and run, no Go toolchain needed:
 
 ```bash
-go run ./cmd/discover -timeout 5s
-go run ./cmd/discover -interface eth0
+gh release download v2.2.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
 ```
 
-## onvif-quick
-
-One-shot device summary against one camera: device information, profiles,
-stream URIs. Reads endpoint/credentials from flags. Handy as the "does this
-library talk to my camera at all" probe.
+Or install from source at a pinned version:
 
 ```bash
-go run ./cmd/onvif-quick
+go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
 ```
 
-## onvif-diagnostics
+Or build from a checkout (`make build` compiles everything including
+`generate-tests`, which is a developer tool and not part of release
+artifacts).
 
-Deep diagnostic collector for a specific camera — the tool to run when
-filing an issue. Exercises all major operations, prints per-operation
-results, and can capture raw SOAP exchanges for reuse as regression
-fixtures:
+## Shared conventions
 
-```bash
-go run ./cmd/onvif-diagnostics \
-    -endpoint http://192.0.2.100/onvif/device_service \
-    -username admin -password '***' \
-    -verbose
+- Exit code 0 = success; nonzero with a message on stderr = failure.
+- Camera credentials are never read from a config file — flags (or the
+  `ONVIF_SERVER_PASSWORD` env var for `onvif-server`) only, so secrets
+  stay out of dotfiles.
+- What you see is what the library does: the tools are thin shells over
+  the public API, with no tool-side special cases — behavior you observe
+  reproduces in your own integration.
 
-# Capture raw XML request/response pairs (attach to issues after redacting
-# credentials; they can become testdata/captures fixtures):
-go run ./cmd/onvif-diagnostics -endpoint ... -username ... -password *** \
-    -capture-xml -output diag.json
-```
-
-Flags: `-endpoint`, `-username`, `-password`, `-timeout` (seconds),
-`-verbose`, `-capture-xml`, `-capture-all`, `-output`.
-
-## onvif-server
-
-The virtual ONVIF camera simulator, runnable standalone for testing a
-recorder's discovery/onboarding flow without hardware:
-
-```bash
-go run ./cmd/onvif-server -port 8000 -manufacturer TestCam -model V1 \
-    -serial SIM-0001
-```
-
-Feature toggles: `-info`, `-ptz`, `-imaging`, `-events`, `-version`.
-
-## generate-tests
-
-Developer tool: converts captured SOAP exchanges (from `onvif-diagnostics`)
-into Go test scaffolding and maintains the capture registry. See
-[testing.md](onvif-go-testing.md) for the fixture workflow.
+For the discovery mechanics behind `discover` and `onvif-quick`, see
+[discovery.md](onvif-go-discovery.md); for embedding the simulator
+instead of running the binary, [server.md](onvif-go-server.md).

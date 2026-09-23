@@ -6,14 +6,14 @@
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.11.0
+cargo add gb28181-rs@0.12.0
 ```
 
 示例还需要一个异步运行时（服务器是 async 的）：
 
 ```toml
 [dependencies]
-gb28181-rs = "=0.11.0"
+gb28181-rs = "=0.12.0"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 ```
 
