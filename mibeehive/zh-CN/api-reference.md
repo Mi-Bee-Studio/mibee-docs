@@ -1,6 +1,6 @@
 # MiBeeHive API 参考文档
 
-[English](../en/api-reference.md)
+[English](../en-US/api-reference.md)
 
 ## 认证端点
 

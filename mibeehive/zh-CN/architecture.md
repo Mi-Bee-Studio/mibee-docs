@@ -1,6 +1,6 @@
 # MiBeeHive 架构文档
 
-[English](../en/architecture.md)
+[English](../en-US/architecture.md)
 
 ## 蜂巢哲学
 

@@ -1,6 +1,6 @@
 # MiBeeHive Deployment Guide
 
-[中文](../zh/deployment.md)
+[中文](../zh-CN/deployment.md)
 
 ## Target Device: ARM64 NAS Device
 
