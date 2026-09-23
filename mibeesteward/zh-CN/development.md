@@ -276,13 +276,13 @@ PR 合并前必须通过以下检查（`.github/workflows/ci.yml`）：
 
 ## 双许可与法律要求
 
-MiBee Steward 采用**双许可**分发：[GNU AGPLv3](../../LICENSE) + [商业许可](../../LICENSE-COMMERCIAL.md)。为保持此模式，每个贡献必须满足：
+MiBee Steward 采用**双许可**分发：[GNU AGPLv3](../../LICENSE) + [商业许可](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/LICENSE-COMMERCIAL.md)。为保持此模式，每个贡献必须满足：
 
 ### 贡献者许可协议（CLA）
 
 每个贡献者**只需签署一次** CLA（个人签 ICLA，公司签 CCLA）。CLA 授予 Mi-Bee Studio 将您的贡献以 AGPLv3 和商业许可双重发布的权利，您保留版权。
 
-CLA 到位前，PR **无法合并**。详见 [CLA.md](../../CLA.md)。
+CLA 到位前，PR **无法合并**。详见 [CLA.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/CLA.md)。
 
 ### DCO 签名
 
@@ -292,7 +292,7 @@ CLA 到位前，PR **无法合并**。详见 [CLA.md](../../CLA.md)。
 git commit -s -m "feat: add new discovery source"
 ```
 
-CI 检查（`.github/workflows/dco.yml`）会阻止未签名的 commit。详见 [DCO.md](../../.github/DCO.md)。
+CI 检查（`.github/workflows/dco.yml`）会阻止未签名的 commit。详见 DCO.md。
 
 ### 指纹库许可证
 
