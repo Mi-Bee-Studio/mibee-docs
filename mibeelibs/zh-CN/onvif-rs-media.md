@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+cargo add onvif-device-rs@0.7.0  # crate 名与仓库(onvif-rs)不同
 ```
 
 ## 配置
@@ -58,6 +58,21 @@ soap.register_handler("GetProfiles", Box::new(GetProfilesHandler::new(Arc::clone
 soap.register_handler("GetStreamUri", Box::new(GetStreamUriHandler::new(Arc::clone(&media))));
 soap.register_handler("GetSnapshotUri", Box::new(GetSnapshotUriHandler::new(Arc::clone(&media))));
 soap.register_handler("GetVideoSources", Box::new(GetVideoSourcesHandler::new(Arc::clone(&media))));
+```
+
+NVR 侧看到的握手与媒体路径的分界：
+
+```mermaid
+sequenceDiagram
+    participant N as NVR / 客户端
+    participant S as onvif-device-rs
+    participant H as 宿主（媒体端点）
+    N->>S: GetProfiles（SOAP）
+    S-->>N: Profile 列表（token、分辨率、编码来自 OnvifMediaConfig）
+    N->>S: GetStreamUri
+    S-->>N: rtsp://device:8554/stream（MediaUri/Uri 线上契约）
+    N->>H: RTSP OPTIONS/DESCRIBE/PLAY + GET /snapshot.jpg
+    Note over S,H: ONVIF 层只播报地址；RTSP 与快照服务在宿主里
 ```
 
 ## 字节稳定

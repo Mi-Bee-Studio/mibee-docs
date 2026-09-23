@@ -7,7 +7,7 @@ layer advertises them.
 ## Install
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate name differs from the repo (onvif-rs)
+cargo add onvif-device-rs@0.7.0  # crate name differs from the repo (onvif-rs)
 ```
 
 ## Configuration
@@ -60,6 +60,21 @@ soap.register_handler("GetProfiles", Box::new(GetProfilesHandler::new(Arc::clone
 soap.register_handler("GetStreamUri", Box::new(GetStreamUriHandler::new(Arc::clone(&media))));
 soap.register_handler("GetSnapshotUri", Box::new(GetSnapshotUriHandler::new(Arc::clone(&media))));
 soap.register_handler("GetVideoSources", Box::new(GetVideoSourcesHandler::new(Arc::clone(&media))));
+```
+
+The handshake an NVR sees, and where the media path leaves ONVIF:
+
+```mermaid
+sequenceDiagram
+    participant N as NVR / client
+    participant S as onvif-device-rs
+    participant H as Host (media endpoints)
+    N->>S: GetProfiles (SOAP)
+    S-->>N: profile list (token, resolution, codec from OnvifMediaConfig)
+    N->>S: GetStreamUri
+    S-->>N: rtsp://device:8554/stream (MediaUri/Uri wire contract)
+    N->>H: RTSP OPTIONS/DESCRIBE/PLAY + GET /snapshot.jpg
+    Note over S,H: the ONVIF layer only advertises URLs; the RTSP and snapshot servers live in the host
 ```
 
 ## Byte stability

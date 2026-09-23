@@ -9,7 +9,7 @@ MiBee NVR supports multiple ingest paths: ONVIF auto-discovery, direct RTSP, RTM
 | Seeed XIAO ESP32-S3 Sense | MJPEG HTTP stream, NAS upload | ffmpeg relay of MJPEG to RTMP/SRT; or browse the NAS folder |
 | Luatos ESP32-S3 A10 | MJPEG HTTP stream | Same — ffmpeg relay to RTMP/SRT |
 | AI-Thinker ESP32-CAM | MJPEG HTTP stream, REST | Same — ffmpeg relay to RTMP/SRT |
-| ESP32-S3-N16R8 | **RTSP (digest auth) + ONVIF discovery** | NVR ONVIF auto-discovery, or direct RTSP |
+| ESP32-S3-N16R8 | **RTSP (no auth) + ONVIF discovery** | NVR ONVIF auto-discovery, or direct RTSP |
 | rpi-cam | **Full ONVIF + RTSP + RTMP push + WS-Discovery** | NVR ONVIF auto-discovery (zero config) |
 
 ## Relaying MJPEG Devices
@@ -26,6 +26,6 @@ Push-in ingest (RTMP/SRT) and stream address configuration: NVR manual — [SRT 
 ## Discovery and Direct Connect
 
 - **ONVIF auto-discovery**: rpi-cam and the N16R8 support WS-Discovery / ONVIF — one-click add from the NVR web UI → [ONVIF Auto-discovery](https://www.mlsbs.top/docs/mibeenvr/onvif-discovery)
-- **Direct RTSP**: the N16R8 RTSP server uses digest auth — pick RTSP when adding the camera and provide credentials
+- **Direct RTSP**: the N16R8 RTSP server needs no credentials since contract v1.9 (2026-09-18) — pick RTSP when adding the camera and leave credentials empty
 - **Raspberry Pi camera guide** → [Raspberry Pi Camera](https://www.mlsbs.top/docs/mibeenvr/raspberrypi)
 - **More brand compatibility** → [Camera Brand Compatibility Guide](https://www.mlsbs.top/docs/mibeenvr/camera-guide)

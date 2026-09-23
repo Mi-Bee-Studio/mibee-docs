@@ -16,6 +16,11 @@
       "title": "GB28181 · Go",
       "items": [
         {
+          "slug": "gb28181-go-quickstart",
+          "file": "gb28181-go-quickstart.md",
+          "title": "Quick start: register a camera with a platform"
+        },
+        {
           "slug": "gb28181-go-platform",
           "file": "gb28181-go-platform.md",
           "title": "Platform (UAS): the SIP server side"
@@ -45,6 +50,11 @@
     {
       "title": "GB28181 · Rust",
       "items": [
+        {
+          "slug": "gb28181-rs-quickstart",
+          "file": "gb28181-rs-quickstart.md",
+          "title": "Quick start: a minimal compilable device"
+        },
         {
           "slug": "gb28181-rs-server",
           "file": "gb28181-rs-server.md",
@@ -80,6 +90,11 @@
     {
       "title": "ONVIF · Go",
       "items": [
+        {
+          "slug": "onvif-go-quickstart",
+          "file": "onvif-go-quickstart.md",
+          "title": "Quick start: discover and pull a stream"
+        },
         {
           "slug": "onvif-go-architecture",
           "file": "onvif-go-architecture.md",
@@ -121,6 +136,26 @@
           "title": "CLI Tools"
         },
         {
+          "slug": "onvif-go-cli-discover",
+          "file": "onvif-go-cli-discover.md",
+          "title": "CLI: discover"
+        },
+        {
+          "slug": "onvif-go-cli-quick",
+          "file": "onvif-go-cli-quick.md",
+          "title": "CLI: onvif-quick"
+        },
+        {
+          "slug": "onvif-go-cli-diagnostics",
+          "file": "onvif-go-cli-diagnostics.md",
+          "title": "CLI: onvif-diagnostics"
+        },
+        {
+          "slug": "onvif-go-cli-server",
+          "file": "onvif-go-cli-server.md",
+          "title": "CLI: onvif-server"
+        },
+        {
           "slug": "onvif-go-concurrency",
           "file": "onvif-go-concurrency.md",
           "title": "Concurrency Model"
@@ -136,9 +171,19 @@
       "title": "ONVIF · Rust",
       "items": [
         {
+          "slug": "onvif-rs-quickstart",
+          "file": "onvif-rs-quickstart.md",
+          "title": "Quick start: a minimal ONVIF device"
+        },
+        {
           "slug": "onvif-rs-discovery",
           "file": "onvif-rs-discovery.md",
           "title": "WS-Discovery: being findable"
+        },
+        {
+          "slug": "onvif-rs-events",
+          "file": "onvif-rs-events.md",
+          "title": "Events (server side, pull-point)"
         },
         {
           "slug": "onvif-rs-media",
@@ -173,12 +218,27 @@
       ]
     },
     {
+      "title": "ONVIF · C (ESP-IDF)",
+      "items": [
+        {
+          "slug": "onvif-c-quickstart",
+          "file": "onvif-c-quickstart.md",
+          "title": "onvif-c: ONVIF device server for ESP-IDF"
+        }
+      ]
+    },
+    {
       "title": "Fingerprint Rule Engine",
       "items": [
         {
           "slug": "fingerprints-overview",
           "file": "fingerprints-overview.md",
           "title": "mibee-fingerprints-go"
+        },
+        {
+          "slug": "fingerprints-quickstart",
+          "file": "fingerprints-quickstart.md",
+          "title": "Quick start: load rules and classify"
         }
       ]
     }

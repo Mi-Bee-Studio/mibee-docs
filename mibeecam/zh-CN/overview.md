@@ -16,7 +16,7 @@ MiBeeCam 是 Mi&Bee Studio 的自托管摄像头产品线文档中心，收录**
 | [Seeed XIAO ESP32-S3 Sense](https://github.com/Mi-Bee-Studio/seeed-esp32s3-cam) | ESP32-S3 + OV2640/OV5640 | MJPEG、RTSP（MJPEG + G.711 音频）、AVI 分段录像、NAS 上传（WebDAV/HTTP）、动态缩时、OTA | 均衡型监控相机 |
 | [Luatos ESP32-S3 A10](https://github.com/Mi-Bee-Studio/luatos-esp32s3-a10-camera) | ESP32-S3 + OV2640 | MJPEG、移动侦测、WebSocket 事件、webhook、ONVIF、AT 指令 | 事件驱动的紧凑相机（无 PSRAM） |
 | [AI-Thinker ESP32-CAM](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam) | ESP32 + OV2640 | MJPEG、移动侦测、SD 缩时/连拍、ONVIF、双 WiFi、文件管理、OTA、轻量 MPA | 低成本入门 |
-| [ESP32-S3-N16R8](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) | ESP32-S3 + OV3660（3 MP） | MJPEG、RTSP（digest）、ONVIF、人脸/移动/QR 检测、web OTA | 高清 + 标准协议 + AI |
+| [ESP32-S3-N16R8](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) | ESP32-S3 + OV3660（3 MP） | MJPEG、RTSP、ONVIF、人脸/移动/QR 检测、web OTA | 高清 + 标准协议 + AI |
 | [rpi-cam](https://github.com/Mi-Bee-Studio/mibee-eye-raspi-go) | 树莓派（Go） | ONVIF Device/Media/PTZ、RTSP/RTMP/SRT 转推、WS-Discovery | 树莓派软相机 |
 
 ## 生态架构

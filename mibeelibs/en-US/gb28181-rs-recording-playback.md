@@ -8,7 +8,7 @@ library's job.
 ## Install
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.12.0
 ```
 
 ## The RecordingSource seam
@@ -79,6 +79,26 @@ Helpers if you build the format yourself: `sidecar_path()` (segment path
   server pushes at full speed.
 - **PlaybackControl over SIP INFO** — pause, resume, seek by absolute
   time, and speed changes arrive as INFO and steer the paced pusher.
+
+```mermaid
+sequenceDiagram
+    participant P as Platform
+    participant S as Gb28181Server
+    participant R as RecordingSource (host)
+    P->>S: MESSAGE RecordInfo (time range)
+    S->>R: lookup(start_ms, end_ms)
+    R-->>S: SegmentMeta list
+    S-->>P: MESSAGE response (segment list)
+    P->>S: INVITE (SDP: s=Playback, u=start-end)
+    S-->>P: 200 OK
+    loop paced by timestamps
+        S->>P: RTP/PS (playback pace, not full speed)
+    end
+    P->>S: INFO playback control (pause / resume / seek / speed)
+    S-->>P: 200 OK
+    P->>S: BYE
+    S-->>P: 200 OK
+```
 
 ## Recording status
 

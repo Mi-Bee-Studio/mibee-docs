@@ -9,7 +9,7 @@ If you just want to pick a board, read the selection table below. To understand 
 | Board | Chip / Sensor | Flash / PSRAM | Unique capabilities | Repository |
 |--------|---------------|---------------|---------------------|------------|
 | AI-Thinker ESP32-CAM | ESP32 (original) + OV2640 | 4 MB / none | Dual WiFi config, SD file management, lightweight MPA frontend | [ai-thinker-esp32-cam](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam) |
-| ESP32-S3 N16R8 | ESP32-S3 + OV3660 (3MP) | 16 MB / 8 MB Octal | AI pipeline (face/motion/QR), RTSP digest auth, AT commands | [esp32s3-n16r8-cam](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) |
+| ESP32-S3 N16R8 | ESP32-S3 + OV3660 (3MP) | 16 MB / 8 MB Octal | AI pipeline (face/motion/QR), RTSP, AT commands | [esp32s3-n16r8-cam](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) |
 | Luatos ESP32-S3 A10 | ESP32-S3 + OV2640 | 16 MB / none (by design) | WebSocket event push, webhooks, serial AT config | [luatos-esp32s3-a10-camera](https://github.com/Mi-Bee-Studio/luatos-esp32s3-a10-camera) |
 | Seeed XIAO ESP32-S3 Sense | ESP32-S3 + OV2640/OV5640* | 8 MB / 8 MB Octal | AVI segmented recording, NAS upload, G.711 audio, OTA | [seeed-esp32s3-cam](https://github.com/Mi-Bee-Studio/seeed-esp32s3-cam) |
 
@@ -26,7 +26,7 @@ If you just want to pick a board, read the selection table below. To understand 
 
 1. **Unified API contract** ([contract v1.2](espcam-api.md)) — core endpoints 100% identical across boards; differences only ever surface through capability gating + dynamic metadata.
 2. **Unified frontend** ([frontend design](espcam-webui.md)) — the three S3 boards share one SPA (four files, md5-identical); ai-thinker keeps a lightweight MPA on the same contract.
-3. **Unified streaming stack** — MJPEG (`:81/stream`) + RTSP (`:554`, digest) + ONVIF (WS-Discovery + SOAP), all built on one publisher/subscriber frame broadcaster.
+3. **Unified streaming stack** — MJPEG (`:81/stream`) + RTSP (`:554`, open — auth removed in v1.9) + ONVIF (WS-Discovery + SOAP), all built on one publisher/subscriber frame broadcaster.
 4. **Unified identity & config** — serial/UUID derived from the factory eFuse MAC (WiFi-state independent); NVS-backed versioned config blobs with auto-reset on magic/version mismatch.
 
 ```mermaid

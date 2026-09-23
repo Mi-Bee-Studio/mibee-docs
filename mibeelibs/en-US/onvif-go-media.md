@@ -5,10 +5,29 @@ snapshot URIs, and encoder configuration. This document covers the parts with
 field-tested semantics: profile selection, stream-setup parameterization,
 and response parsing.
 
+## Client bootstrap exchange
+
+The typical handshake from device discovery to a streamable URI
+(for the WS-Discovery probe see [discovery](onvif-go-discovery.md)):
+
+```mermaid
+sequenceDiagram
+    participant C as Client (client.Media())
+    participant D as ONVIF device
+    C->>D: GetCapabilities / GetServices (locate the media service XAddr)
+    D-->>C: Media XAddr
+    C->>D: GetProfiles
+    D-->>C: profile list (token + resolution)
+    Note over C: SelectMainProfile / SelectSubProfile (pixel count first, naming hints settle exact ties only)
+    C->>D: GetStreamUri (StreamSetup: RTP-Unicast + RTSP)
+    D-->>C: rtsp://… (MediaUri/Uri)
+    Note over C,D: media then flows over RTSP/RTP — outside ONVIF signaling
+```
+
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## Choosing the right profile
@@ -81,3 +100,50 @@ OSD management, multicast configuration (`Start/StopMulticastStreaming`), and
 synchronization points. See the
 [Go reference](https://pkg.go.dev/github.com/mickeyzzc/onvif-go/v2/onvif) for the full
 operation list.
+
+## Media2 (H.265/AV1)
+
+The ver10 media model enumerates codecs as fixed schema types (H264,
+MPEG4 — there is no H.265 in it). The Media2 service
+(ver20/media/wsdl, `client.Media2()`, since v2.1.0) is the
+codec-agnostic answer: `Encoding` is a free media-subtype name, and the
+device reports one options entry per codec it supports:
+
+```go
+m2 := client.Media2()
+
+profiles, _ := m2.GetProfiles(ctx, "", nil) // all profiles, inline configs
+for _, p := range profiles {
+    if p.VideoEncoder != nil {
+        fmt.Println(p.Token, p.Name, p.VideoEncoder.Encoding) // "H264", "H265", …
+    }
+}
+
+opts, _ := m2.GetVideoEncoderConfigurationOptions(ctx, "", "")
+for _, o := range opts {
+    fmt.Printf("%s: %dx%d…%dx%d, %v–%v fps\n", o.Encoding,
+        o.Resolutions[0].Width, o.Resolutions[0].Height,
+        o.Resolutions[len(o.Resolutions)-1].Width, o.Resolutions[len(o.Resolutions)-1].Height,
+        o.FrameRateRange[0], o.FrameRateRange[len(o.FrameRateRange)-1])
+}
+```
+
+Switching a profile to H.265 is a read-modify-write with the encoding
+name passed through verbatim — the library never rewrites it:
+
+```go
+cfgs, _ := m2.GetVideoEncoderConfigurations(ctx)
+for _, c := range cfgs {
+    if c.Encoding == "H264" {
+        c.Encoding = "H265" // free-name; verbatim on the wire
+        _ = m2.SetVideoEncoderConfiguration(ctx, c)
+    }
+}
+```
+
+Requests follow the WSDL contract (tr2-wrapped, `tt:` payload children);
+Media2 rides the media service endpoint unless pinned via
+`SetServiceEndpoint`. `GetStreamUri(protocol, profileToken)` completes
+the play path. Not implemented yet: profile create/delete and the
+audio/OSD families — ver10 media (`client.Media()`) remains the
+full-coverage surface for those.

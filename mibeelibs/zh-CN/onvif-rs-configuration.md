@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+cargo add onvif-device-rs@0.7.0  # crate 名与仓库(onvif-rs)不同
 ```
 
 ## OnvifConfig
@@ -79,3 +79,22 @@ handle.shutdown().await?;                   // 优雅停机；handle.await 等�
 > （`let handle = soap.start().await?; handle.await;`），或保存并调用
 > `shutdown()`。丢弃 `Ok` 值会悄悄杀死服务器——自 0.3.1 起两个句柄均为
 > `#[must_use]`，在编译期拦截该错误。
+
+## TLS 监听器（v0.7.0，`tls` feature）
+
+启用可选的 `tls` cargo feature 并设置两个 PEM 路径，全部连接以
+HTTPS 服务（ONVIF Profile T 传输基线）：
+
+```toml
+[dependencies]
+onvif-device-rs = { version = "0.7", features = ["tls"] }
+```
+
+```rust
+config.tls_cert_file = "/etc/certs/device.pem".into();
+config.tls_key_file = "/etc/certs/device.key".into();
+```
+
+两者必须同时设置（both-or-neither）：只设其一为配置错误；在未启用
+feature 的构建里配置 TLS 会在 `start()` 失败——绝无静默降级到
+明文 HTTP。

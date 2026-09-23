@@ -9,7 +9,7 @@ ESP-Cam 是 MiBeeCam 家族中的 **ESP32 大集合**：四块不同主板各自
 | 主板 | 芯片 / 传感器 | Flash / PSRAM | 独有能力 | 独立仓库 |
 |------|-------------|---------------|----------|----------|
 | AI-Thinker ESP32-CAM | ESP32（原版）+ OV2640 | 4 MB / 无 PSRAM | 双 WiFi 配置、SD 文件管理、轻量 MPA 前端 | [ai-thinker-esp32-cam](https://github.com/Mi-Bee-Studio/ai-thinker-esp32-cam) |
-| ESP32-S3 N16R8 | ESP32-S3 + OV3660（3 MP） | 16 MB / 8 MB Octal | AI 流水线（人脸/移动/QR）、RTSP digest 鉴权、AT 指令 | [esp32s3-n16r8-cam](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) |
+| ESP32-S3 N16R8 | ESP32-S3 + OV3660（3 MP） | 16 MB / 8 MB Octal | AI 流水线（人脸/移动/QR）、RTSP、AT 指令 | [esp32s3-n16r8-cam](https://github.com/Mi-Bee-Studio/esp32s3-n16r8-cam) |
 | Luatos ESP32-S3 A10 | ESP32-S3 + OV2640 | 16 MB / 无（设计禁用） | WebSocket 事件推送、webhook、串口 AT 配置 | [luatos-esp32s3-a10-camera](https://github.com/Mi-Bee-Studio/luatos-esp32s3-a10-camera) |
 | Seeed XIAO ESP32-S3 Sense | ESP32-S3 + OV2640/OV5640* | 8 MB / 8 MB Octal | AVI 分段录像、NAS 自动上传、G.711 音频、OTA | [seeed-esp32s3-cam](https://github.com/Mi-Bee-Studio/seeed-esp32s3-cam) |
 
@@ -28,7 +28,7 @@ ESP-Cam 是 MiBeeCam 家族中的 **ESP32 大集合**：四块不同主板各自
 
 1. **统一 API 契约**（[契约 v1.2 详解](espcam-api.md)）：核心端点四板 100% 一致；板间差异只允许通过"能力门控 + 动态元数据"产生，禁止字段名或语义分叉。
 2. **统一前端设计**（[前端规范](espcam-webui.md)）：三块 S3 板共享同一套单页应用（四文件 md5 一致）；ai-thinker 用轻量多页应用但遵守同一契约层。
-3. **统一流媒体栈**：MJPEG（`:81/stream`）+ RTSP（`:554`，digest 鉴权）+ ONVIF（WS-Discovery + SOAP），全部构建在同一个发布/订阅帧广播器上。
+3. **统一流媒体栈**：MJPEG（`:81/stream`）+ RTSP（`:554`，v1.9 起免鉴权）+ ONVIF（WS-Discovery + SOAP），全部构建在同一个发布/订阅帧广播器上。
 4. **统一身份与配置**：设备序列号/UUID 从出厂 eFuse MAC 派生（与 WiFi 状态无关）；配置存 NVS、版本化 blob、魔数/版本不匹配自动回出厂值。
 
 ```mermaid

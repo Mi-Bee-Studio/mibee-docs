@@ -346,7 +346,6 @@ curl http://<ip>/api/status
 
 **API Troubleshooting**:
 - **Server running**: Check "Web server started" in serial
-- **Authentication**: Some endpoints require password
 - **CORS**: Check browser console for CORS errors
 - **Content-Type**: Ensure proper headers for POST requests
 
@@ -440,7 +439,7 @@ curl http://<ip>/metrics | grep heap_free
 
 **Solutions**:
 - **Web interface**: Go to Configuration page → Reset to Defaults
-- **API endpoint**: `curl -X POST http://<device-ip>/api/reset -H "X-Password: mibeecam2026"`
+- **API endpoint**: `curl -X POST http://<device-ip>/api/reset`
 - **Serial command**: Type `reset` in serial monitor
 
 **Note**: GPIO0 serves as camera master clock (XCLK) and cannot be used as a general-purpose button.

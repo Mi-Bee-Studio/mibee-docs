@@ -10,7 +10,7 @@ v2 is a deliberately breaking release. Two forces drive it:
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## Module versioning
@@ -62,6 +62,13 @@ github.com/mickeyzzc/onvif-go/v2
 ├── media/               trt: profiles, main/sub selection, StreamSetup,
 │                        encoder/audio/OSD configuration
 ├── ptz/   imaging/   events/ (incl. managed subscriptions)   deviceio/
+├── media2/              tr2: the codec-agnostic Media2 configuration model —
+│                        per-encoding options with free-name Encoding
+│                        (the H.265/AV1 answer), verbatim set (v2.1.0)
+├── analytics/           tan: Profile M rule / analytics-module configuration
+│                        client (v2.1.0)
+├── metadata/            tt:MetadataStream parser — the Profile M analytics
+│                        output channel (frames, objects, geometry) (v2.1.0)
 ├── discovery/           client-side discovery (probe / listener / directed / post-processing)
 ├── wsdiscovery/         WS-Discovery message codec leaf — shared by the client
 │                        side and the device-side responder (#15)

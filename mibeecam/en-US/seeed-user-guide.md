@@ -22,7 +22,7 @@ The device has a built-in HTTP server providing Web management interface and RES
 
 ### Login Password
 
-Default management password: `mibeecam2026`. API requests involving write operations need to pass the password via `X-Password` request header or `?password=xxx` query parameter.
+None since contract v1.9 (2026-09-18): the web admin password was removed from the firmware. All HTTP endpoints are open on the trusted LAN; the trust boundary is the router's WPA2.
 
 ### Page Description
 
@@ -44,13 +44,13 @@ The dashboard shows real-time device status: recording state, current file, WiFi
 
 ![Configuration](images/config-page.png)
 
-All device parameters can be modified here: WiFi credentials, video resolution/FPS/quality, recording segment duration, WebDAV/HTTP(S) upload settings, camera flip/mirror, and system password.
+All device parameters can be modified here: WiFi credentials, video resolution/FPS/quality, recording segment duration, WebDAV/HTTP(S) upload settings, and camera flip/mirror.
 
 ### File Manager Page
 
 ![File Manager](images/files-page.png)
 
-Browse recordings organized by date. Features collapsible date groups, batch selection, folder-level download/delete, and persistent authentication.
+Browse recordings organized by date. Features collapsible date groups, batch selection, and folder-level download/delete.
 
 ### Preview Page
 
@@ -66,17 +66,17 @@ Open the `config` page, directly modify parameters and save. Changes take effect
 
 ### Via API
 
-Use `POST /api/config` interface to modify configuration, requires `X-Password` authentication:
+Use `POST /api/config` interface to modify configuration (no authentication since contract v1.9):
 
 ```bash
 # Modify WiFi
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
+  -H 'Content-Type: application/json' \
   -d '{"wifi_ssid":"MyWiFi","wifi_pass":"mypassword"}'
 
 # Modify video parameters
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
+  -H 'Content-Type: application/json' \
   -d '{"resolution":1,"fps":10,"jpeg_quality":12,"segment_sec":300}'
 ```
 
@@ -97,7 +97,6 @@ curl -X POST http://192.168.4.1/api/config \
 
 | Parameter | Type | Default | Description |
 | `device_name` | string | `"MiBee Cam"` | Device name |
-| `web_password` | string | `"admin"` | Web management password |
 
 #### Upload Method Configuration
 
@@ -245,12 +244,10 @@ Manually start or stop recording via API:
 
 ```bash
 # Start recording
-curl -X POST "http://192.168.4.1/api/record?action=start" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.4.1/api/record?action=start"
 
 # Stop recording
-curl -X POST "http://192.168.4.1/api/record?action=stop" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.4.1/api/record?action=stop"
 ```
 
 ### Recording Format
@@ -403,8 +400,7 @@ All updates are SHA-256 verified. After update, the device reboots and runs a se
 
 ```bash
 curl -X POST http://192.168.4.1/api/ota \
-  -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
+  -H "Content-Type: application/json"  \
   -d '{"url":"https://example.com/firmware/mibee_cam.bin"}'
 ```
 
@@ -447,7 +443,7 @@ Modify camera flip/mirror via `POST /api/config`:
 
 ```bash
 curl -X POST http://192.168.4.1/api/config \
-  -H 'Content-Type: application/json' -H 'X-Password: mibeecam2026' \
+  -H 'Content-Type: application/json' \
   -d '{"vflip":true,"hmirror":true}'
 ```
 
@@ -470,8 +466,7 @@ In STA mode, device automatically syncs time via NTP after startup:
 
 ```bash
 curl -X POST http://192.168.4.1/api/time \
-  -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
+  -H "Content-Type: application/json"  \
   -d '{"year":2026,"month":4,"day":24,"hour":14,"min":30,"sec":0}'
 ```
 
@@ -488,8 +483,7 @@ Click "Factory Reset" button on Web configuration page.
 ### Method 3: API
 
 ```bash
-curl -X POST http://192.168.4.1/api/reset \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.4.1/api/reset
 ```
 
 ### Reset Result

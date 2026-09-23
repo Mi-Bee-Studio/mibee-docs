@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-cargo add gb28181-rs@0.7.0
+cargo add gb28181-rs@0.12.0
 ```
 
 ## 数据模型
@@ -62,6 +62,23 @@ impl FrameSource for MyFrameHub {
 4. PTS 增量由 `AccessUnit::timestamp` 推导（90 kHz 时钟，钳制在合理
    范围）——时间戳不需要你管理。
 5. `BYE`（或停机）取消订阅，channel 关闭向下传播。
+
+```mermaid
+sequenceDiagram
+    participant P as 平台
+    participant S as Gb28181Server
+    participant H as FrameSource（宿主）
+    P->>S: INVITE（SDP: s=Play、媒体端口、SSRC）
+    S-->>P: 200 OK（SDP 应答）
+    S->>H: subscribe_with_capacity()（有界 channel）
+    loop 推流期间
+        H->>S: AccessUnit（不含起始码的 NAL + 采集时刻）
+        S->>P: RTP/PS（MPEG-PS 打包，90 kHz PTS）
+    end
+    P->>S: BYE
+    S->>H: unsubscribe(id)（关闭 channel，媒体任务退出）
+    S-->>P: 200 OK
+```
 
 内置 `MockFrameHub`（有界、写满即丢）供真实管线就绪前跑通通信令。
 

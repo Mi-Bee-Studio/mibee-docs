@@ -23,7 +23,7 @@ sequenceDiagram
 ## 安装
 
 ```bash
-cargo add onvif-device-rs@0.3.1  # crate 名与仓库(onvif-rs)不同
+cargo add onvif-device-rs@0.7.0  # crate 名与仓库(onvif-rs)不同
 ```
 
 ## 基础应答器
@@ -73,3 +73,10 @@ let (status, body) = handle_http_probe(&discovery, &http_body, &server_ip);
 
 ProbeMatches 的字节布局有金串测试——确切信封见 `src/discovery.rs`
 的测试。
+
+## Hello / Bye 主动通告（v0.7.0）
+
+`start()` 在组上组播 WS-Discovery **Hello**，应答器停止时
+（`shutdown()` 或丢弃句柄）发送 **Bye**——与 ProbeMatches 同族信封、
+同样的通告字段，跟踪在线状态的客户端无需轮询 Probe 即可看到设备
+上下线。两者均为尽力而为：通告丢失从不妨碍 Probe 应答。

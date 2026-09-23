@@ -7,7 +7,7 @@ usually want.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## Managed subscriptions
@@ -16,6 +16,23 @@ go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
 long-polls `PullMessages`, delivers every notification to your handler,
 renews the subscription before it expires, and stops cleanly when you
 unsubscribe or the context dies.
+
+```mermaid
+sequenceDiagram
+    participant C as Client (SubscribeEvents)
+    participant D as ONVIF device
+    C->>D: CreatePullPointSubscription (InitialTerminationTime)
+    D-->>C: SubscriptionReference + TerminationTime
+    loop long polling (PullTimeout, transient failures back off)
+        C->>D: PullMessages (Timeout, MessageLimit)
+        D-->>C: NotificationMessage list (Topic / UtcTime / Data)
+    end
+    Note over C: auto-Renew inside the renew margin; renewal failure terminates the loop
+    C->>D: Renew
+    D-->>C: new TerminationTime
+    C->>D: Unsubscribe (or context cancel — best-effort unsubscribe)
+    D-->>C: 200 OK
+```
 
 ```go
 sub, err := client.Events().SubscribeEvents(ctx,
@@ -83,3 +100,17 @@ When you need full control, the primitives remain: `CreatePullPointSubscription`
 `PullMessages`, `RenewSubscription`, `Unsubscribe`, `Seek`,
 `SetEventSynchronizationPoint`, `GetEventProperties`, event-broker
 management, and `GetEventServiceCapabilities`.
+
+## Topic filters are honored (v2.1.0)
+
+`CreatePullPointSubscription` accepts a topic expression, and since
+v2.1.0 the library's own server means it: subscriptions in the
+**Concrete** dialect (exact local topic path, prefix-independent, e.g.
+`tns1:VideoSource/MotionAlarm`) and **ConcreteSet** (`|`-alternatives
+with `*` segment wildcards) receive exactly what the filter selects.
+Unsupported dialects and empty expressions fault — the server no longer
+accepts a filter and then silently ignores it. `GetEventProperties`
+answers the spec-complete form (topic namespace location, the two
+mandatory topic-expression dialects, the spec-blessed empty
+message-content dialect); message-content filtering is not applied and
+not advertised.

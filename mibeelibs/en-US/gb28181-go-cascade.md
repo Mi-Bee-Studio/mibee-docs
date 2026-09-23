@@ -7,7 +7,7 @@ forwards INVITEs as streams, and serves playback from your recordings.
 ## Install
 
 ```bash
-go get github.com/mickeyzzc/gb28181-go@v0.3.0
+go get github.com/mickeyzzc/gb28181-go@v0.11.0
 ```
 
 ## Config
@@ -70,6 +70,28 @@ a thin wrapper (field names already match).
 - **Playback** — RecordInfo from your `Store`; playback INVITEs pump
   recorded segments through the same media path.
 - **Signaling** — BYE/SUBSCRIBE/MESSAGE/INFO/OPTIONS all answered.
+
+```mermaid
+sequenceDiagram
+    participant U as Upper platform
+    participant C as cascade (lower platform)
+    participant L as CameraSource / Store (host)
+    C->>U: REGISTER (digest auth, LocalDeviceID)
+    U-->>C: 401 (challenge) / 200 OK
+    C->>U: MESSAGE Catalog upload (channel IDs stable after first sight)
+    U-->>C: 200 OK
+    U->>C: INVITE (channel live view)
+    C->>L: Hub(cameraID) subscribe live frames
+    C-->>U: 200 OK (SDP answer)
+    C->>U: RTP/PS upstream (psmux, UDP or TCP)
+    U->>C: MESSAGE RecordInfo (playback query)
+    C->>L: ListRecordings(filter)
+    C-->>U: MESSAGE response (recording list)
+    U->>C: INVITE (playback)
+    C->>U: RTP/PS (recorded segments, same media path)
+    U->>C: BYE
+    C-->>U: 200 OK
+```
 
 Multiple upper platforms are supported (`upstreams` config); each is
 an independent registration session over the shared listener.

@@ -3,10 +3,29 @@
 媒体服务门面（`client.Media()`）覆盖 profile、流/快照 URI、编码配置。本文讲
 其中经过真机验证的语义部分：profile 选择、StreamSetup 参数化、响应解析。
 
+## 客户端引导时序
+
+从设备发现到拿到可拉流地址的典型握手（WS-Discovery 探测见
+[发现](onvif-go-discovery.md)）：
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端（client.Media()）
+    participant D as ONVIF 设备
+    C->>D: GetCapabilities / GetServices（定位媒体服务 XAddr）
+    D-->>C: Media XAddr
+    C->>D: GetProfiles
+    D-->>C: Profile 列表（token + 分辨率）
+    Note over C: SelectMainProfile / SelectSubProfile（像素数优先，命名线索仅裁决平手）
+    C->>D: GetStreamUri（StreamSetup: RTP-Unicast + RTSP）
+    D-->>C: rtsp://…（MediaUri/Uri）
+    Note over C,D: 之后媒体走 RTSP/RTP——不在 ONVIF 信令内
+```
+
 ## 安装
 
 ```bash
-go get github.com/mickeyzzc/onvif-go/v2@v2.0.0-rc4
+go get github.com/mickeyzzc/onvif-go/v2@v2.2.0
 ```
 
 ## 选对 Profile
@@ -69,3 +88,46 @@ ONVIF 媒体响应比规范更多变：命名空间前缀（`trt:`/`tt:`/默认�
 系列）、OSD 管理、组播配置（`Start/StopMulticastStreaming`）与同步点。完整
 操作列表见
 [Go 参考文档](https://pkg.go.dev/github.com/mickeyzzc/onvif-go/v2/onvif)。
+
+## Media2（H.265/AV1）
+
+ver10 媒体模型把编码器枚举成固定 schema 类型（H264、MPEG4——其中没有
+H.265）。Media2 服务（ver20/media/wsdl，`client.Media2()`，v2.1.0 起）是
+编解码无关的答案：`Encoding` 是自由媒体子类型名，设备按它支持的每个编码
+各报一条 options：
+
+```go
+m2 := client.Media2()
+
+profiles, _ := m2.GetProfiles(ctx, "", nil) // 全部 profile，带内联配置
+for _, p := range profiles {
+    if p.VideoEncoder != nil {
+        fmt.Println(p.Token, p.Name, p.VideoEncoder.Encoding) // "H264"、"H265"…
+    }
+}
+
+opts, _ := m2.GetVideoEncoderConfigurationOptions(ctx, "", "")
+for _, o := range opts {
+    fmt.Printf("%s: %dx%d…%dx%d, %v–%v fps\n", o.Encoding,
+        o.Resolutions[0].Width, o.Resolutions[0].Height,
+        o.Resolutions[len(o.Resolutions)-1].Width, o.Resolutions[len(o.Resolutions)-1].Height,
+        o.FrameRateRange[0], o.FrameRateRange[len(o.FrameRateRange)-1])
+}
+```
+
+把一个 profile 切到 H.265 是一次读改写，编码名逐字透传——库绝不改写它：
+
+```go
+cfgs, _ := m2.GetVideoEncoderConfigurations(ctx)
+for _, c := range cfgs {
+    if c.Encoding == "H264" {
+        c.Encoding = "H265" // 自由名；线上逐字透传
+        _ = m2.SetVideoEncoderConfiguration(ctx, c)
+    }
+}
+```
+
+请求遵循 WSDL 契约（tr2 包装、`tt:` 载荷子元素）；Media2 默认搭媒体
+服务 endpoint，可用 `SetServiceEndpoint` 钉住。`GetStreamUri(protocol,
+profileToken)` 补齐播放路径。未实现：profile 增删与音频/OSD 族——这些仍以
+ver10 media（`client.Media()`）为全覆盖面。

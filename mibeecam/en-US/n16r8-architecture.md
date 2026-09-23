@@ -41,7 +41,7 @@ From `main.c`:
    - Start AI task on Core 1 (priority 5, stack 24576)
    - Apply config-based feature enables
 9. **web_server_start** - Start HTTP server on port 80 (stack 16384)
-10. **rtsp_start** - Start RTSP server (MJPEG-only, digest auth)
+10. **rtsp_start** - Start RTSP server (MJPEG-only, no auth)
 11. **onvif_start** - Start ONVIF discovery + SOAP service
 12. **at_command_init** - Start AT command listener on UART0
 13. **Idle loop** - 60-second heartbeat logging

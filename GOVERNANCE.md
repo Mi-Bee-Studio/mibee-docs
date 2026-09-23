@@ -59,7 +59,9 @@ flowchart LR
 - 密钥/token 格式（GitHub/AWS/OpenAI/Slack/Google/GitLab/npm/DO、JWT、PEM 私钥、SSH 密钥）；
 - 非文档保留段的公网 IPv4（文档示例 IP 只允许 `192.0.2.x` / `198.51.100.x` / `203.0.113.x`）；
 - **凭据取值白名单外的新密码**：文档中出现的 password/密码/secret/token 取值，只允许
-  (a) 三个**官方公开默认密码**：`mibeecam2026` / `mibeestudio2026` / `mibeehome2026`（须注明“首次配置后立即修改”）；
+  (a) 三个**官方公开默认密码**：`mibeecam2026` / `mibeestudio2026` / `mibeehome2026`（须注明“首次配置后立即修改”。
+      注：2026-09-18 契约 v1.9 起，ESP 摄像头家族的 Web/RTSP 设备级密码已从固件移除，`mibeecam2026`
+      在 mibeecam 文档中仅作为 **AP 热点口令**（SSID `MiBeeCam`）与 WiFi 示例值出现，含义不变）；
   (b) 第三方厂商公开默认值（如 `admin`/`123456`，仅限摄像头接入等事实性文档）；
   (c) 明确占位符（`your-*`、`<...>`、`changeme` 等）。
   确需新增取值：在脚本白名单登记并在 PR 描述说明理由，由守门人审查放行。

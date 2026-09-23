@@ -17,32 +17,8 @@ Replace `<device-ip>` with your device's IP address.
 
 ## Authentication
 
-### Protected Endpoints
-The following endpoints require authentication:
+Firmware with contract v1.9 (2026-09-18) has no device-level password: the web admin password (and the `X-Password` header / `POST /api/auth` flow) were removed. All HTTP endpoints are open on the trusted LAN; the trust boundary is the router's WPA2.
 
-- `POST /api/config`
-- `POST /api/reset` — Factory reset (via web interface, BOOT button not functional)
-- `POST /api/reboot` — Reboot device
-- `POST /api/auth` — Verify web password
-
-### Authentication Method
-Use the `X-Password` header with the web password (default: "mibeecam2026"):
-
-```bash
-curl -X POST http://192.168.1.100/api/config \
-  -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
-  -d '{"wifi_ssid":"MyNetwork"}'
-```
-
-### Password Configuration
-Set web password via POST /api/config:
-
-```json
-{
-  "web_password": "your-password-here"
-}
-```
 ## API Endpoints
 
 ### 1. Device Status
@@ -107,47 +83,7 @@ Returns comprehensive device status information.
 curl -s http://192.168.1.100/api/status | python -m json.tool
 ```
 
-### 2. Authentication
-
-#### POST /api/auth
-
-Verify web password and return authentication status.
-
-**Request Body**
-```json
-{
-  "password": "mibeecam2026"
-}
-```
-
-**Response**
-```json
-{
-  "authenticated": true,
-  "message": "Authentication successful"
-}
-```
-
-**Curl Example**
-```bash
-# Check authentication
-curl -X POST http://192.168.1.100/api/auth \
-  -H "Content-Type: application/json" \
-  -d '{"password":"mibeecam2026"}'
-
-# Change password
-curl -X POST http://192.168.1.100/api/config \
-  -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
-  -d '{"web_password":"newpassword"}'
-
-# Verify new password
-curl -X POST http://192.168.1.100/api/auth \
-  -H "Content-Type: application/json" \
-  -d '{"password":"newpassword"}'
-```
-
-### 3. Configuration Management
+### 2. Configuration Management
 
 #### GET /api/config
 
@@ -162,7 +98,6 @@ Returns current configuration (passwords are not included).
   "resolution": 0,
   "fps": 15,
   "jpeg_quality": 12,
-  "web_password": "[hidden]",
   "timezone": "CST-8",
   "motion_threshold": 5,
   "motion_cooldown": 10,
@@ -184,7 +119,7 @@ curl -s http://192.168.1.100/api/config | python -m json.tool
 
 #### POST /api/config
 
-Updates device configuration. Requires authentication.
+Updates device configuration.
 
 **Request Body**
 ```json
@@ -221,33 +156,29 @@ Updates device configuration. Requires authentication.
 # Update WiFi credentials
 curl -X POST http://192.168.1.100/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"wifi_ssid":"MyNetwork","wifi_pass":"MyPassword"}'
 
 # Update motion detection settings
 curl -X POST http://192.168.1.100/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"motion_threshold":3,"motion_cooldown":15}'
 
 # Update camera quality
 curl -X POST http://192.168.1.100/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"jpeg_quality":10}'
 
 # Update timelapse settings
 curl -X POST http://192.168.1.100/api/config \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"timelapse_enabled":true,"timelapse_interval_s":60}'
 ```
 
-### 4. System Control
+### 3. System Control
 
 #### POST /api/reset
 
-Resets configuration to factory defaults. Requires authentication.
+Resets configuration to factory defaults.
 
 **Important**: BOOT button is not functional (GPIO0 = camera XCLK). Use this endpoint instead.
 
@@ -262,13 +193,12 @@ Resets configuration to factory defaults. Requires authentication.
 
 **Curl Example**
 ```bash
-curl -X POST http://192.168.1.100/api/reset \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/reset
 ```
 
 #### POST /api/reboot
 
-Reboots the device. Requires authentication.
+Reboots the device.
 
 **Response**
 ```json
@@ -281,11 +211,10 @@ Reboots the device. Requires authentication.
 
 **Curl Example**
 ```bash
-curl -X POST http://192.168.1.100/api/reboot \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/reboot
 ```
 
-### 5. Camera Functions
+### 4. Camera Functions
 
 #### GET /capture
 
@@ -332,7 +261,7 @@ curl -s http://192.168.1.100/stream | head -c 10485760 > stream.mjpeg
 curl -I http://192.168.1.100/stream
 ```
 
-### 6. Prometheus Monitoring
+### 5. Prometheus Monitoring
 
 #### GET /metrics
 
@@ -392,7 +321,7 @@ curl -s http://192.168.1.100/metrics > prometheus_metrics.txt
 watch -n 5 "curl -s http://192.168.1.100/metrics | grep heap"
 ```
 
-### 7. SD Card File Management
+### 6. SD Card File Management
 
 #### GET /api/files
 
@@ -462,11 +391,11 @@ curl -o "photo_backup.jpg" "http://192.168.1.100/api/download?name=2024-12-30-14
 curl -s http://192.168.1.100/api/files | jq -r '.photos[].name'
 ```
 
-### 8. Photo Deletion
+### 7. Photo Deletion
 
 #### DELETE /api/files?name=xxx
 
-Deletes a specific photo from SD card. Requires authentication.
+Deletes a specific photo from SD card.
 
 **Parameters**
 - `name`: Photo filename to delete (required)
@@ -483,8 +412,7 @@ Deletes a specific photo from SD card. Requires authentication.
 **Curl Examples**
 ```bash
 # Delete specific photo
-curl -X DELETE "http://192.168.1.100/api/files?name=2024-12-30-14-30-25.jpg" \
-  -H "X-Password: mibeecam2026"
+curl -X DELETE "http://192.168.1.100/api/files?name=2024-12-30-14-30-25.jpg"
 
 # List photos before deletion
 curl -s http://192.168.1.100/api/files | jq -r '.photos[].name'
@@ -494,11 +422,11 @@ curl -s http://192.168.1.100/api/files | jq -r '.photos[] | select(.name == "202
 ```
 
 
-### 9. Timelapse Control
+### 8. Timelapse Control
 
 #### POST /api/timelapse/start
 
-Starts timelapse recording. Requires authentication.
+Starts timelapse recording.
 
 **Request Body**
 ```json
@@ -524,13 +452,12 @@ Starts timelapse recording. Requires authentication.
 # Start timelapse (1 minute intervals, 3 photos)
 curl -X POST http://192.168.1.100/api/timelapse/start \
   -H "Content-Type: application/json" \
-  -H "X-Password: mibeecam2026" \
   -d '{"interval_seconds":60,"burst_count":3}'
 ```
 
 #### POST /api/timelapse/stop
 
-Stops timelapse recording. Requires authentication.
+Stops timelapse recording.
 
 **Response**
 ```json
@@ -544,8 +471,7 @@ Stops timelapse recording. Requires authentication.
 **Curl Example**
 ```bash
 # Stop timelapse
-curl -X POST http://192.168.1.100/api/timelapse/stop \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/timelapse/stop
 ```
 
 #### GET /api/timelapse/status
@@ -564,7 +490,7 @@ Returns current timelapse status and configuration.
 }
 ```
 
-### 10. Flash Control
+### 9. Flash Control
 
 #### GET /api/flash
 
@@ -585,7 +511,7 @@ curl -s http://192.168.1.100/api/flash
 
 #### POST /api/flash
 
-Controls flash LED status. Requires authentication.
+Controls flash LED status.
 
 **Parameters**
 - `action`: `on` or `off` (optional, toggles if not specified)
@@ -603,24 +529,21 @@ Controls flash LED status. Requires authentication.
 ```bash
 # Turn flash on
 curl -X POST http://192.168.1.100/api/flash \
-  -H "X-Password: mibeecam2026" \
   -d '{"action":"on"}'
 
 # Turn flash off
 curl -X POST http://192.168.1.100/api/flash \
-  -H "X-Password: mibeecam2026" \
   -d '{"action":"off"}'
 
 # Toggle flash state
-curl -X POST http://192.168.1.100/api/flash \
-  -H "X-Password: mibeecam2026"
+curl -X POST http://192.168.1.100/api/flash
 ```
 
-### 11. Recording Control
+### 10. Recording Control
 
 #### POST /api/record?action=start|stop
 
-Start or stop video recording. Requires authentication.
+Start or stop video recording.
 
 **Parameters**
 - `action`: `start` or `stop` (required)
@@ -637,12 +560,10 @@ Start or stop video recording. Requires authentication.
 **Curl Examples**
 ```bash
 # Start continuous recording
-curl -X POST "http://192.168.1.100/api/record?action=start" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=start"
 
 # Stop recording
-curl -X POST "http://192.168.1.100/api/record?action=stop" \
-  -H "X-Password: mibeecam2026"
+curl -X POST "http://192.168.1.100/api/record?action=stop"
 ```
 
 #### GET /api/record
@@ -661,7 +582,7 @@ Returns recording status and information.
 }
 ```
 
-### 12. Storage Management
+### 11. Storage Management
 
 #### GET /api/storage
 
@@ -699,7 +620,6 @@ Returns storage usage and cleanup status.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET    | `/api/status` | Device status and sensor data |
-| POST   | `/api/auth` | Verify web password |
 | GET    | `/api/config` | Current configuration JSON |
 | POST   | `/api/config` | Update configuration |
 | POST   | `/api/reset` | Factory reset to defaults |
@@ -800,7 +720,6 @@ All endpoints return appropriate HTTP status codes and error messages:
 ### Common HTTP Status Codes
 - `200 OK` - Successful request
 - `400 Bad Request` - Invalid request parameters
-- `401 Unauthorized` - Missing or invalid authentication
 - `404 Not Found` - Resource not found
 - `500 Internal Server Error` - Server error
 - `503 Service Unavailable` - Service temporarily unavailable
@@ -818,7 +737,6 @@ All endpoints return appropriate HTTP status codes and error messages:
 ```
 
 ### Common Error Codes
-- `INVALID_AUTH` - Authentication failed
 - `CONFIG_INVALID` - Invalid configuration parameters
 - `CAMERA_ERROR` - Camera operation failed
 - `STORAGE_ERROR` - SD card operation failed
