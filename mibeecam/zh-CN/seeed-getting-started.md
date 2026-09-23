@@ -258,6 +258,7 @@ http://<设备IP>/stream
 
 ### API 状态检查
 
+```
 ```bash
 curl http://<设备IP>/api/status
 ```

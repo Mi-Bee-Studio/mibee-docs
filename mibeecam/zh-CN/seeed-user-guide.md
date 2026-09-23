@@ -427,6 +427,7 @@ TF 卡配置文件 > NVS 闪存 > 默认值
 
 **API 触发**（仅 URL 模式）：
 
+```
 ```bash
 curl -X POST http://192.168.4.1/api/ota \
   -H "Content-Type: application/json" \

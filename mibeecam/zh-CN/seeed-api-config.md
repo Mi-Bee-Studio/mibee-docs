@@ -272,6 +272,7 @@ async function switchToHttp() {
 ### 典型使用场景
 
 **场景 1：获取配置后原样回传（不修改密码）**
+```
 ```javascript
 // GET 返回 wifi_pass: "****"
 // 原样回传 "****" 即可保持密码不变
