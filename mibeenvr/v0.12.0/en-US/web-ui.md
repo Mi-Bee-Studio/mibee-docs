@@ -1,6 +1,6 @@
 # Web UI Tour
 
-> For MiBeeNvr v0.11.0
+> For MiBeeNvr v0.12.0
 
 The MiBee NVR web interface is organized into six pages. This page is a feature cheat sheet; step-by-step configuration lives in the dedicated guides.
 
