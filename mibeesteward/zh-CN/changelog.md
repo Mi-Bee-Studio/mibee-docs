@@ -1,4 +1,4 @@
-> 本页是仓库根目录 [CHANGELOG.md](../../CHANGELOG.md) 的镜像副本（保留英文原文，便于与仓库逐字对照）。上游 CHANGELOG 更新后需同步刷新本文件。
+> 本页是仓库根目录 [CHANGELOG.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/CHANGELOG.md) 的镜像副本（保留英文原文，便于与仓库逐字对照）。上游 CHANGELOG 更新后需同步刷新本文件。
 
 
 # Changelog

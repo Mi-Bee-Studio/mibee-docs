@@ -276,13 +276,13 @@ Coverage is **reported** (artifact uploaded), not hard-gated.
 
 ## Dual License & Legal Requirements
 
-MiBee Steward is distributed under a **dual license**: [GNU AGPLv3](../../LICENSE) + [commercial license](../../LICENSE-COMMERCIAL.md). For this to remain possible, every contribution must satisfy:
+MiBee Steward is distributed under a **dual license**: [GNU AGPLv3](../../LICENSE) + [commercial license](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/LICENSE-COMMERCIAL.md). For this to remain possible, every contribution must satisfy:
 
 ### Contributor License Agreement (CLA)
 
 A signed CLA is required **once per contributor** (ICLA for individuals, CCLA for companies). The CLA grants Mi-Bee Studio the right to release your contribution under both AGPLv3 and the commercial license. You retain your copyright.
 
-A pull request **cannot be merged** until the CLA is on file. See [CLA.md](../../CLA.md) for signing instructions.
+A pull request **cannot be merged** until the CLA is on file. See [CLA.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/CLA.md) for signing instructions.
 
 ### DCO Sign-off
 
@@ -292,7 +292,7 @@ Every commit must carry a `Signed-off-by` line certifying its origin. Pass `-s` 
 git commit -s -m "feat: add new discovery source"
 ```
 
-A CI check (`.github/workflows/dco.yml`) blocks any PR with an unsigned commit. See [DCO.md](../../.github/DCO.md) for details.
+A CI check (`.github/workflows/dco.yml`) blocks any PR with an unsigned commit. See DCO.md for details.
 
 ### Fingerprint Corpus License
 
