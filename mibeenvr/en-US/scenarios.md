@@ -208,4 +208,4 @@ Recordings now land on your own disk — no subscription, no privacy concerns. C
 
 - Full feature boundary: [Feature Overview](features.md)
 - Comparing options: [How It Compares](comparison.md)
-- Stuck? Start with [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/troubleshooting.md)
+- Stuck? Start with [Troubleshooting](upgrade-faq.md)

@@ -1,6 +1,6 @@
 # Observability Guide
 
-MiBee NVR ships a complete troubleshooting and monitoring toolkit: the flow-path view, end-to-end latency display, health stability stats, per-camera frame-trace sampling, Prometheus metrics and Grafana dashboards. This page is the entry point; full metric reference lives in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/metrics.md).
+MiBee NVR ships a complete troubleshooting and monitoring toolkit: the flow-path view, end-to-end latency display, health stability stats, per-camera frame-trace sampling, Prometheus metrics and Grafana dashboards. This page is the entry point; full metric reference lives in [metrics.md](observability.md).
 
 ## Flow View
 
@@ -79,7 +79,7 @@ Deduction reasons are listed in plain language (e.g. "3.2% frame drops in the la
 
 ### Scraping
 
-`/metrics` is public by default (optional BasicAuth via `metrics_auth`); Prometheus scrape config in [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/metrics.md).
+`/metrics` is public by default (optional BasicAuth via `metrics_auth`); Prometheus scrape config in [metrics.md](observability.md).
 
 ### Import dashboards
 
@@ -113,7 +113,7 @@ This exposes `/debug/pprof/*` (CPU/heap/goroutine profiles). The endpoint sits b
 
 ## Related docs
 
-- [metrics.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/metrics.md) — full Prometheus metric reference
-- [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/configuration.md) — `observability` settings
+- [metrics.md](observability.md) — full Prometheus metric reference
+- [configuration.md](config.md) — `observability` settings
 - [performance.md](performance.md) — memory tiering & background I/O budgeting (incl. the `nvr_iobudget_*` / `nvr_memlimit_bytes` metrics)
-- [troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/troubleshooting.md) — common problems
+- [troubleshooting.md](upgrade-faq.md) — common problems

@@ -86,10 +86,85 @@ io:
 - unlink 护栏额外把递归帧目录删除限制在 200 文件/秒（可配），防止
   ext4 日志（jbd2）饱和在删除进程退出后自持（#748 教训）。
 
-观测：`nvr_iobudget_wait_seconds_total{consumer}`（后台等待时长）、
+### 租户全景
+
+所有共享同一令牌桶的 I/O 租户（即指标里的 `consumer` 标签）：
+
+| 租户 | 计费内容 | 状态 |
+|------|----------|------|
+| `merge` | 滚动 / 批量合并的读写 | 既有 |
+| `cleanup` | 保留期 / 磁盘水位清理删除 | 既有 |
+| `repair` | 修复性批量删除 | 既有 |
+| `timelapse` | 延时摄影帧提取 | 既有 |
+| `transcode` | 转码输入读 + 输出写，按输入大小 ×2 估价计费（#848） | 既有 |
+| `offload` | S3 对象存储冷备上传（#874） | v0.13 |
+| `recording` | 录像段样本写，按 NALU 字节计费 | v0.13 灰度，默认关（#886） |
+| `playback` | API 媒体服务读，按读块计费 | v0.13 灰度，默认关（#886） |
+
+观测：`nvr_iobudget_wait_seconds_total{consumer}`（等待时长）、
 `nvr_iobudget_bytes_charged_total{consumer}` /
-`nvr_iobudget_unlinks_charged_total{consumer}`（计费量），
-`consumer` ∈ {merge, cleanup, repair, timelapse}。
+`nvr_iobudget_unlinks_charged_total{consumer}`（计费量）。
+
+### 前台灰度开关（v0.13，#886）
+
+预算默认只约束后台任务；v0.13 新增两个灰度开关，把**前台** I/O 也纳入同一预算：
+
+```yaml
+io:
+  budget_bytes_per_sec: 16777216    # 前提：预算本身已启用
+  recording_writes_budgeted: false  # 录像段写按 NALU 字节计入 "recording" 租户
+  playback_reads_budgeted: false    # API 媒体服务读按读块计入 "playback" 租户
+```
+
+- **默认 false——关闭态零行为变化**，与历史版本完全一致；两者都要求 `budget_bytes_per_sec > 0`；
+- `recording_writes_budgeted`：段样本写在 muxer 写入前计费，桶枯竭时阻塞让路（录像器环形缓冲吸收延迟，仅当停顿超出缓冲容量才丢帧）。只在"无界录像写本身就是延迟问题"的介质上开启——例如 SD 卡同时承压合并与回放下载。代码：`internal/recorder/iobudget.go`；
+- `playback_reads_budgeted`：回放 / 下载的文件读按 `http.ServeContent` 读块计费，桶枯竭时给传输限速（Range / 协商语义不变）。代码：`internal/api/playback_budget.go`；
+- **开启前先观察 iobudget 指标**：确认 `nvr_iobudget_wait_seconds_total` 余量充足，开启后再复查前台等待没有失控。
 
 `mibee-nvr repair delete-by-format` CLI 读取同一 `io:` 配置节——对在线
 服务器手工批量删除时，让路行为与服务端自身清理完全一致。
+
+### 碎段攒批折叠（#852）
+
+闪断相机（Wi-Fi/电源不稳、CS2 EOF、级联抖动）每次重连产出一个 ~7s 碎段；滚动合并的每次
+折卷都是全桶整读整写（`MergeMP4Segments([bucket, 段])` 流式重写），发病期单台相机的折卷率
+可达 36 次/分钟，PSI io some 冲 86%（#851 实测）。碎段攒批把 <30s 的 MP4 段先攒进持有队列，
+到期后**一次**折卷整批——全桶重写次数降为约 1/N。
+
+```yaml
+merge:
+  rolling_fragment_hold_s: 300   # 默认；0 = 关闭（逐段折卷）；范围 0-3600
+```
+
+- 默认开启（纯元数据持有，最坏内存 <1MB，RPi 3B 无影响）；可在 Web
+  **设置 → 录像合并**卡片直接调整或关闭；
+- 冲刷条件任一满足即折：最老碎段年龄到期 / 深度 8 段 / 累计 64MB / 小时窗翻转 /
+  同相机健康段（≥30s）到达搭车；10 分钟回填扫描对窗口内年轻碎段让路（防中途收走）；
+- 持有期间碎段仍是可独立播放的录像行——只是合并产物晚至多一个窗口出现。
+
+### 顺序追加桶（#853，实验性，默认关闭）
+
+#852 把折卷**次数**降为 1/N；顺序追加桶把单次**代价**从 O(桶) 降为 O(段)：桶创建时在
+样本表预留容量槽位，折卷只在 mdat 尾部追加新段字节并原地补丁表条目，绝不重写已有字节。
+启动自检发现未提交尾部（崩溃残留）按 mdat 声明截断；容量耗尽自动回落经典全量重写。
+
+```yaml
+merge:
+  rolling_append_bucket: false  # 默认关闭；实验性，Web 设置 → 录像合并可开
+```
+
+**⚠️ RPi 3B 基线**：每活跃相机常驻约 1–2MB 内存镜像（72k 样本/小时 × 12–16B/条目）；
+12 路全开 ≈ 12–24MB。1GB 设备谨慎；默认关闭由用户按实际开启。
+
+---
+
+## 0.13 录像写路径优化
+
+v0.13 对录像写盘路径做了三项改进，消除段写入制造的 I/O 尖峰（效果可用
+`nvr_segment_write_duration_seconds` 指标观测）：
+
+- **MP4 增量落盘**：媒体字节在录制期间增量写出，段关闭只剩一个小 moov 头
+  待补——消除 Close 时刻的全文件突发写；
+- **每段独立写锁**：相机之间的段写盘不再互相串行化，单相机慢盘不拖累全局；
+- **NALU 缓冲池化**：Annex-B 组帧缓冲按录像器池化复用（#875），
+  消除每 NALU 一次的堆分配与 GC 压力。

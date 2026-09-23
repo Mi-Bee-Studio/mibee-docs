@@ -208,4 +208,4 @@ NVR 侧把推流当作一路普通摄像头——录制、直播、AI 一切照�
 
 - 想全面了解功能边界：[功能总览](features.md)
 - 正在和其他方案比较：[同类方案对比](comparison.md)
-- 遇到问题：先看[故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/troubleshooting.md)
+- 遇到问题：先看[故障排除](upgrade-faq.md)

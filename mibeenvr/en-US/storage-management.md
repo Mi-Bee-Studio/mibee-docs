@@ -1,6 +1,6 @@
 # Storage Management & Recording Migration
 
-> For MiBeeNvr v0.12.0
+> For MiBeeNvr v0.13.0
 
 Where recordings live, how to swap disks, and how to move history — all **runtime operations, no restart required**. The database is decoupled from the recording root (SQLite stays on the data volume), so switching storage never walks off with your index.
 
@@ -102,4 +102,4 @@ curl -u admin:password http://192.168.1.50:9090/api/storage/migrate/status
 ## Next Steps
 
 - [Adaptive Recording](adaptive-recording.md) — cut disk usage at the write-density level first
-- [Storage Research](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/storage-research.md) — design deep-dive of the storage subsystem
+- [Storage Research](storage-management.md) — design deep-dive of the storage subsystem

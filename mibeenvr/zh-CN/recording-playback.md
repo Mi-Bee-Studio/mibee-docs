@@ -1,6 +1,6 @@
 # 录制与回放
 
-> 适用于 MiBeeNvr v0.12.0
+> 适用于 MiBeeNvr v0.13.0
 
 MiBee NVR 将摄像头视频流录制为 MP4 片段并保存到磁盘，提供 Web 界面用于回放、搜索和下载录像。
 
@@ -57,7 +57,7 @@ cleanup:
 
 - **按天数**：`max_days: 30` 保留最近 30 天
 - **按磁盘**：监控磁盘使用量，自动清理最旧的片段
-- **手动**：在 Web UI 中手动删除片段，或用 [`mibee-nvr cleanup`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/cli.md#cleanup-录像清理) 按日期 / 孤儿文件批量清理
+- **手动**：在 Web UI 中手动删除片段，或用 [`mibee-nvr cleanup`](cli.md#cleanup-录像清理) 按日期 / 孤儿文件批量清理
 
 ## Web UI 回放
 

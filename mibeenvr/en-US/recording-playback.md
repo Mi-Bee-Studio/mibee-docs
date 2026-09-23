@@ -1,6 +1,6 @@
 # Recording & Playback
 
-> Applies to MiBeeNvr v0.12.0
+> Applies to MiBeeNvr v0.13.0
 
 MiBee NVR captures camera video streams as MP4 segments and saves them to disk. A built-in web interface lets you browse, search, and download recordings.
 
@@ -57,7 +57,7 @@ Tuning knobs, the audio trigger, the ambient-audio layer and activity retrieval 
 
 - **By days**: `max_days: 30` keeps the most recent 30 days
 - **By disk**: monitors disk usage and deletes the oldest segments first
-- **Manual**: delete individual segments from the web UI, or bulk-clean by date / orphan files with [`mibee-nvr cleanup`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/cli.md#cleanup-recording-cleanup)
+- **Manual**: delete individual segments from the web UI, or bulk-clean by date / orphan files with [`mibee-nvr cleanup`](cli.md#cleanup-recording-cleanup)
 
 ## Web UI Playback
 

@@ -1,6 +1,6 @@
 # 接入 Home Assistant
 
-> 适用于 MiBee NVR v0.12.0+（内置 RTSP 输出、MQTT 触发与状态发布）；仓库内附带的 custom integration 自 v0.13.0 起提供
+> 适用于 MiBee NVR v0.13.0+（内置 RTSP 输出、MQTT 触发与状态发布）；仓库内附带的 custom integration 自 v0.13.0 起提供
 
 MiBee NVR 自带一个可选的 Home Assistant 自定义集成（方案 0：自动发现、按相机生成实体与开关）；不装它也完全可行——通过 RTSP 输出、REST API、MQTT 触发与状态发布四个能力，可以拼出完整的接入方案。本文按用途拆分路径，全部可独立启用。
 
@@ -25,7 +25,7 @@ MiBee NVR 自带一个可选的 Home Assistant 自定义集成（方案 0：自�
 
 ## 方案 0：自定义集成（推荐）
 
-仓库内置一个 Home Assistant 自定义集成（[源码与实体清单](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/deploy/home-assistant/README.md)）。安装后自动发现局域网内的 NVR，并为每台相机创建：
+仓库内置一个 Home Assistant 自定义集成（源码与实体清单）。安装后自动发现局域网内的 NVR，并为每台相机创建：
 
 - **摄像头实体** — H.264/H.265 走 NVR 内置 RTSP 输出（HA `stream`，延迟 1–3 秒）；MJPEG/JPEG 相机走 `stream.mjpeg` 直通（HA 原生 MJPEG 摄像头）。
 - **二进制传感器 ×2** — *Connected*（连接状态）与 *Recording*（正在写录像段）。
@@ -197,5 +197,5 @@ muted: true
 ## 下一步
 
 - [MQTT 集成](mqtt.md) — 触发动作与状态发布的完整参考
-- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/configuration.md) — `server.rtsp`、`mqtt`、`health.alerts` 等全部字段
+- [配置参考](config.md) — `server.rtsp`、`mqtt`、`health.alerts` 等全部字段
 - [API 概览](api.md) — REST 接口与鉴权说明

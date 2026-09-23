@@ -530,7 +530,7 @@ PUT /api/cameras/camera-id
 
 ## 相关文档
 
-- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/configuration.md)
+- [配置参考](config.md)
 - [摄像头指南](camera-guide.md)
-- [API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/api-reference.md)
-- [故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/troubleshooting.md)
+- [API 参考](api.md)
+- [故障排除](upgrade-faq.md)

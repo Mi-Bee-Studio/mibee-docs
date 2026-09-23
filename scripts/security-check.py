@@ -110,6 +110,7 @@ PLACEHOLDER_VALUES = {
     "stream-key", "secret", "secretkey", "token", "apikey",
     "password123", "camera123", "yourpassword", "your_passToken_here",
     "mqtt_password", "xiaomi_password", "new_xiaomi_password",
+    "dav_password", "secure_password", "upload_password",  # WebDAV/FTP 教程配置键名（mibeenvr v0.13.0 文档，2026-09-23 登记）
     "secure_password_123", "complex_password", "secure_admin_password",
     "super-secret-key", "secret123", "securepassword123", "videoSrc0", "enc0",
 }

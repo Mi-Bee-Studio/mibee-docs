@@ -1,6 +1,6 @@
 # Sub-Streams (Low-Resolution Secondary Streams)
 
-> For MiBeeNvr v0.12.0
+> For MiBeeNvr v0.13.0
 
 Most IP cameras output two streams: the **main stream** (high resolution, for recording) and a **sub-stream** (low resolution/bitrate, traditionally for previews). MiBee NVR makes the sub-stream an **on-demand** first-class citizen: the surveillance grid, GB cascade, and external AI consumers ride the sub-stream while **main-stream recording is untouched**; with no viewers the sub-stream pull stops by itself — zero cost when nobody watches.
 
@@ -13,7 +13,7 @@ Most IP cameras output two streams: the **main stream** (high resolution, for re
 | Live API | `stream/ws` / `stream.flv` with `?quality=sub`; HLS uses the path form `/api/cameras/{id}/stream/sub/index.m3u8` |
 | WebRTC (WHEP) | True sub-stream session when the sub-stream is H.264; H.265 sub-streams fall back to main (WebRTC is H.264-only) |
 | GB28181 cascade | Per-camera "cascade sub-stream" toggle — upper-platform previews stop saturating your uplink (see the [GB/T 28181 guide](gb28181.md)) |
-| External AI push | Sub-stream analysis layer — low-res segments decode at 1/4–1/16 the cost of main (see the [configuration reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/configuration.md#vision-push-integration-configuration)) |
+| External AI push | Sub-stream analysis layer — low-res segments decode at 1/4–1/16 the cost of main (see the [configuration reference](config.md#vision-push-integration-configuration)) |
 
 **Fallback semantics**: when a camera has no sub-stream or the pull fails, every consumer falls back to the main stream, and the live response header `X-Stream-Quality: main|sub` reports what was actually served — the frontend never black-screens, scripts can decide.
 
@@ -70,4 +70,4 @@ rtsp://<NVR-IP>:8554/<camera_id>
 
 - [Streaming Protocol Selection](streaming.md) — choosing WebRTC / WS / FLV / HLS / WASM
 - [GB/T 28181 Guide](gb28181.md) — cascading the sub-stream to an upper platform
-- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/configuration.md) — all configuration keys
+- [Configuration Reference](config.md) — all configuration keys

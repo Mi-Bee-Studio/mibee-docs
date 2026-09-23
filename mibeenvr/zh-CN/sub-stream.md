@@ -1,6 +1,6 @@
 # 子码流（低分辨率第二流）
 
-> 适用于 MiBeeNvr v0.12.0
+> 适用于 MiBeeNvr v0.13.0
 
 多数 IP 相机会同时输出两路流：**主码流**（高分辨率，用于录像）和**子码流**（低分辨率低码率，常用于预览）。MiBee NVR 把子码流做成**按需拉取**的一等公民：宫格预览、级联上报、外部 AI 消费走子码流，**主码流录像完全不受影响**；没有任何观看者时子码流拉取自动停止——「无观看者零成本」。
 
@@ -13,7 +13,7 @@
 | 直播 API | `stream/ws` / `stream.flv` 加 `?quality=sub`；HLS 用路径式 `/api/cameras/{id}/stream/sub/index.m3u8` |
 | WebRTC (WHEP) | 子码流为 H.264 时建立真子流会话；H.265 子码流自动回退主码流（WebRTC 仅支持 H.264） |
 | GB28181 级联上报 | 相机级「级联上报子码流」开关——上级平台预览不再吃满上行带宽（见 [GB/T 28181 指南](gb28181.md)） |
-| 外部 AI 推送 | 子流分析层——低分辨率段解码成本为主流的 1/4~1/16（见[配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/configuration.md#vision-推送集成配置)） |
+| 外部 AI 推送 | 子流分析层——低分辨率段解码成本为主流的 1/4~1/16（见[配置参考](config.md#vision-推送集成配置)） |
 
 **回退语义**：相机没有子码流、或拉取失败时，一切消费自动回退主码流，直播响应头带 `X-Stream-Quality: main|sub` 如实回报实际使用的流——前端不会黑屏，脚本可判定。
 
@@ -70,4 +70,4 @@ rtsp://<NVR-IP>:8554/<camera_id>
 
 - [播放协议选择](streaming.md) — WebRTC / WS / FLV / HLS / WASM 怎么选
 - [GB/T 28181 指南](gb28181.md) — 级联上报子码流
-- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/configuration.md) — 全部配置键
+- [配置参考](config.md) — 全部配置键

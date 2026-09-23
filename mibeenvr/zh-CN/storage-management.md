@@ -1,6 +1,6 @@
 # 存储管理与录像迁移
 
-> 适用于 MiBeeNvr v0.12.0
+> 适用于 MiBeeNvr v0.13.0
 
 录像存到哪里、怎么换盘、怎么把历史录像搬走——全部**运行时可操作，无需重启**。数据库与录像根目录解耦（SQLite 单文件固定在数据目录），切换存储不会带走索引。
 
@@ -99,4 +99,4 @@ curl -u admin:password http://192.168.1.50:9090/api/storage/migrate/status
 ## 下一步
 
 - [自适应录制](adaptive-recording.md) — 从写入密度上先把磁盘占用降下来
-- [存储优化研究](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/zh/storage-research.md) — 存储子系统的设计深潜
+- [存储优化研究](storage-management.md) — 存储子系统的设计深潜

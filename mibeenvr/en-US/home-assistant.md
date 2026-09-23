@@ -1,6 +1,6 @@
 # Home Assistant Integration
 
-> Applies to MiBee NVR v0.12.0+ (built-in RTSP output, MQTT triggers and status publishing); the bundled custom integration ships with v0.13.0+
+> Applies to MiBee NVR v0.13.0+ (built-in RTSP output, MQTT triggers and status publishing); the bundled custom integration ships with v0.13.0+
 
 MiBee NVR ships an optional Home Assistant custom integration (Option 0: discovery plus per-camera entities and switches); skipping it is equally viable — the RTSP output, REST API, MQTT trigger, and status publishing capabilities combine into a complete setup. This guide splits the paths by purpose — each can be enabled independently.
 
@@ -25,7 +25,7 @@ The simplest combination is "RTSP for viewing + MQTT trigger + MQTT state" — H
 
 ## Option 0: Bundled Custom Integration (recommended)
 
-The repository ships a Home Assistant custom integration ([source and entity list](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/deploy/home-assistant/README.md)). Once installed it discovers NVRs on the LAN automatically and creates, per camera:
+The repository ships a Home Assistant custom integration (source and entity list). Once installed it discovers NVRs on the LAN automatically and creates, per camera:
 
 - **Camera entity** — H.264/H.265 via the NVR's built-in RTSP output (HA `stream`, 1–3 s latency); MJPEG/JPEG cameras via the `stream.mjpeg` passthrough (HA-native MJPEG camera).
 - **Binary sensors ×2** — *Connected* (connectivity) and *Recording* (segment writer active).
@@ -197,5 +197,5 @@ The card runs an embedded go2rtc to convert RTSP→WebRTC (it does not consume t
 ## Next Steps
 
 - [MQTT Integration](mqtt.md) — full reference for triggers and status publishing
-- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.13.0/docs/en/configuration.md) — all fields including `server.rtsp`, `mqtt`, `health.alerts`
+- [Configuration Reference](config.md) — all fields including `server.rtsp`, `mqtt`, `health.alerts`
 - [API Overview](api.md) — REST endpoints and authentication
