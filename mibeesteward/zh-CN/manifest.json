@@ -26,6 +26,11 @@
           "title": "产品范围与边界"
         },
         {
+          "slug": "comparison",
+          "file": "comparison.md",
+          "title": "与同类工具的对比"
+        },
+        {
           "slug": "discovery",
           "file": "discovery.md",
           "title": "设备发现与识别"
@@ -69,6 +74,11 @@
           "slug": "api",
           "file": "api.md",
           "title": "API 参考"
+        },
+        {
+          "slug": "integrations",
+          "file": "integrations.md",
+          "title": "生态集成"
         },
         {
           "slug": "ebpf",
