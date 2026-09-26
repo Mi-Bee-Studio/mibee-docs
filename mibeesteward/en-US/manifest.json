@@ -26,6 +26,11 @@
           "title": "Product Scope & Boundary"
         },
         {
+          "slug": "comparison",
+          "file": "comparison.md",
+          "title": "Comparison with Similar Tools"
+        },
+        {
           "slug": "discovery",
           "file": "discovery.md",
           "title": "Device Discovery & Identification"
@@ -69,6 +74,11 @@
           "slug": "api",
           "file": "api.md",
           "title": "API Reference"
+        },
+        {
+          "slug": "integrations",
+          "file": "integrations.md",
+          "title": "Integrations"
         },
         {
           "slug": "ebpf",
