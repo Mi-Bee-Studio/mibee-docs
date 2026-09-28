@@ -34,7 +34,7 @@ Grafana → Dashboards → Import → 粘贴 JSON 文件内容 → 选择 Promet
 
 ## 通知渠道
 
-通知规则（事件 → 渠道，见 [Web UI](web-ui.md) → 设置 → 通知）支持六种渠道类型：
+通知规则（事件 → 渠道，见 [Web UI](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/docs/zh/web-ui.md) → 设置 → 通知）支持六种渠道类型：
 
 | 类型 | 配置字段 | 鉴权 |
 |---|---|---|

@@ -34,7 +34,7 @@ Grafana → Dashboards → Import → paste the JSON file contents → select yo
 
 ## Notification Channels
 
-Notification rules (event → channel, see [Web UI](web-ui.md) → Settings → Notifications) can deliver to six channel types:
+Notification rules (event → channel, see [Web UI](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/docs/en/web-ui.md) → Settings → Notifications) can deliver to six channel types:
 
 | Type | Config fields | Auth |
 |---|---|---|
