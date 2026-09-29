@@ -52,8 +52,11 @@ flowchart TB
     OSS["oss/ — Phase 1: Downloaded binary releases (Foraging)"]
     OSI["os-install/ — Phase 2: OS installation files (Provisioning)"]
     WDV["webdav/ — Phase 3: WebDAV shared files (Sharing)"]
+    QBEE["queenbee/ — queenbee data (role≠hive):<br/>models/ uploads/ events/ agents/"]
   end
 ```
+
+> The queenbee event store is a separate SQLite file (`queenbee/events/events.db`), deliberately outside the main database — the coupling boundary reserved for the later queen process split.
 
 ## Deploy & Restart
 
@@ -135,6 +138,64 @@ auth:
 - Environment-specific configurations stored in YAML
 - Database stores project configuration separately from infrastructure config
 
+## Queenbee Deployment
+
+### Role selection
+
+```yaml
+queenbee:
+  role: all            # hive (default, supply only) | queen (pure queenbee) | all (both planes, single port)
+  auth_token: <secret> # static token for /queen APIs (scripts/agents); the admin plane also accepts hive JWTs
+  base_url: http://this-host:9090/queen   # builds download URLs for model_id commands
+  mqtt:
+    enabled: true
+    broker: tcp://mqtt-host:1883
+    client_id: mibeehive-queen
+  events_backend: sqlite   # sqlite (default) | jsonl | memory
+```
+
+Environment variables override YAML (the pre-merge ops-agent-center contract is preserved): `QUEENBEE_ROLE` / `AUTH_TOKEN` / `QUEENBEE_BASE_URL` (legacy `CENTER_BASE_URL`) / `MQTT_ENABLED` / `MQTT_BROKER` / `EVENTS_BACKEND` / `SUPPLY_TOKEN`, full list in `internal/queenbee/queenbee.go`.
+
+### Dependencies
+
+- **MQTT broker** (required when `mqtt.enabled: true`): mosquitto or any compatible broker; credentials ride the broker username/password
+- **kite agent** (edge side): see the kite-agent-rust repository; point its broker at the same address
+
+### Channel tokens (supply-plane gating)
+
+```bash
+# Login for a JWT
+JWT=$(curl -s -X POST http://host:9090/api/v1/auth/login \
+  -H 'Content-Type: application/json' -d '{"username":"admin","password":"..."}' | jq -r .data.token)
+
+# Issue a channel token
+curl -s -X POST -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
+  -d '{"name":"edge-fleet"}' http://host:9090/api/v1/admin/channels/1/tokens
+
+# Flip the governing channel to token_read (reads require the token; revocations apply immediately)
+curl -X PUT -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
+  -d '{"auth_mode":"token_read"}' http://host:9090/api/v1/admin/channels/1
+```
+
+Client usage (the token rides in the URL):
+
+```bash
+echo "deb http://u:<token>@host:9090/apt stable main" > /etc/apt/sources.list.d/mibeehive.list
+pip install --index-url http://u:<token>@host:9090/simple/ <pkg>
+```
+
+### Model distribution
+
+Uploads (`POST /queen/api/v1/models/upload`, multipart `file=@model.gguf`) register as hive
+artifacts (sha256 identity, public_token, virtual index); `model_id` commands resolve the
+supply-plane URL and embed credentials automatically. Under a token_read channel, configure
+the distribution channel token:
+
+```yaml
+queenbee:
+  supply_token: <channel-token>   # or the SUPPLY_TOKEN environment variable
+```
+
 ## Memory Management
 
 ### Target Device Constraints
@@ -149,14 +210,17 @@ auth:
 ## Network Configuration
 
 ### Ports
-- **HTTP**: 9090 (main web interface)
+- **HTTP**: 9090 (main web interface + supply endpoints + the `/queen/` control plane)
 - **HTTPS**: 9443 (WebDAV and admin panel)
 - **PXE**: 9090 (public endpoints, no auth)
+- **MQTT**: broker deployed separately (default 1883, per broker config)
 
 ### Firewall Considerations
 - Ensure ports 9090 and 9443 are accessible
 - PXE endpoints must be publicly accessible (no auth)
 - Admin endpoints require JWT authentication
+- Supply endpoints are open by default (`anonymous_read`); switch to `token_read` + channel tokens to gate them
+- kite agents must reach the MQTT broker
 
 ## Backup and Recovery
 

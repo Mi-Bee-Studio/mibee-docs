@@ -52,8 +52,11 @@ flowchart TB
     OSS["oss/ — 第一阶段：下载的二进制文件（采蜜）"]
     OSI["os-install/ — 第二阶段：操作系统安装文件（哺育）"]
     WDV["webdav/ — 第三阶段：WebDAV 共享文件（分享）"]
+    QBEE["queenbee/ — 蜂后数据（role≠hive 时）：<br/>models/ uploads/ events/ agents/"]
   end
 ```
+
+> 蜂后事件库是独立的 SQLite 文件（`queenbee/events/events.db`），刻意不并入主库——为后期蜂后独立成进程保留耦合边界。
 
 ## 部署与重启
 
@@ -135,6 +138,63 @@ auth:
 - 环境特定配置存储在 YAML 中
 - 数据库将项目配置与基础设施配置分开存储
 
+## 蜂后（queenbee）部署
+
+### 角色选择
+
+```yaml
+queenbee:
+  role: all            # hive（默认，仅供应）| queen（纯蜂后）| all（双面单端口）
+  auth_token: <secret> # /queen API 静态 token（脚本/agent）；管理面同时接受 hive JWT
+  base_url: http://this-host:9090/queen   # model_id 命令构造下载 URL 用
+  mqtt:
+    enabled: true
+    broker: tcp://mqtt-host:1883
+    client_id: mibeehive-queen
+  events_backend: sqlite   # sqlite（默认）| jsonl | memory
+```
+
+环境变量优先于 YAML（沿用原 ops-agent-center 契约）：`QUEENBEE_ROLE` / `AUTH_TOKEN` / `QUEENBEE_BASE_URL`（旧名 `CENTER_BASE_URL`）/ `MQTT_ENABLED` / `MQTT_BROKER` / `EVENTS_BACKEND` / `SUPPLY_TOKEN` 等，完整清单见 `internal/queenbee/queenbee.go`。
+
+### 依赖
+
+- **MQTT broker**（`mqtt.enabled: true` 时必需）：mosquitto 或任意兼容 broker；内网部署可无 TLS，凭据走 broker 用户名/密码
+- **kite agent**（边缘侧）：见 kite-agent-rust 仓库；broker 指向同一地址即可上线
+
+### 通道 token（供应面门禁）
+
+```bash
+# 登录取 JWT
+JWT=$(curl -s -X POST http://host:9090/api/v1/auth/login \
+  -H 'Content-Type: application/json' -d '{"username":"admin","password":"..."}' | jq -r .data.token)
+
+# 签发通道 token
+curl -s -X POST -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
+  -d '{"name":"edge-fleet"}' http://host:9090/api/v1/admin/channels/1/tokens
+
+# 主管通道切为 token_read（读取即需 token；吊销即时生效）
+curl -X PUT -H "Authorization: Bearer $JWT" -H 'Content-Type: application/json' \
+  -d '{"auth_mode":"token_read"}' http://host:9090/api/v1/admin/channels/1
+```
+
+客户端用法（token 在 URL 中即可）：
+
+```bash
+echo "deb http://u:<token>@host:9090/apt stable main" > /etc/apt/sources.list.d/mibeehive.list
+pip install --index-url http://u:<token>@host:9090/simple/ <pkg>
+```
+
+### 模型分发
+
+上传（`POST /queen/api/v1/models/upload`，multipart `file=@model.gguf`）即注册为蜂巢
+artifact（sha256 身份、public_token、进虚拟索引）；`model_id` 下发自动解析供应面
+URL 并嵌入凭据。`token_read` 通道下，给蜂后配置分发用通道 token：
+
+```yaml
+queenbee:
+  supply_token: <channel-token>   # 或环境变量 SUPPLY_TOKEN
+```
+
 ## 内存管理
 
 ### 目标设备限制
@@ -149,14 +209,17 @@ auth:
 ## 网络配置
 
 ### 端口
-- **HTTP**: 9090（主要 Web 界面）
+- **HTTP**: 9090（主要 Web 界面 + 供应端点 + `/queen/` 控制面）
 - **HTTPS**: 9443（WebDAV 和管理面板）
 - **PXE**: 9090（公共端点，无需认证）
+- **MQTT**: broker 独立部署（默认 1883，按 broker 自身配置）
 
 ### 防火墙考虑
 - 确保端口 9090 和 9443 可访问
 - PXE 端点必须公开可访问（无需认证）
 - 管理端点需要 JWT 认证
+- 供应端点默认开放（`anonymous_read`）；需要门禁时切 `token_read` + 通道 token
+- kite agent 需能到达 MQTT broker
 
 ## 备份与恢复
 

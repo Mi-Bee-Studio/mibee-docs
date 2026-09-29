@@ -2,24 +2,39 @@
 
 [English](../en-US/architecture.md)
 
-## 蜂巢哲学
+## 蜂巢体系
 
-MiBeeHive 将文件操作抽象为一个蜂巢（BeeHive）— 一个小型团队文件实用平台，包含三个功能模块：
+MiBeeHive 是运维集群中心的**蜂巢**：一个单二进制里跑着两个面——
 
-- **采蜜 (Foraging)**: 从公共源抓取和下载二进制发行版用于内网使用
-- **哺育 (Provisioning)**: 通过 Web UI 提供无人值守的操作系统安装配置，包含特定 URL
-- **分享 (Sharing)**: 基本的 WebDAV 功能用于文件共享，可通过 Web UI 配置
+- **蜂巢面（hive，供应面）**：面向服务器的供应链
+  - **采蜜 (Foraging)**: 从公共源抓取和下载二进制发行版用于内网使用
+  - **供应 (Supply)**: 把采集到的工件按集群原生协议供出——APT 仓库（`.deb`）、PyPI Simple（PEP 503 wheel）、通用 `/repo/`、WebDAV，支持 Range 断点续传与 sha256 强 ETag
+  - **哺育 (Provisioning)**: 通过 Web UI 提供无人值守的操作系统安装配置，包含特定 URL
+  - **分享 (Sharing)**: 基本的 WebDAV 功能用于文件共享，可通过 Web UI 配置
+- **蜂后面（queenbee，控制面）**：面向边缘 agent（kite / 工蜂）的指挥中枢——经 MQTT 收敛事件与指标、下发带回执的命令、把本地 AI 模型当作普通供应 artifact 分发
 
-每个模块都在可配置的父路径下有独立的存储路径：`{base_path}/{oss,os-install,webdav}`
+每个模块都在可配置的父路径下有独立的存储路径：`{base_path}/{oss,os-install,webdav}`；蜂后数据在 `{data_dir}/queenbee/{models,uploads,events,agents}/`（独立事件库，为后期蜂后进程分离保留耦合边界）。
+
+### 角色模型
+
+`queenbee.role` 选择本实例跑什么：
+
+| 角色 | 行为 |
+|---|---|
+| `hive`（默认） | 仅供应面，行为与合并前一致 |
+| `queen` | 纯蜂后——不启爬虫调度/下载重试/ISO 队列，供应前缀显式 404 |
+| `all` | 双面单端口：供应在 `/`，控制在 `/queen/` |
 
 ### 阶段路线图
 - 第一阶段（已完成）：采蜜 — Web 管理爬取源、API 令牌、爬取控制、密码更改
 - 第二阶段（已完成）：哺育 — 操作系统安装配置管理、PXE 端点、ISO 下载
 - 第三阶段（已完成）：分享 — WebDAV 服务器、基础认证、HTTPS 支持
+- 第四阶段（已完成）：供应 — APT / PyPI Simple / 通用 repo 端点、虚拟索引、文件中心
+- 第五阶段（2026-09 合并）：蜂后 — 原 ops-agent-center 吸收为 `internal/queenbee`，认证统一（JWT + 通道 token）、模型分发 artifact 化
 
 ## 系统架构
 
-MiBeeHive 是一个单体 Go 二进制文件，用于爬取、下载和服务二进制发行版（GitHub、Go、HashiCorp、Grafana、NPM、PyPI），面向资源受限的 ARM64 NAS 设备（469MB RAM）。它通过 `go:embed` 嵌入了一个 **Preact + HTM** SPA 前端，并包含一个 Web 管理面板，具有仪表板概览和标签式导航，用于管理所有三个模块以及容器、搜索、日志、任务和备份。
+MiBeeHive 是一个单体 Go 二进制文件，用于爬取、下载和服务二进制发行版（GitHub、Go、HashiCorp、Grafana、NPM、PyPI），面向资源受限的 ARM64 NAS 设备（469MB RAM）。它通过 `go:embed` 嵌入了一个 **Preact + HTM** SPA 前端，并包含一个 Web 管理面板，具有仪表板概览和标签式导航，用于管理所有三个模块以及容器、搜索、日志、任务和备份。2026-09 合并后，同一二进制还承载**蜂后控制面**（`internal/queenbee/`）：MQTT 数据/命令面、事件收敛存储、模型分发与 fleet 面板，HTTP 面挂载在 `/queen/`。
 
 ### 架构概览
 ```mermaid
@@ -35,6 +50,7 @@ flowchart TB
       DK["Docker 客户端 · internal/docker/"]
       MO["监控器 · internal/monitor/"]
       WV["WebDAV · internal/webdav/"]
+      QB["蜂后控制面 · internal/queenbee/<br/>MQTT 摄入 · 事件存储 · 模型分发 · /queen REST"]
       H --> S --> D
     end
     subgraph FE["嵌入式前端（web/）"]
@@ -42,8 +58,12 @@ flowchart TB
       F1["HTML/CSS（CSS 变量、响应式）"]
       F2["JavaScript 模块（31 个文件、3 层架构）"]
     end
-    DB[("SQLite 数据库<br/>14 个嵌入式迁移文件")]
+    DB[("SQLite 数据库<br/>32 个嵌入式迁移文件")]
     D --> DB
+    QB --> EQ[("queenbee 事件库<br/>独立 SQLite · data/queenbee/events/")]
+    MQ{{"MQTT broker<br/>(mosquitto 等)"}}
+    QB <--> MQ
+    MQ <-.-> K["kite agent（工蜂）<br/>边缘节点"]
   end
 ```
 
@@ -175,6 +195,35 @@ flowchart LR
 - 文件列表和管理
 - 可通过 Web UI 配置
 
+### 4. 供应（原生协议端点）
+**用途**：让集群服务器用它们现成的工具拉取采集到的工件，无需安装客户端
+**端点**：
+- **APT 仓库**（`/apt/`）：基于采集到的 `.deb`，按需生成 `Packages`/`Release`
+- **PyPI Simple**（`/simple/`，PEP 503）：基于采集到的 wheel/sdist，sha256 fragment
+- **通用 repo**（`/repo/index` + `/repo/files/{id}`）：JSON 清单 + 下载
+**分发能力**：全部端点支持 Range 断点续传（206 分片、开区间续传）、HEAD、sha256 强 ETag 304 复验——多 GB 工件弱网可续传
+**认证**：主管通道 `auth_mode` 门禁——`anonymous_read`（默认）开放；`token_read` 要求按通道签发的 token（Bearer / Basic 密码栏 / `?token=`，apt sources.list 与 pip `--index-url` 的 URL 可直接携带）
+
+### 5. 蜂后（agent 控制面）
+**用途**：指挥边缘 agent（kite / 工蜂）——事件/指标上行、命令下行、模型分发
+**挂载**：HTTP 面在 `/queen/`（API `/queen/api/v1/*`，fleet 面板 `/queen/ui`）
+**数据面（MQTT）**：
+- 上行：`kite/agent/{id}/events`（收敛计数入库）与 `.../metrics`（挂到 agent 记录）
+- 下行：`kite/agent/{id}/commands`（QoS 1，按命令 ID 幂等去重）；agent 回执 `command_result` 呈现在面板 "last cmd" 列
+**事件存储**：SQLite 默认（去重收敛、30 天保留、node/severity/since 过滤），可切 jsonl/memory
+**模型分发（artifact 化）**：上传模型自动注册为蜂巢 artifact（sha256 身份、public_token、进虚拟索引）；`model_id` 命令优先解析供应面 URL（`/repo/files/{id}`，继承通道认证与断点续传），凭据自动嵌入载荷
+**命令集**：`status` / `reload_config` / `restart` / `download_model`（未知 agent 404、离线 409、未知类型 400）
+
+## 认证模型（2026-09 统一后）
+
+| 面 | 凭据 | 说明 |
+|---|---|---|
+| hive 管理 API/UI | JWT | `POST /api/v1/auth/login`；密码变更后旧 token 失效 |
+| `/queen` 管理 API + fleet 面板 | **同一 JWT** 或静态 token（`AUTH_TOKEN`） | 面板沿用 hive 登录会话；脚本/agent 用静态 token |
+| 供应面 + 蜂后模型下载 | **通道 token**（`auth_mode=token_read` 时） | 按通道签发/吊销（管理 API）；`anonymous_read` 开放 |
+| WebDAV | Basic Auth | 匿名只读 + 管理员读写 |
+| MQTT | broker 用户名/密码 | kite 配置段 |
+
 ## 仪表板架构
 
 仪表板通过单个 API 端点提供所有模块的聚合概览。
@@ -231,15 +280,33 @@ flowchart LR
   PXE["PXE 客户端"] --> PE["公共端点"] --> CG["配置生成"] --> BF["引导文件"] --> IN["安装"]
 ```
 
+### 蜂后数据面流
+```mermaid
+flowchart LR
+  K["kite agent"] -->|events/metrics| MQ["MQTT broker"] --> MI["mqttingest 摄入"] --> ES[("事件存储<br/>收敛+持久化")]
+  MI --> AR["agent 注册表<br/>在线状态/指标"]
+```
+
+### 命令与模型分发流
+```mermaid
+flowchart LR
+  OP["操作员/面板"] -->|POST /queen/api/v1/agents/{id}/commands| CP["命令发布"] --> MQ["MQTT broker"] --> K["kite agent"]
+  K -->|command_result 回执| MQ --> MI["摄入"] --> AR["agent.last_command"]
+  MM["模型上传"] -->|ArtifactSink<br/>sha256 身份| FC["蜂巢文件中心"] -->|model_id 解析| CP
+  K -->|Range 续传下载| SP["供应面 /repo/files/{id}"]
+```
+
 ## 关键设计原则
 
 - **单体架构**：单个 Go 二进制文件，便于部署
+- **双面单进程**：蜂巢供应面与蜂后控制面同端口共存（`/` 与 `/queen/`），后期蜂后分离是部署变更而非代码变更（ArtifactSink/事件库耦合边界为此预留）
 - **嵌入式前端**：无需单独的 Web 服务器
 - **SQLite 数据库**：轻量级、基于文件的存储（纯 Go 驱动程序）
 - **Preact + HTM**：无框架，最小依赖（约 950KB 总量）
 - **仅使用标准库**：无外部 Web 框架或 cron 库
 - **资源高效**：针对 469MB ARM64 设备优化
-- **模块化设计**：三个功能模块之间的清晰分离
+- **模块化设计**：功能模块之间的清晰分离
 - **队列处理**：用于下载队列管理的后台协程
 - **增量 DOM 更新**：定期刷新使用目标 DOM 补丁，从不使用 innerHTML
 - **单一仪表板 API**：单个聚合端点减少仪表板上的请求数量
+- **sha256 即工件身份**：上传校验、强 ETag、artifact URL 解析、agent 端到端校验共用同一摘要

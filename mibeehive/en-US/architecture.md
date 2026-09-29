@@ -3,24 +3,39 @@
 [中文](../zh-CN/architecture.md)
 
 
-## BeeHive Philosophy
+## The Hive System
 
-MiBeeHive abstracts file operations as a BeeHive — a small team file utility platform with three functional modules:
+MiBeeHive is the **hive** at the center of an ops fleet — one binary running two planes:
 
-- **Foraging** (采蜜): Crawl and download binary releases from public sources for intranet use
-- **Provisioning** (哺育): Provide unattended OS installation configuration via web UI with specific URLs
-- **Sharing** (分享): Basic WebDAV capabilities for file sharing, configurable via web UI
+- **Hive plane (supply)**: the supply chain for your servers
+  - **Foraging** (采蜜): Crawl and download binary releases from public sources for intranet use
+  - **Supply**: serve collected artifacts over fleet-native protocols — APT repository (`.deb`), PyPI Simple (PEP 503 wheels), generic `/repo/`, WebDAV — with Range resume and strong sha256 ETags
+  - **Provisioning** (哺育): Provide unattended OS installation configuration via web UI with specific URLs
+  - **Sharing** (分享): Basic WebDAV capabilities for file sharing, configurable via web UI
+- **Queenbee plane** (蜂后, control): the command center for edge agents (kite / worker bees) — MQTT event/metric ingest, commands with acknowledgements, and local AI model distribution as ordinary supply artifacts
 
-Each module has isolated storage paths under a configurable parent: `{base_path}/{oss,os-install,webdav}`
+Each module has isolated storage paths under a configurable parent: `{base_path}/{oss,os-install,webdav}`; queenbee data lives in `{data_dir}/queenbee/{models,uploads,events,agents}/` (a separate event store keeps the coupling boundary for the later queen process split).
+
+### Role Model
+
+`queenbee.role` selects what an instance runs:
+
+| Role | Behavior |
+|---|---|
+| `hive` (default) | Supply plane only, identical to pre-merge behavior |
+| `queen` | Pure queenbee — no crawler scheduler/download retries/ISO queue; supply prefixes answer an explicit 404 |
+| `all` | Both planes, single port: supply on `/`, control on `/queen/` |
 
 ### Phase Roadmap
 - Phase 1 (Complete): Foraging — Web management for crawl sources, API tokens, crawl control, password change
 - Phase 2 (Complete): Provisioning — OS install config management, PXE endpoints, ISO downloading
 - Phase 3 (Complete): Sharing — WebDAV server, Basic Auth, HTTPS support
+- Phase 4 (Complete): Supply — APT / PyPI Simple / generic repo endpoints, virtual index, file center
+- Phase 5 (2026-09 merge): Queenbee — ops-agent-center absorbed as `internal/queenbee`; unified auth (JWT + channel tokens), model distribution as artifacts
 
 ## System Architecture
 
-MiBeeHive is a monolithic Go binary that crawls, downloads, and serves binary releases (GitHub, Go, HashiCorp, Grafana, NPM, PyPI) for a resource-constrained ARM64 NAS device (469MB RAM). It embeds a **Preact + HTM** SPA frontend via `go:embed` and includes a web admin panel with dashboard overview and tabbed navigation for managing all three modules plus containers, search, logs, tasks, and backup.
+MiBeeHive is a monolithic Go binary that crawls, downloads, and serves binary releases (GitHub, Go, HashiCorp, Grafana, NPM, PyPI) for a resource-constrained ARM64 NAS device (469MB RAM). It embeds a **Preact + HTM** SPA frontend via `go:embed` and includes a web admin panel with dashboard overview and tabbed navigation for managing all three modules plus containers, search, logs, tasks, and backup. Since the 2026-09 merge the same binary also hosts the **queenbee control plane** (`internal/queenbee/`): MQTT data/command plane, event store, model distribution, and a fleet dashboard, mounted at `/queen/`.
 
 ### Architecture Overview
 ```mermaid
@@ -36,6 +51,7 @@ flowchart TB
       DK["Docker Client · internal/docker/"]
       MO["Monitor · internal/monitor/"]
       WV["WebDAV · internal/webdav/"]
+      QB["Queenbee · internal/queenbee/<br/>MQTT ingest · event store · model dist · /queen REST"]
       H --> S --> D
     end
     subgraph FE["Embedded Frontend (web/)"]
@@ -43,8 +59,12 @@ flowchart TB
       F1["HTML/CSS (CSS variables, responsive)"]
       F2["JavaScript Modules (31 files, 3-tier)"]
     end
-    DB[("SQLite Database<br/>14 Embedded Migrations")]
+    DB[("SQLite Database<br/>32 Embedded Migrations")]
     D --> DB
+    QB --> EQ[("Queenbee event store<br/>separate SQLite · data/queenbee/events/")]
+    MQ{{"MQTT broker<br/>(mosquitto etc.)"}}
+    QB <--> MQ
+    MQ <-.-> K["kite agent (worker bee)<br/>edge node"]
   end
 ```
 
@@ -176,6 +196,35 @@ flowchart LR
 - File listing and management
 - Configurable via web UI
 
+### 4. Supply (Native-Protocol Endpoints)
+**Purpose**: let fleet servers pull collected artifacts with the tooling they already have — no client to install
+**Endpoints**:
+- **APT repository** (`/apt/`): over collected `.deb` files, `Packages`/`Release` generated on demand
+- **PyPI Simple** (`/simple/`, PEP 503): over collected wheels/sdists with sha256 fragments
+- **Generic repo** (`/repo/index` + `/repo/files/{id}`): JSON manifest + download
+**Distribution**: every endpoint supports Range resume (206 slices, open-ended resume), HEAD, and strong sha256 ETag 304 revalidation — multi-GB artifacts survive weak links
+**Auth**: gated by the governing channel's `auth_mode` — `anonymous_read` (default) stays open; `token_read` requires a per-channel token (Bearer, HTTP Basic password, or `?token=` — forms apt sources.list and pip `--index-url` URLs can carry)
+
+### 5. Queenbee (Agent Control Plane)
+**Purpose**: command edge agents (kite / worker bees) — event/metric upstream, commands downstream, model distribution
+**Mount**: HTTP face at `/queen/` (API `/queen/api/v1/*`, fleet dashboard `/queen/ui`)
+**Data plane (MQTT)**:
+- Upstream: `kite/agent/{id}/events` (dedup-counted into the store) and `.../metrics` (attached to the agent record)
+- Downstream: `kite/agent/{id}/commands` (QoS 1, id-deduplicated by the agent); the agent's `command_result` acks surface in the dashboard's "last cmd" column
+**Event store**: SQLite by default (dedup convergence, 30-day retention, node/severity/since filters), jsonl/memory backends available
+**Model distribution (as artifacts)**: uploads register as hive artifacts (sha256 identity, public_token, virtual-index event); `model_id` commands resolve the supply-plane URL first (`/repo/files/{id}`, inheriting channel auth and Range resume), with credentials embedded in the payload
+**Command set**: `status` / `reload_config` / `restart` / `download_model` (unknown agent 404, offline 409, unknown type 400)
+
+## Authentication Model (2026-09 unification)
+
+| Plane | Credential | Notes |
+|---|---|---|
+| Hive admin API/UI | JWT | `POST /api/v1/auth/login`; tokens invalidated on password change |
+| `/queen` admin API + fleet dashboard | **the same JWT** or static token (`AUTH_TOKEN`) | the dashboard reuses the hive login session; scripts/agents use the static token |
+| Supply plane + queenbee model download | **channel token** (when `auth_mode=token_read`) | issued/revoked per channel via the admin API; `anonymous_read` stays open |
+| WebDAV | Basic Auth | anonymous read + admin write |
+| MQTT | broker username/password | kite config section |
+
 ## Dashboard Architecture
 
 The dashboard provides an aggregated overview of all modules through a single API endpoint.
@@ -232,17 +281,35 @@ flowchart LR
   PXE["PXE Client"] --> PE["Public Endpoint"] --> CG["Config Generation"] --> BF["Boot Files"] --> IN["Installation"]
 ```
 
+### Queenbee Data Plane Flow
+```mermaid
+flowchart LR
+  K["kite agent"] -->|events/metrics| MQ["MQTT broker"] --> MI["mqttingest"] --> ES[("Event store<br/>converged + persisted")]
+  MI --> AR["Agent registry<br/>online status/metrics"]
+```
+
+### Command and Model Distribution Flow
+```mermaid
+flowchart LR
+  OP["Operator/Dashboard"] -->|POST /queen/api/v1/agents/{id}/commands| CP["Command publish"] --> MQ["MQTT broker"] --> K["kite agent"]
+  K -->|command_result ack| MQ --> MI["Ingest"] --> AR["agent.last_command"]
+  MM["Model upload"] -->|ArtifactSink<br/>sha256 identity| FC["Hive file center"] -->|model_id resolution| CP
+  K -->|Range resumable download| SP["Supply plane /repo/files/{id}"]
+```
+
 ## Key Design Principles
 
 - **Monolithic Architecture**: Single Go binary for deployment simplicity
+- **Two Planes, One Process**: supply and control share a listener (`/` and `/queen/`); the later queen split is a deployment change, not a code change (ArtifactSink/event-store boundaries reserved for it)
 - **Embedded Frontend**: No separate web server required
 - **SQLite Database**: Lightweight, file-based storage (pure-Go driver)
 - **Preact + HTM**: No frameworks, minimal dependencies (~950KB total)
 - **Stdlib Only**: No external web frameworks or cron libraries
 - **Resource Efficient**: Optimized for 469MB ARM64 device
-- **Modular Design**: Clear separation between the three functional modules
+- **Modular Design**: Clear separation between functional modules
 - **Queue Processing**: Background goroutines for download queue management
 - **Incremental DOM Updates**: Periodic refresh uses targeted DOM patching, never innerHTML
 - **Single Dashboard API**: One aggregated endpoint reduces request count on dashboard
+- **sha256 as the artifact identity**: upload verification, strong ETags, artifact URL resolution, and end-to-end agent checks share one digest
 
 [中文](../zh-CN/architecture.md)

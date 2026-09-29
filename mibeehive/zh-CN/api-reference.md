@@ -533,3 +533,70 @@ Authorization: Bearer <jwt-token>
 - 匿名用户：只读访问
 - 管理员用户：读写访问
 - 凭据与 Web 管理面板相同
+## 供应端点（公共）
+
+### GET /repo/index
+**描述**：可服务工件的 JSON 清单（外部服务器发现工具用）
+**认证**：主管通道 `anonymous_read` 时无；`token_read` 时需通道 token（Bearer / Basic 密码栏 / `?token=`）
+**响应**：`{"count": N, "items": [{id, project_id, version, filename, size_bytes, checksum, download_url}]}`（30s 缓存）
+
+### GET /repo/files/{id}
+**描述**：按文件 ID 下载工件；支持 Range 断点续传（206）、HEAD、sha256 强 ETag 304
+**认证**：同上
+
+### GET /apt/{rest...}
+**描述**：APT 仓库（`dists/` 元数据 + `pool/` 下载），按需生成 `Packages`/`Release`
+**认证**：同上（apt 用法：`deb http://u:<token>@host:9090/apt stable main`）
+
+### GET /simple/{rest...}
+**描述**：PyPI Simple（PEP 503）索引 + wheel/sdist 下载，带 sha256 fragment
+**认证**：同上（pip 用法：`--index-url http://u:<token>@host:9090/simple/`）
+
+## 通道 token 管理（需要 JWT）
+
+签发/吊销供应面读取凭据。吊销即时生效（缓存同步失效）。
+
+### POST /api/v1/admin/channels/{id}/tokens
+**描述**：为通道签发新 token（base58，22 字符 ≈128bit）
+**请求体**：`{"name": "edge-fleet"}`（name 缺省 "token"）
+**响应**：`{"data": {"id": 1, "channel_id": 1, "name": "edge-fleet", "token": "SVGq9K6t...", "created_at": "..."}}`
+
+### GET /api/v1/admin/channels/{id}/tokens
+**描述**：列出通道下全部 token（含使用遥测 `last_used_at`）
+
+### DELETE /api/v1/admin/channels/{id}/tokens/{tokenID}
+**描述**：吊销一个 token（通道与 token 双重绑定）
+
+### 通道 auth_mode
+- `PUT /api/v1/admin/channels/{id}` 的 `auth_mode` 取值：`anonymous_read`（默认）/ `token_read`；遗留拼写 `public` 归一为 `anonymous_read`，非法值 400
+
+## 蜂后端点（/queen）
+
+`/queen` HTTP 面的认证：hive JWT **或** 静态 token（`AUTH_TOKEN`）任一通过；fleet 面板（`/queen/ui`）自动沿用 hive 登录会话。
+
+### GET /queen/api/v1/health
+**认证**：豁免
+
+### GET /queen/api/v1/agents
+**描述**：agent 快照列表（在线状态、最近心跳、指标、最近命令回执）
+
+### POST /queen/api/v1/agents/{id}/commands
+**描述**：下发命令（QoS 1 经 MQTT）
+**请求体**：`{"command_type": "status|reload_config|restart|download_model", "payload": ""}`；`download_model` 支持捷径 `{"model_id": "<id>"}`——服务端解析为 `{url, sha256, file_name, token}`（优先供应面 URL 并嵌入凭据）
+**响应**：`202 {"command_id": "...", "topic": "kite/agent/{id}/commands"}`
+**护栏**：未知 agent 404；离线 agent 409（命令会丢失）；未知类型 400
+
+### GET /queen/api/v1/events
+**描述**：收敛后的事件列表
+**查询参数**：`limit` / `node` / `severity` / `since`（unix 时间戳）
+
+### 模型管理
+- `GET /queen/api/v1/models` — 分页列表（`page` / `page_size` / `format`）
+- `POST /queen/api/v1/models/upload` — multipart `file=@model.gguf`（自动算 sha256 并注册为蜂巢 artifact）
+- `GET /queen/api/v1/models/{id}` / `POST`（注册元数据）/ `DELETE`
+- `GET /queen/api/v1/models/{id}/download` — 下载；配置守卫后由通道 token 单独保护（agent 单凭据）；带 sha256 强 ETag 与 Range 续传
+
+### 量化任务
+- `GET /queen/api/v1/quantize/jobs` — 任务列表
+- `POST /queen/api/v1/quantize/jobs/create` — 创建量化任务
+- `GET/DELETE /queen/api/v1/quantize/jobs/{id}` — 查询/取消

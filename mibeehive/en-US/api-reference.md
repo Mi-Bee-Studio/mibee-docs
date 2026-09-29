@@ -534,3 +534,71 @@ All API endpoints use a consistent response format:
 - Anonymous users: Read-only access
 - Admin users: Read-write access
 - Credentials same as web admin panel
+
+## Supply Endpoints (Public)
+
+### GET /repo/index
+**Description**: JSON manifest of servable artifacts (for external server discovery)
+**Auth**: none when the governing channel is `anonymous_read`; channel token when `token_read` (Bearer / Basic password / `?token=`)
+**Response**: `{"count": N, "items": [{id, project_id, version, filename, size_bytes, checksum, download_url}]}` (30s cache)
+
+### GET /repo/files/{id}
+**Description**: download an artifact by file ID; Range resume (206), HEAD, strong sha256 ETag 304
+**Auth**: as above
+
+### GET /apt/{rest...}
+**Description**: APT repository (`dists/` metadata + `pool/` downloads), `Packages`/`Release` generated on demand
+**Auth**: as above (apt usage: `deb http://u:<token>@host:9090/apt stable main`)
+
+### GET /simple/{rest...}
+**Description**: PyPI Simple (PEP 503) index + wheel/sdist downloads with sha256 fragments
+**Auth**: as above (pip usage: `--index-url http://u:<token>@host:9090/simple/`)
+
+## Channel Token Management (JWT required)
+
+Issue/revoke supply-plane read credentials. Revocations apply immediately (synchronized cache invalidation).
+
+### POST /api/v1/admin/channels/{id}/tokens
+**Description**: issue a token for a channel (base58, 22 chars ≈128 bits)
+**Body**: `{"name": "edge-fleet"}` (name defaults to "token")
+**Response**: `{"data": {"id": 1, "channel_id": 1, "name": "edge-fleet", "token": "SVGq9K6t...", "created_at": "..."}}`
+
+### GET /api/v1/admin/channels/{id}/tokens
+**Description**: list all tokens under a channel (including `last_used_at` telemetry)
+
+### DELETE /api/v1/admin/channels/{id}/tokens/{tokenID}
+**Description**: revoke one token (channel and token doubly bound)
+
+### Channel auth_mode
+- `PUT /api/v1/admin/channels/{id}` accepts `auth_mode`: `anonymous_read` (default) / `token_read`; the legacy spelling `public` normalizes to `anonymous_read`, invalid values 400
+
+## Queenbee Endpoints (/queen)
+
+Authentication for the `/queen` HTTP face: a hive JWT **or** the static token (`AUTH_TOKEN`), either passes; the fleet dashboard (`/queen/ui`) reuses the hive login session automatically.
+
+### GET /queen/api/v1/health
+**Auth**: exempt
+
+### GET /queen/api/v1/agents
+**Description**: agent snapshots (online status, last heartbeat, metrics, last command ack)
+
+### POST /queen/api/v1/agents/{id}/commands
+**Description**: dispatch a command (QoS 1 over MQTT)
+**Body**: `{"command_type": "status|reload_config|restart|download_model", "payload": ""}`; `download_model` supports the `{"model_id": "<id>"}` shortcut — the server resolves it into `{url, sha256, file_name, token}` (supply-plane URL preferred, credentials embedded)
+**Response**: `202 {"command_id": "...", "topic": "kite/agent/{id}/commands"}`
+**Guardrails**: unknown agent 404; offline agent 409 (the command would be lost); unknown type 400
+
+### GET /queen/api/v1/events
+**Description**: converged event listing
+**Query params**: `limit` / `node` / `severity` / `since` (unix timestamp)
+
+### Model management
+- `GET /queen/api/v1/models` — paginated list (`page` / `page_size` / `format`)
+- `POST /queen/api/v1/models/upload` — multipart `file=@model.gguf` (sha256 computed and registered as a hive artifact)
+- `GET /queen/api/v1/models/{id}` / `POST` (register metadata) / `DELETE`
+- `GET /queen/api/v1/models/{id}/download` — download; with a guard wired, protected by the channel token alone (single credential for agents); strong sha256 ETag and Range resume
+
+### Quantize jobs
+- `GET /queen/api/v1/quantize/jobs` — list jobs
+- `POST /queen/api/v1/quantize/jobs/create` — create a quantize job
+- `GET/DELETE /queen/api/v1/quantize/jobs/{id}` — inspect/cancel
