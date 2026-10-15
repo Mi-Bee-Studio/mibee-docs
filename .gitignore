@@ -29,3 +29,9 @@ GEMINI.md
 Thumbs.db
 *~
 *.swp
+
+# Transient artifacts (scratch scripts, build output, captures).
+# Every other repo in the workspace carries this; without it `git status`
+# is permanently dirty and a scratch file is one `git add -A` away from
+# being committed.
+tmp/
