@@ -28,15 +28,17 @@ WebRTC 默认走 **UDP**,需要 ICE 服务器(STUN/TURN)来穿越 NAT。MiBee NV
 streaming:
   webrtc:
     enabled: true
+    # 自建 coturn 同时提供 STUN 与 TURN(国内场景基本必需,见下文)
     ice_servers:
-      - urls: ["stun:stun.l.google.com:19302"]            # 公共 STUN(免费)
+      - urls: ["stun:coturn.example.com:3478"]
       - urls: ["turn:turn.example.com:3478?transport=udp"] # TURN 中继(对称 NAT 必须)
         username: "user"
         credential: "pass"
 ```
 
-- **STUN**:免费公共服务器即可,适合大多数 NAT 类型(锥形 NAT)。
-- **TURN**:对称 NAT(symmetric NAT,运营商级 NAT 常见)必须用 TURN 中继。TURN 流量会消耗服务器带宽,建议自建 [coturn](https://github.com/coturn/coturn)。
+- **STUN**:获取本机公网映射地址。**注意:公共第三方 STUN(如 Google 的 `stun.l.google.com`)在中国大陆常不可达或极不稳定**——照抄公共地址会收集不到 `srflx` 候选,WebRTC 在外网直接不可用且无任何报错提示。
+- **TURN**:中继兜底。**国内运营商 NAT 普遍是对称型(symmetric NAT),仅配 STUN 通常不足以穿透**——自建一台 [coturn](https://github.com/coturn/coturn)(同时提供 STUN + TURN)在国内场景基本必需;TURN 流量消耗服务器带宽,选型时请预留。
+- **验证 STUN/TURN 是否生效**:浏览器打开 [trickle-ice](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/) 测试页,填入你的 ICE 服务器后 Gather candidates——出现 `srflx`(或 `relay`)候选 = STUN/TURN 生效;只剩 `host` / `.local` 候选 = **STUN 不可达**,先排查 STUN 服务的境内可达性,不要去调播放器。
 - **TCP-only tunnel(如 Cloudflare Tunnel)走不通 WebRTC UDP**:这种情况请在播放器里手动选择 HLS 协议(播放器切换器/协议降级链会自动落到 HTTP 传输),HLS 走 HTTP/TCP,tunnel 友好。
 
 ---
