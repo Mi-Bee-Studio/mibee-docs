@@ -1,66 +1,134 @@
 # MiBee Vision 智能分析
 
 MiBee Vision 是与 MiBee NVR 配套的服务端智能分析组件：对 NVR
-已录制的视频做 AI 分析（人、车等常见目标），把检测结果以事件形式
-写回 NVR，在网页端直接浏览与检索。
+已录制的视频做 AI 目标检测，按规则区域生成事件并写回 NVR，
+在网页端直接浏览与检索。
 
-> **内测中**：MiBee Vision 目前处于内测阶段，暂不公开提供下载，
-> 也暂不以开源形式发布。内测用户随部署包获得配套的安装与配置说明。
+## 版本与获取
+
+当前公开发布的版本为 **MiBeeVision Lite（免费版）**，随 MiBee NVR 的
+[GitHub 发布页](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases)分发，
+在发布列表中找到名称以 `mibee-vision-` 开头的发行版即可下载。
+
+- **平台**：Linux（x86_64 / ARM64），低功耗主机（如树莓派）即可运行。
+- **Lite 版能力**：单摄像头、CPU 推理，检测模型已内置，无需额外下载。
+- **版本线**：Vision 使用独立版本号（如 `mibee-vision-v0.1.0`），与
+  MiBeeNVR 的版本相互独立；许可说明见发布页（内置检测模型 YOLOv8n
+  采用 Ultralytics AGPL-3.0 许可）。
+
+Vision 与 NVR 在同一台机器或分机部署均可；分析在独立的设备或服务器上
+完成，不占用 NVR 本机的分析算力，录像性能不受影响。
 
 ## 它能做什么
 
-- **事后智能分析**——对 NVR 录好的视频片段进行目标检测，不占用
-  NVR 本机的分析算力，录像性能不受影响。
-- **结构化事件**——检测结果生成带置信度的事件（如「逗留 · 人」），
-  写回 NVR 的 **AI 事件页**：按日分组、可按摄像头与事件类型筛选、
-  一键跳转到对应录像位置。
-- **独立监控页**——Vision 自带推送监控页，实时显示队列、处理量与
-  处理耗时，运行状态一目了然。
+- **事后智能分析**——对 NVR 录好的视频片段进行目标检测，检测过程
+  与录像完全解耦。
+- **区域事件**——在画面上划定规则区域，有人进入区域即产生带置信度的
+  事件（如「区域入侵 · 人」），写回 NVR 的 **AI 事件页**：按日分组、
+  可按摄像头与事件类型筛选、一键跳转到对应录像位置。
+- **网页配置页**——NVR 连接、摄像头选择、规则区域、运行状态与最近
+  事件集中在一个网页里，接入无需手工编辑配置之外的任何操作。
 
-![Vision 推送监控页](images/vision-monitor.webp)
-
-分析在独立的设备或服务器上完成——低功耗主机即可起步，使用带显卡
-的机器可以获得更高的处理吞吐。Vision 与 NVR 在同一台机器或分机
-部署均可。
+![MiBeeVision Lite 配置页](images/vision-lite-config.webp)
 
 ## 接入教程
 
-接入只需三步：NVR 生成密钥 → NVR 开启推送 → Vision 填入密钥。
-需要 **v0.12.0 及以上**版本的 MiBee NVR。
+全程约十分钟，需要 **v0.12.0 及以上**版本的 MiBee NVR。
 
 ### 1. 在 NVR 生成 API Key
 
 进入 **设置 → AI 检测 → MiBeeVision 集成**，点击生成 API Key。
 密钥形如 `mbv_…`，**只在生成时显示一次**，请妥善保存；同一页面
-可以随时吊销（吊销后 Vision 立即失去访问权限）。
+可以随时吊销。
 
-### 2. 在 NVR 开启推送
+> 注意：必须使用这里生成的 API Key。网页登录会话用的 `mbs_` token
+> 对 Vision 无效，用它回写 AI 事件会被拒绝。
 
-编辑 NVR 配置文件，加入（或修改）`vision` 配置节：
+### 2. 下载并解包
 
-```yaml
-vision:
-  enabled: true
-  url: "http://192.0.2.50:9091"   # Vision 所在主机的地址
-  # skip_cameras:                  # 可选：不参与分析的摄像头
-  #   - "cam-xxxx"
+在发布页的 MiBeeVision Lite 发行版中，下载与主机架构匹配的二进制和
+ONNX Runtime 库（连同 `SHA256SUMS` 与 `README.txt`），放到同一目录
+（如 `/opt/mibee-vision/`），并为二进制加执行权限：
+
+```bash
+cd /opt/mibee-vision
+chmod +x mibee-vision-lite-v0.1.0-linux-aarch64
 ```
 
-保存后重启 NVR 服务生效。
+### 3. 初始化配置
 
-### 3. 在 Vision 填入 NVR 地址与密钥
+```bash
+./mibee-vision-lite-v0.1.0-linux-aarch64 config init
+```
 
-在 Vision 的配置中填入 NVR 的访问地址，以及第 1 步生成的
-API Key（内测部署包附有对应说明）。连接建立后，NVR 会把新完成的
-录像片段推送给 Vision 分析。
+会在当前目录生成 `config/config.toml`。按部署方式二选一修改：
 
-### 4. 验证
+- **分机部署（推荐，Vision 与 NVR 不同机）**：把 `[transport]` 节的
+  `type` 改为 `http_download`（Vision 通过 NVR 的 HTTP 接口下载录像
+  再分析）；同时把 `[source]` 节的 `camera_whitelist` 临时改为
+  `["pending"]`——Lite 版要求启动前已选择摄像头，这里先放一个占位值，
+  稍后在配置页选择真实摄像头即可覆盖。
+- **同机部署**：保持 `local_file` 不变，把 `[source.nvr_files]` 的
+  `dir` 指向 NVR 的录像存储目录（`camera_whitelist` 同样先放占位值）。
 
-- NVR 网页端打开 **仪表盘 → AI 事件**：出现检测结果即接入成功；
-  未连接时该页会提示「MiBeeVision 未连接」。
-- Vision 监控页状态显示 `healthy`，处理计数持续增长。
+### 4. 启动
+
+```bash
+ORT_DYLIB_PATH=/opt/mibee-vision/libonnxruntime-1.17.1-linux-aarch64.so \
+  /opt/mibee-vision/mibee-vision-lite-v0.1.0-linux-aarch64 serve
+```
+
+`ORT_DYLIB_PATH` 必须指向随包的 `libonnxruntime-*.so`——缺失时推理库
+无法加载，配置页能打开但永远处理不了录像段。这是最常见的启动问题。
+
+希望开机自启时，可用 systemd 托管（示例）：
+
+```ini
+[Unit]
+Description=MiBeeVision Lite
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/mibee-vision
+Environment=ORT_DYLIB_PATH=/opt/mibee-vision/libonnxruntime-1.17.1-linux-aarch64.so
+ExecStart=/opt/mibee-vision/mibee-vision-lite-v0.1.0-linux-aarch64 serve
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 5. 网页配置
+
+浏览器打开 `http://<Vision 主机 IP>:9092`：
+
+1. 填入 NVR 地址（如 `http://192.0.2.10:9090`）与第 1 步生成的
+   API Key，点「**测试连接并拉取摄像头**」，成功会列出摄像头；
+2. 在「处理摄像头」中选择要分析的摄像头（Lite 一次处理一路）；
+3. 检测置信度阈值与抽帧帧率保持默认即可；
+4. 在「事件区域」中填规则名称与区域顶点（0–1 归一化坐标，也可点
+   「全画面」一键填充），连续命中帧数用于防抖；
+5. 点「**保存(自动重启管线)**」——顶部状态区显示
+   「管线 运行中 / NVR 已连接」即接入成功。
+
+![MiBeeVision Lite 配置页](images/vision-lite-config.webp)
+
+### 6. 验证
+
+- 配置页状态区：**管线 运行中**、**NVR 已连接**；
+- NVR 网页端打开 **仪表盘 → AI 事件**：有人进入规则区域后会出现事件，
+  录像列表的 AI 标记转为「已完成」。
 
 ![NVR 的 AI 事件页](images/vision-ai-events.webp)
+
+## 常见问题
+
+| 症状 | 原因与处理 |
+|---|---|
+| 配置页能打开，但管线启动失败或永远没有结果 | 未设置 `ORT_DYLIB_PATH`（或路径没指向随包的 `.so`），见上文第 4 步 |
+| 保存后录像的 AI 标记一直为空 | 用了网页登录 token（`mbs_`）而不是 API Key（`mbv_`），回写被 NVR 拒绝；请在 NVR 重新生成 API Key 并在配置页更新 |
+| 日志报「打开视频失败… No such file or directory」 | Vision 与 NVR 不同机但传输模式仍是 `local_file`；按第 3 步改为 `http_download` |
+| 网页保存报 JSON 解析错误（missing field …） | 配置文件被手工精简、缺少必要字段；删掉 `config/config.toml` 后重新 `config init`，再只修改第 3 步提到的项 |
 
 ## 与浏览器端 AI 检测的关系
 
