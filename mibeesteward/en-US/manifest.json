@@ -8,12 +8,22 @@
         {
           "slug": "introduction",
           "file": "introduction.md",
-          "title": "Product Introduction"
+          "title": "Introduction"
         },
         {
           "slug": "quick-start",
           "file": "quick-start.md",
           "title": "Quick Start"
+        },
+        {
+          "slug": "user-guide",
+          "file": "user-guide.md",
+          "title": "User Guide"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web UI Tour"
         }
       ]
     },
@@ -23,22 +33,32 @@
         {
           "slug": "product-scope",
           "file": "product-scope.md",
-          "title": "Product Scope & Boundary"
+          "title": "Product Scope"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "Feature Overview"
         },
         {
           "slug": "comparison",
           "file": "comparison.md",
-          "title": "Comparison with Similar Tools"
+          "title": "Comparison"
         },
         {
           "slug": "discovery",
           "file": "discovery.md",
-          "title": "Device Discovery & Identification"
+          "title": "Discovery"
         },
         {
           "slug": "architecture",
           "file": "architecture.md",
-          "title": "Architecture Overview"
+          "title": "Architecture"
+        },
+        {
+          "slug": "agent-rs",
+          "file": "agent-rs.md",
+          "title": "Distributed Agent (Rust)"
         }
       ]
     },
@@ -48,12 +68,7 @@
         {
           "slug": "deployment",
           "file": "deployment.md",
-          "title": "Standalone Deployment"
-        },
-        {
-          "slug": "openwrt",
-          "file": "openwrt.md",
-          "title": "OpenWrt Router Deployment"
+          "title": "Deployment"
         },
         {
           "slug": "distributed",
@@ -61,9 +76,19 @@
           "title": "Distributed Deployment"
         },
         {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt Deployment"
+        },
+        {
+          "slug": "build-variants",
+          "file": "build-variants.md",
+          "title": "Build Variants & Capability Matrix"
+        },
+        {
           "slug": "configuration",
           "file": "configuration.md",
-          "title": "Configuration Reference"
+          "title": "Configuration"
         }
       ]
     },
@@ -81,19 +106,29 @@
           "title": "Integrations"
         },
         {
+          "slug": "benchmark",
+          "file": "benchmark.md",
+          "title": "Benchmarks"
+        },
+        {
+          "slug": "playbooks",
+          "file": "playbooks.md",
+          "title": "Scenario Playbooks"
+        },
+        {
           "slug": "ebpf",
           "file": "ebpf.md",
-          "title": "eBPF Passive Observer"
+          "title": "eBPF"
         },
         {
           "slug": "fingerprint-spec",
           "file": "fingerprint-spec.md",
-          "title": "Fingerprint Library — Adapter Specification"
+          "title": "Fingerprint Spec"
         },
         {
           "slug": "development",
           "file": "development.md",
-          "title": "Development & Contributing"
+          "title": "Development"
         },
         {
           "slug": "changelog",

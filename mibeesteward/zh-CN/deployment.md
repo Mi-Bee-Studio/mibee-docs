@@ -30,7 +30,7 @@ flowchart TD
 
 ### 下载
 
-从 [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) 下载对应平台的预编译 binary（amd64/arm64），或从源码构建。单机部署使用**中心**二进制（源码入口 `cmd/server`，约 24MB，内嵌 SvelteKit Web 界面）；纯采集器（`cmd/agent`，约 18MB，无内嵌界面）用于 [OpenWrt](openwrt.md) 与 [分布式](distributed.md) 场景：
+从 [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) 下载对应平台的预编译 binary（amd64/arm64），或从源码构建。单机部署使用**中心**二进制（源码入口 `cmd/server`，约 24MB，内嵌 SvelteKit Web 界面）；纯采集器（Rust `agent-rs/` workspace，约 4.8MB，无内嵌界面）用于 [OpenWrt](openwrt.md) 与 [分布式](distributed.md) 场景。每个版本另附每架构一个 **`-full` 变体**，编入可选的 LLDP/CDP 监听与 ARP 扫描（需 `CAP_NET_RAW`；见[构建变体矩阵](build-variants.md)）；全部 center 二进制的校验和在 `SHA256SUMS.center`：
 
 ```bash
 git clone https://github.com/Mi-Bee-Studio/MiBeeSteward.git
@@ -39,6 +39,27 @@ make build
 # 或交叉编译
 make build-linux-amd64
 ```
+
+### 软件包安装（deb / rpm）
+
+Debian / RHEL 系主机可以跳过下面的手工步骤：每个版本附带原生软件包——`mibee-steward`（center）与 `mibee-agent`（agent），各有 `.deb` / `.rpm` 双格式、amd64 / arm64 / armhf（rpm 侧为 armv7hl）三架构（校验和 `SHA256SUMS.deb-rpm`）：
+
+```bash
+# Debian / Ubuntu / Armbian（apt 可直接装本地文件；arm64 / armhf 同理）
+sudo apt install ./mibee-steward_<version>_amd64.deb
+# Fedora / RHEL / openSUSE
+sudo dnf install ./mibee-steward-<version>-1.x86_64.rpm
+```
+
+首次安装会自动完成下面二进制部署的全部手工步骤：铺出完全相同的目录布局（`/opt/mibee-steward` 下的二进制 + configs、`/usr/lib/systemd/system/` 下的 systemd unit、logrotate、`backup.sh`），**生成 `/opt/mibee-steward/configs/config.yaml`**（随机 `jwt_secret`；admin 密码留空——Web 界面首启时在浏览器里创建；`cookie_secure: false` 局域网明文 HTTP 默认——上 nginx+TLS 后改回 `true`），打开并持久化 `net.ipv4.ping_group_range`（非特权 ICMP），随后启用并启动服务。Web 界面在 `http://<host>:8080`。
+
+注意：
+
+- 服务以**数字 uid/gid 1000** 运行（unit 刻意如此，见其注释）；postinst 会把 `/opt/mibee-steward` 整体 chown 到 1000:1000。若本机 1000 不是预期账号，用 unit drop-in 覆盖。
+- 升级 = 安装新包：配置与数据永不被改动（配置只在首次安装生成）。`apt purge` / `dnf remove` 删除生成配置，但刻意保留 `data/`。
+- 从手工二进制安装迁移到包安装可直接进行（存量配置保留），但先移除手工拷贝的 `/etc/systemd/system/mibee-steward.service`——`/etc` 下的 unit 会永久遮蔽包内 unit（postinst 也会提示这一点）。
+- agent 包 `mibee-agent` 生命周期相同：`/etc/mibee/agent.yaml` + 专用 `mibee-agent` 系统用户；`network.name`/`cidr` 从默认路由推导，`center.url` / `center.auth_token` 未填时服务保持停止（[distributed.md](distributed.md)）。
+- 包只带默认构建；`-full` 能力变体仍是手工构建（[构建变体](build-variants.md)）。
 
 ### 最小配置
 
@@ -133,7 +154,7 @@ flowchart LR
     A -->|"macvlan：独占 LAN IP"| D["以独立设备身份接入 LAN"]
 ```
 
-实测经验进一步印证：bridge 模式下基本拿不到设备 MAC，host 网络模式下接近全量 —— 生产扫描务必使用 host 网络模式。
+实测经验进一步印证：bridge 模式下基本拿不到设备 MAC，host 网络模式下接近全量，生产扫描务必使用 host 网络模式。
 
 > ⚠️ **为什么 bridge 模式不能用于真实盘点**
 > Docker 默认 bridge 把容器放在 NAT 后面。后果：
@@ -161,7 +182,8 @@ curl -s http://localhost:8080/api/v1/health
 
 ```bash
 BUILD_TAGS=WITH_LLDP,WITH_EBPF docker compose --profile host build
-# 运行时 eBPF 额外需要 cap_add: BPF，内核 ≥5.8 + BTF
+# 运行时 eBPF 额外需要 cap_add: BPF + NET_ADMIN，内核 ≥6.6（BTF 可选）；
+# systemd 部署改用 deploy/mibee-steward-ebpf-dropin.example.conf
 ```
 
 **国内网络构建加速**：
@@ -268,9 +290,31 @@ SQLite 数据库默认位于 `./data/mibee.db`（二进制部署）或容器内 
 
 备份脚本会自动验证完整性并清理过期备份。
 
+### 自动养护
+
+每轮保留清理（默认每 6 小时，`retention.sweep_interval_hours`）同时执行存储健康巡检：WAL 检查点并截断（`PRAGMA wal_checkpoint(TRUNCATE)`，将预写日志页折回主文件，`-wal` 归零）、刷新 SQLite 统计信息（`PRAGMA optimize`），并将磁盘体积与高容量表行数导出到 Prometheus：
+
+| 指标 | 标签 | 含义 |
+|---|---|---|
+| `mibee_db_size_bytes` | `db`（main/heartbeat）、`kind`（db/wal） | 磁盘文件体积 |
+| `mibee_db_table_rows` | `db`、`table` | 高容量表行数 |
+
+这是容量规划的增长基线，也是自监控样例（见 `deploy/prometheus`）中库体积告警的数据源。
+
+所有导出指标均有开箱即用的 Grafana 面板（`deploy/grafana/`），见[生态集成指南](integrations.md)。
+
+### 容量规划（实测基线）
+
+在 85 台设备的局域网、默认保留窗口（扫描结果 30 天、心跳结果 7 天、服务证据 14 天）下实测：
+
+- 稳态：主库约 150 MB + 心跳库约 4 MB
+- 增长主要由 `scan_results`（每任务 × 每 IP × 每轮扫描一行，/24 每 30 分钟一轮 ≈ 1.2 万行/天）与 `heartbeat_results`（每探测每 tick 一行，30 台 × 3 探测 × 2880 tick/天 ≈ 26 万行/天，7 天清理）主导
+- 经验值：默认保留窗口下按**每台被扫描设备每月约 2 MB** 预算；之后关注 `mibee_db_size_bytes`，若偏离线性增长，用 `mibee_db_table_rows` 定位哪张表在累积（清理器卡死表现为单表单调增长）
+
+
 ### 恢复
 
-备份文件是 `sqlite3 ".backup"` 产出的**二进制数据库文件**，不是 SQL 脚本——直接复制回原位即可：
+备份文件是 `sqlite3 ".backup"` 产出的**二进制数据库文件**，不是 SQL 脚本--直接复制回原位即可：
 
 ```bash
 sudo systemctl stop mibee-steward
@@ -291,6 +335,10 @@ sudo cp mibee-steward /opt/mibee-steward/
 sudo systemctl start mibee-steward
 ```
 
+### 软件包升级（deb / rpm）
+
+在旧包上直接安装新包即是全部升级动作：prerm 停服务 → postinst 重启，配置与数据保留。下方数据兼容性规则同样适用。
+
 ### Docker 升级
 
 ```bash
@@ -298,7 +346,7 @@ docker compose pull  # 拉取新镜像
 docker compose up -d
 ```
 
-数据兼容性：数据库 schema 在应用启动时自动迁移（迁移前自动 `VACUUM INTO` 备份），升级无需手动操作。ARMv7 设备无 release 预编译产物，需本地 `make build-linux-arm` 交叉编译。
+数据兼容性：自 v0.7 起 schema 只在首次启动时全新创建，不做原地升级。记录为旧版本号的数据库会在启动时被拒绝并给出指引；跨版本升级的做法是先备份 `data/` 目录（`scripts/backup.sh`），用新数据库启动，设备由下一次扫描重新发现。schema 版本兼容时，替换二进制即完成升级。ARMv7 设备无 release 预编译产物，需本地 `make build-linux-arm` 交叉编译。
 
 ### 管理员密码重置
 

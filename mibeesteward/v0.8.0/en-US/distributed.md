@@ -1,0 +1,295 @@
+# Distributed Deployment
+
+MiBee Steward uses a **center + agents** architecture to manage assets across multiple LANs / sites. This page covers the architecture, the data-sync model, the command channel, and operations.
+
+## When to Go Distributed
+
+| Scenario | Scale | Recommendation |
+|---|---|---|
+| Single LAN, a few dozen devices | Small | Standalone deployment (see [Standalone Deployment](deployment.md)) |
+| Multiple LANs / sites | Medium-large | **Distributed**: one center + one agent per site |
+| Router-based discovery needs | Any | See [OpenWrt Deployment](openwrt.md) (Form B is the distributed agent) |
+
+Use the distributed architecture when you manage multiple disjoint subnets, or want Tier-1 signals (DHCP/conntrack/hostapd/dns_log) collected on each gateway.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph NA["Network A (center site)"]
+        C["Center, cmd/server<br/>Web UI + API + asset registry + change detection"]
+    end
+    subgraph NB["Network B (remote site, may be behind NAT)"]
+        AG["Agent, agent-rs (Rust)<br/>scan + report + command polling + passive sources"]
+        D1["Site devices"]
+        AG --- D1
+    end
+    AG -- "outbound HTTPS (report / command poll)" --> C
+```
+
+The center is the **single writer** of the device registry (single-writer persistence). Agents scan their own network and report results to the center over HTTPS. Agents only make **outbound** connections (pull model), so they work through NAT/firewalls without any inbound port on the site side.
+
+![Agents management page](images/agents.webp)
+
+### Pull-Model Sequence
+
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant C as Center
+    Note over A: The agent computes the state hash of the alive set<br/>and sends it as X-Network-State-Hash
+    A->>C: report (POST /api/v1/agents/report, Bearer + hash header)
+    alt Hash matches the center's last-seen value
+        C-->>A: Skip per-host bridge (fast path, leases only)
+    else Hash differs
+        C->>C: Device bridge merge + persist
+    end
+    loop Command channel (independent loop, ~60s cycle)
+        A->>C: Poll commands (GET /api/v1/agents/commands, token identifies the agent)
+        C-->>A: Pending commands (if any)
+        A->>C: ack (POST /commands/{id}/ack)
+        A->>C: complete (POST /commands/{id}/complete, with the result)
+    end
+```
+
+The agent pairs a command poller (poll / ack / complete) with a reporter (reports carrying `X-Network-State-Hash`); scanning runs the same scannerv2 discovery engine the center uses (passive router-resident sources are collected locally). The two channels are independent: report cadence does not affect command polling. The agent is the Rust workspace `agent-rs/` — the former Go agent (`cmd/agent`) was retired 2026-10-09; see [agent-rs.md](agent-rs.md) for the full comparison and migration notes.
+
+## Prerequisites
+
+- **Center**: a server reachable by all agents (hostname or fixed IP, HTTPS recommended), running the center binary (`cmd/server`, ~24MB, embedded SPA).
+- **Agent**: one per site (VM or low-power router), running the Rust agent binary (`mibee-agent` from `agent-rs/`, ~4.8MB static, no embedded UI, ~12MB RAM steady — see [agent-rs.md](agent-rs.md)).
+- **Clock sync**: NTP on all nodes is recommended so report timestamps read cleanly. Tokens themselves are opaque hash lookups with no time check, and lease expiry only uses the center's own clock.
+
+## Install & Register an Agent
+
+### 1. Mint an agent token on the center
+
+Agent tokens are credentials issued by the center, bound to `network_id + agent_id` and not reusable across networks. First create the target network (note its **numeric ID**) under network management, then mint the token from the center's **Agents page** or via the API:
+
+```bash
+curl -s -X POST http://<center-ip>:8080/api/v1/agents/tokens \
+  -H 'Authorization: Bearer <admin-token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"agent_id":"agent-site-b","network_id":3,"name":"site-b"}'
+```
+
+- `agent_id` (required, unique; 409 on collision): the agent's identity
+- `network_id` (required): the **numeric ID** of the target `networks` row (not the network name)
+- `name` (optional): display label
+
+The plaintext token is returned exactly once at creation; the center stores only a SHA-256 hash.
+
+### 2. Install the agent binary
+
+```bash
+# Option 1: download the release binary (static musl, tag-stamped)
+wget https://github.com/Mi-Bee-Studio/MiBeeSteward/releases/download/<tag>/mibee-agent-linux-arm64
+chmod +x mibee-agent-linux-arm64
+sudo mv mibee-agent-linux-arm64 /usr/local/bin/mibee-agent
+
+# Option 2: build locally (aarch64 / armv7 musl; requires cargo-zigbuild +
+# the ziglang pip package — see agent-rs/README.md)
+make build-agent-rs
+cp agent-rs/target/aarch64-unknown-linux-musl/release/mibee-agent /usr/local/bin/mibee-agent
+
+# Option 3: native deb/rpm package (Debian/RHEL hosts - lays down
+# /usr/bin/mibee-agent + a systemd mibee-agent service and GENERATES
+# /etc/mibee/agent.yaml on first install; see deployment.md
+# "Package Installation" for the lifecycle)
+sudo apt install ./mibee-agent_<version>_amd64.deb
+cp agent-rs/target/aarch64-unknown-linux-musl/release/mibee-agent /usr/local/bin/mibee-agent
+```
+
+### 3. Configure and start
+
+```bash
+sudo mkdir -p /etc/mibee
+sudo tee /etc/mibee/agent.yaml > /dev/null <<'EOF'
+center:
+  url: "https://<center-domain>"
+  auth_token: "<token-from-step-1>"
+  report_interval: "30s"
+network:
+  name: "site-b"
+  cidr: "192.168.20.0/24"
+EOF
+
+sudo mibee-agent -config /etc/mibee/agent.yaml
+```
+
+Optional: run it as a service with systemd (the repo ships a unit template at `deploy/mibee-agent.service`; the deb/rpm package ships a system unit running as a dedicated `mibee-agent` user).
+
+> **Important**: the agent does **not** start scanning from this config alone, it only executes scan tasks registered in its local `scan_tasks` and commands dispatched by the center. Three ways to get it moving:
+> 1. Dispatch a `scan` command to it from the center's Agents page (most common);
+> 2. Insert a `scan_tasks` row into the agent's local database (good for recurring scans);
+> 3. Enable `scanner.discovery.*` passive sources (router-side signals, see [OpenWrt Deployment](openwrt.md)).
+>
+> Command polling starts immediately (~60s cycle); the first report happens after the first scan/discovery produces results (refreshed every 30s by default, `center.report_interval`).
+
+## Data Sync Model
+
+### Report → Device Bridge
+
+The agent POSTs scan results to `POST /api/v1/agents/report` with an `X-Network-State-Hash` header. The center is the single writer of the device registry (single-writer persistence).
+
+**The agent computes the hash** (SHA-256 over the sorted identity+classification fields of the alive set); the center only compares it against the last value it saw:
+
+- **Hash matches** → the center skips the full per-host bridge and only refreshes leases (fast path; saves CPU and DB writes). Note the last-seen hash lives in the center's memory, after a center restart the next report takes the full-merge path once.
+- **Hash differs** → full merge: de-duplicate by MAC, keep stable device IDs across reports, update online state, and emit **change events**.
+
+Change events are pushed in near-real-time to subscribers over SSE (`/api/v1/changes/watch`), the cross-network asset view stays fresh.
+
+### Lease & State
+
+| Parameter | Default | Notes |
+|---|---|---|
+| Device lease TTL | 5 min (`scanner.agent_lease_ttl`) | Renewed by agent reports; the center's background `LeaseSweeper` (60s default) marks expiry as offline |
+| Report refresh interval | 30s (`center.report_interval`) | New scan results are flushed at this cadence; ~10 consecutive misses exceed the lease TTL |
+| Command poll cycle | ~60s | Independent of the report channel |
+| Pending-report retry queue | 100 batches in memory | Buffers **reports** (not commands) while disconnected, drained on reconnect; oldest batches dropped when full |
+
+## Command Channel
+
+The center can actively dispatch commands to an agent (e.g. trigger a one-off scan):
+
+1. An admin enqueues a command via `POST /api/v1/agents/{agentId}/commands` (commands live in the center's `agent_commands` table).
+2. The agent's `command_poller` polls `GET /api/v1/agents/commands` on a ~60s cycle, there is **no** agentId in the path; the token is the identity.
+3. After executing, the agent calls `POST /api/v1/agents/commands/{id}/ack` to acknowledge, then `POST /api/v1/agents/commands/{id}/complete` with the result (`{"status":"done|failed","result":...}`), complete is its own immediate HTTP call, not piggybacked on the next report.
+
+Commands are **best-effort**: commands enqueued while the agent is offline never expire, they run on the next poll cycle after the agent reconnects.
+
+
+### Scheduled scans for agent-managed networks
+
+`scan_tasks` natively supports agent-managed networks: when a task's targets resolve into the CIDR of a network bound to an agent (`networks.agent_id`), the scheduler **dispatches a scan command to that agent** on every cron tick (reusing the command channel and its target validation) instead of scanning locally, the agent IS the scanner for its network. A successful dispatch records a `completed` run; a rejected one (out-of-CIDR targets, reserved ranges) records a `failed` run with the reason, visible in the task's run history. Results flow back through `/agents/report` as usual (device bridge, leases, change detection unchanged).
+
+> Historical note: this capability used to be driven by a deployment-side systemd timer plus a password-hardcoded shell script (login → command API). When the password rotated, the script failed silently and kept burning the admin account's failed-login counter, re-locking it indefinitely. With native scheduling, such external scripts should be retired, rotating the password no longer has hidden consumers.
+
+### Agent-side SNMP credentials (#241)
+
+Agents can probe SNMPv3 (USM auth/priv) devices in their remote LAN via a **local credential vault**, a `snmp_credentials` table in the agent's own mini-DB, encrypted AES-256-GCM with the **agent's** `security.master_key`. The key is deliberately independent of the center's master key: an agent box compromise exposes only that agent's credentials, never the center's vault (and vice versa). No credential material ever crosses the agent↔center channel.
+
+Setup on the agent host:
+
+```bash
+# 1. A 32-byte master key in agent.yaml (or MIBEE_SECURITY_MASTER_KEY):
+#    security:
+#      master_key: "<exactly-32-bytes>"
+
+# 2. Provision credentials (flag > env > stdin prompt for passphrases):
+mibee-agent snmp-credential -config /etc/mibee/agent.yaml -action add \
+  -name switch-v3 -security-level authPriv -username snmpadmin \
+  -auth-protocol SHA -priv-protocol AES
+mibee-agent snmp-credential -config /etc/mibee/agent.yaml -action list
+mibee-agent snmp-credential -config /etc/mibee/agent.yaml -action remove -name switch-v3
+
+# 3. Restart the agent so the resolver picks up the vault.
+```
+
+Two binding paths:
+
+- **Local scan tasks**: set `credential_id` on the agent's `scan_tasks` row (local vault ID), the scheduler passes it straight into the engine.
+- **Center-dispatched tasks**: a center `scan_tasks` row with a center-vault credential dispatches with `credential_name` in the scan payload; the agent resolves the **name** against its own vault (IDs are per-system, names are the cross-system key). Give the agent-side credential the same name as the center's.
+
+Degrade semantics are uniform: no master key, an unknown name, or a stale ID all fall back to the agent's global `scanner.snmp_community` with a warning, a misconfigured vault never fails a scan.
+
+### Vantage probing (#277)
+
+Synthetic probe targets declare **where** they run via their `vantage` field, the same endpoint can legitimately answer differently depending on which network asks:
+
+- `center` (default): this instance probes, the original single-vantage behavior.
+- `agent:{agent_id}`: one named agent executes; the center refuses to run such a target locally (manual trigger returns 409 `ErrProbeVantageNotLocal`).
+- `all`: the center AND every registered agent each run their own track.
+
+The dispatcher ships each agent its probe plan over the command channel, fingerprint-deduplicated so steady state is zero command traffic; an `all` plan is stamped per-agent so results land in that agent's own track. The agent executes with the SAME executor semantics the center uses and posts result batches to `POST /api/v1/agents/probe-report`, agent-token auth, and the reporting agent's identity overrides whatever vantage the payload claims (an agent can only ever write its own track).
+
+**Capability negotiation (#604)**: each agent declares its probe modules (`supported_modules` in the report meta, recorded into `agent_status`), and the dispatcher filters plans accordingly — an agent never receives a target whose module it cannot execute. Legacy agents (≤0.1.x, no declaration) are assumed `{icmp, http, tls}` and held back from `tcp`/`dns` plans with a one-time upgrade hint in the center log: pre-0.2.0 agents shipped tcp plans but failed them with "unknown module" (a live bug), so the dispatcher shields them instead of letting targets go red. **Running tcp or dns vantage targets requires mibee-agent 0.2.0+**, which is also the version that verifies TLS by default on http probes (the previous agent accepted any certificate; `ignore_tls_errors` is the explicit per-target opt-out), resolves icmp/tls hostnames via the system resolver, reports a real webpki-roots trust verdict, parks failed report batches in a bounded retry queue instead of dropping them, and staggers first runs deterministically.
+
+On the center, results are stored per `(target, vantage)`. The Probes page speaks vantage throughout: the target form offers the vantage selector; the target list renders one status line per track (`vantage_latest` on the list/Get responses, so agent outcomes are visible even on agent-only plans whose center-written `last_*` never updates) and highlights when tracks disagree on success; and the history dialog opens on a chart tab, per-track latency lines (failed probes break the line) over a status-timeline strip with success rates, the "reachable from A, not from B" case multi-vantage exists for, with the raw rows one tab away. All `mibee_probe_*` metrics carry a `vantage` label. There is no scheduling strong-consistency: an offline agent simply stops contributing samples to its track.
+
+## Fleet Management (#278)
+
+Every agent report carries a meta block, build version, Go version, hostname, process uptime, cumulative scans shipped, which the center records into its `agent_status` table together with a **clock offset** approximation (report timestamp vs. receive time). The **Agents page** surfaces this fleet telemetry: version, clock offset (highlighted past ±60s), and last-report age per agent, next to the existing token status.
+
+### Remote operations
+
+The command channel also carries an ops family, `restart`, `config-reload`, `logs-tail`, that acts on the agent **process** rather than the network:
+
+- **Double-gated by design**: the center refuses to enqueue ops commands unless `agent_fleet.remote_ops_enabled: true` is set on the center, AND the agent refuses to execute them unless `center.remote_ops_enabled: true` is set in its own config. Either side can keep ops from running.
+- Every successful enqueue is **audit-logged** (`agent.ops_command`, with the issuing user).
+- `restart` / `config-reload` re-exec the agent binary (config is consumed at construction; a re-exec is the only faithful reload). `logs-tail` returns the last ≤50 log lines from the agent's in-memory ring, the result lands in the command history on the Agents page.
+- Under systemd/procd the re-exec is a clean restart; under a bare shell session the process comes back with the same args.
+
+### Fingerprint corpus distribution
+
+The agent can keep its fingerprint corpus in step with the center without any binary or package update (`center.fingerprint_sync.enabled`, default off):
+
+- The agent polls `GET /api/v1/agents/fingerprints` with its last-applied revision (`interval`, default 10m); `204` means nothing changed, `200` carries a deterministic tar.gz of the center's active corpus — the `scanner.fingerprint_path` dir when one is configured on the center (edit/drop YAML there and the fleet picks it up on the next poll, **no center restart involved**), otherwise the corpus embedded in the center binary (so every center upgrade propagates to the whole fleet on its own).
+- Every envelope is validated by the rule engine's own loader before it displaces anything: a corpus that fails to load (or loads zero rules) is discarded and the agent keeps running the previous one — no restart, no crash loop.
+- On success the corpus is swapped on disk (`fingerprints-sync/` next to the agent config) and the agent re-execs to activate it. Restarts are rate-limited (5m): a flapping corpus directory churns the fleet at most once per window, and consecutive changes coalesce into the newest corpus.
+- Corpus precedence when the engine loads: `scanner.fingerprint_path` (operator-managed) → the synced dir → the embedded corpus.
+- The applied revision is persisted next to the synced dir, logged at startup, AND shipped in every report's fleet meta — the center's Settings → Fingerprints page shows the whole fleet's corpus adoption (up to date / stale / not reporting) in one table.
+
+## Operations
+
+### Monitoring
+
+- Center health: `curl http://<center-ip>:8080/api/v1/health`.
+- Agent status: the center's **Agents page** shows each token's last-used time (≈ last report/poll; Active when used within 5 minutes) and its command history.
+- Logs: agent `journalctl -u mibee-agent -f`; the center is managed with systemd too.
+
+### Disconnects & Recovery
+
+- Agent offline: outbound failures back off and retry without an error storm; the in-memory pending queue (100 batches) buffers reports and drains them on reconnect.
+- Center restart: SQLite single-writer makes cold starts safe; agents simply keep reporting (the center's hash cache is cleared, so one full merge happens before the fast path resumes).
+- Token gap / revocation: a 401 means "the center does not know this token *right now*" — that covers both deliberate revocation and the legitimate ops window where the center was rebuilt and the same token is about to be restored (agent-rs 0.1.7, #554). The agent parks the batch in its pending queue, drops only the empty heartbeat, and re-checks once per 5-minute cool-down window until the token works again; local scans and passive discovery keep running throughout. A permanently revoked token therefore costs the agent one probe request per window, nothing more. Other 4xx (400/403/409) stay terminal: that batch is dropped and logged, and re-issuing the token plus updating `center.auth_token` resumes reporting immediately.
+
+### Limitations
+
+- The center is **single-instance** by design (SQLite single writer); multiple centers cannot write one registry.
+- The command channel is pull-based, no millisecond-level dispatch (poll cycle ~60s).
+- The agent's local DB is only a shadow; authoritative data always lives on the center.
+
+## Read-Only Federation (#379)
+
+Two centers can mirror each other's segment: each center fully manages ITS
+OWN network (its UI, its database, its scan cadence stay autonomous when the
+link is down), and additionally holds a near-real-time MIRROR of the peer's
+devices - list + detail portraits only. Everything else (probe targets,
+documents, TLS chains, config backups, credentials, raw evidence, the command
+channel) is neither shared nor exposed: the wire format simply does not carry
+it, and a peer can never dispatch scans/probes/reboots into the other
+segment.
+
+Setup, entirely from existing building blocks:
+
+1. On the peer: create a networks row for YOUR segment (POST /networks) and
+   mint a peer token (POST /agents/tokens with that network) - minting stamps
+   the network's `agent_id`, marking it externally managed.
+2. On your center: set the `peer.*` config block (center_url, auth_token;
+   agent_id defaults to `peer-<hostname>`, cidr defaults to network.cidr).
+
+From then on your scans and passive discoveries flow to the peer over the
+same agent-report channel the Rust agents use (anti-entropy state hash,
+lease-based liveness, change events included), and the peer's devices appear
+on your side tagged with their network.
+
+**The network-origin read-only fence** guards both directions: devices whose
+network has a non-empty `agent_id` (distributed agent OR federated peer) are
+mirrors - every mutating route (device edit/delete, batch ops, systems,
+documents, heartbeat configs) rejects them with 403, for local admins too.
+Hand edits would be overwritten by the next report wave anyway; the UI hides
+the actions and shows a "remote network" badge. The fence also closes the
+same hole in the plain center+agent architecture.
+
+Semantics: peer-link loss lets the peer's leases expire (devices go lost
+there) and self-heal on recovery; mirrored-device change events DO appear in
+the local change log (that is the freshness channel). Cross-segment topology
+link points are a phase-2 candidate (the presence/interconnect facts from
+#526 are the foundation).
+
+## Related Pages
+
+- [Standalone Deployment](deployment.md), single-network scenarios that don't need distribution
+- [OpenWrt Deployment](openwrt.md), Form B is the router variant of the distributed agent
+- [Configuration Reference](configuration.md), all agent and center config options

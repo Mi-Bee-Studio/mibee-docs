@@ -13,7 +13,7 @@ This guide shows how to get MiBee Steward running in minutes and complete your f
 
 ### Option 1: GitHub Releases
 
-Download the binary for your architecture from the [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) page (current version: v0.4.0):
+Download the binary for your architecture from the [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) page (current version: v0.5.0):
 
 ```bash
 chmod +x mibee-steward
@@ -36,7 +36,7 @@ docker run -d --name mibee \
   ghcr.io/mi-bee-studio/mibeesteward:0.4.0
 ```
 
-> Docker's default bridge mode sits behind NAT, which breaks ICMP, ARP/MAC, and multicast probing — it cannot be used for real asset inventory. See [Deployment](deployment.md).
+> Docker's default bridge mode sits behind NAT, which breaks ICMP, ARP/MAC, and multicast probing, it cannot be used for real asset inventory. See [Deployment](deployment.md).
 
 ## Minimal Configuration
 
@@ -74,9 +74,21 @@ For production, always set `auth.jwt_secret` and `auth.initial_admin_password`. 
 
 Open http://localhost:8080 and log in with `admin` and the configured initial password; change the password immediately after the first login. Health check:
 
+![Login page](images/login.webp)
+
 ```bash
 curl http://localhost:8080/api/v1/health
 ```
+
+## 60-Second Demo (no network needed)
+
+Curious what the inventory looks like before wiring a real subnet? Start in demo mode, a fictional fleet (two networks, ~20 devices with portraits, change history, probe results) is seeded on first boot and kept active with simulated events:
+
+```bash
+./mibee-steward -demo -config configs/config.example.yaml
+```
+
+Open the UI and explore; an amber banner marks demo mode and offers a one-click **Clear demo data** to switch to real inventorying.
 
 ## First Scan
 
@@ -98,6 +110,8 @@ sequenceDiagram
 
 **Web UI**: after logging in, open the scanner page and launch a scan against your target CIDR.
 
+![Scanner](images/scanner.webp)
+
 **Synchronous API** (for targets up to 1024 IPs):
 
 ```bash
@@ -118,6 +132,8 @@ The response is `{ hosts, total, alive, duration_ms }`; each host carries `ip`, 
 
 ## What You Should See
 
+![Device list after the first scan](images/devices.webp)
+
 - Device list: IP, MAC, OUI vendor, brand/model, type
 - Identification results: `inferred_type` / `inferred_brand` (e.g. camera, server, pc, iot)
 - Heartbeat status: online/offline and response latency
@@ -136,8 +152,10 @@ The response is `{ hosts, total, alive, duration_ms }`; each host carries `ip`, 
 
 ## Next Steps
 
-- [Architecture](architecture.md) — scanner pipeline and background services
-- [Deployment](deployment.md) — systemd, Docker, Nginx, backups
-- [Distributed](distributed.md) — center + agents for multi-network discovery
-- [Configuration Reference](configuration.md) — all config options
-- [API Reference](api.md) — scan, device, and heartbeat endpoints
+- [Scenario playbooks](playbooks.md), six guided scenarios from first scan to multi-subnet
+- [Feature overview](features.md), the full capability inventory
+- [Architecture](architecture.md), scanner pipeline and background services
+- [Deployment](deployment.md), systemd, Docker, Nginx, backups
+- [Distributed](distributed.md), center + agents for multi-network discovery
+- [Configuration Reference](configuration.md), all config options
+- [API Reference](api.md), scan, device, and heartbeat endpoints

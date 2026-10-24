@@ -13,7 +13,7 @@
 
 ### 方式一：GitHub Releases
 
-从 [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) 下载对应架构的二进制（当前 v0.4.0）：
+从 [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) 下载对应架构的二进制（当前 v0.5.0）：
 
 ```bash
 chmod +x mibee-steward
@@ -74,9 +74,21 @@ export MIBEE_AUTH_INITIAL_ADMIN_PASSWORD="your-strong-password"
 
 打开 http://localhost:8080，使用 `admin` 与配置的初始密码登录，登录后立即修改密码。健康检查：
 
+![登录页](images/login.webp)
+
 ```bash
 curl http://localhost:8080/api/v1/health
 ```
+
+## 60 秒演示（无需网络）
+
+想在接入真实网段前先看看资产画像长什么样？用演示模式启动，首次启动自动种入一套虚构资产（两个网络、约 20 台设备画像、变更历史、拨测结果），并有模拟事件保持活力：
+
+```bash
+./mibee-steward -demo -config configs/config.example.yaml
+```
+
+打开界面即可浏览；顶部琥珀色横幅标注演示模式，并提供一键「清空演示数据」切换到真实资产采集。
 
 ## 首次扫描
 
@@ -98,6 +110,8 @@ sequenceDiagram
 
 **Web 界面**：登录后进入扫描器页面，选择目标 CIDR 发起扫描。
 
+![扫描器](images/scanner.webp)
+
 **同步 API**（适合 ≤1024 IP 的目标）：
 
 ```bash
@@ -118,6 +132,8 @@ curl -X POST http://localhost:8080/api/v1/scanner/scan \
 
 ## 应该看到什么
 
+![扫描后的设备列表](images/devices.webp)
+
 - 设备列表：IP、MAC、OUI 厂商、品牌/型号、类型
 - 识别结果：`inferred_type` / `inferred_brand`（如 camera、server、pc、iot）
 - 心跳状态：在线/离线、响应延迟
@@ -136,8 +152,10 @@ curl -X POST http://localhost:8080/api/v1/scanner/scan \
 
 ## 下一步
 
-- [架构](architecture.md) — 扫描器流水线与后台服务
-- [部署](deployment.md) — systemd、Docker、Nginx、备份
-- [分布式](distributed.md) — 中心 + 采集器跨网络发现
-- [配置参考](configuration.md) — 全部配置项
-- [API 参考](api.md) — 扫描、设备、心跳接口
+- [场景玩法指引](playbooks.md)，从首次扫描到多网段的六个上手场景
+- [功能总览](features.md)，全部能力的分层清单
+- [架构](architecture.md)，扫描器流水线与后台服务
+- [部署](deployment.md)，systemd、Docker、Nginx、备份
+- [分布式](distributed.md)，中心 + 采集器跨网络发现
+- [配置参考](configuration.md)，全部配置项
+- [API 参考](api.md)，扫描、设备、心跳接口

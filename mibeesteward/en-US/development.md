@@ -8,8 +8,8 @@ This guide covers the development environment, project structure, common tasks, 
 
 - **Go** 1.26+ (CGO disabled, uses `modernc.org/sqlite`)
 - **Node.js** 20+ and npm
-- **sqlc** — for query code generation
-- **golangci-lint** v2 — linter (config in `.golangci.yml`)
+- **sqlc**, for query code generation
+- **golangci-lint** v2, linter (config in `.golangci.yml`)
 
 ### Starting the Development Server
 
@@ -23,7 +23,7 @@ make dev
 
 This runs:
 - Frontend: `npm run dev` on port 5173 (Vite HMR)
-- Backend: `go run` on port 8080 (**no hot reload** — restart `make dev` after backend changes)
+- Backend: `go run` on port 8080 (**no hot reload**, restart `make dev` after backend changes)
 
 ### Building for Production
 
@@ -33,30 +33,43 @@ make build-all              # Cross-compile (linux amd64 + arm64)
 make build-linux-arm64      # arm64 only
 ```
 
+### Runtime is Linux-only — never run the server on a Windows dev machine
+
+The center and agent ship as Linux binaries (amd64/arm64/ARMv7). On a Windows
+dev machine, do the build/test work only (cross-compile via the
+`make build-linux-*` targets, `go test`, `npm test`, lint) and never run the
+server/agent locally — not as a service, not as a demo instance, not via
+`scripts/e2e.sh` (run that on a Linux host or in CI). Run-level verification
+(deploy, functional, API, browser UI) belongs on a Linux test host: build the
+linux binary, deploy it there, verify against that instance. On a Windows
+machine, drive the frontend dev server with its proxy pointed at a
+Linux-hosted backend.
+
 ## Project Structure
 
 ```mermaid
 flowchart TB
     ROOT["MiBee Steward repo"] --> CMD["cmd/"]
-    ROOT --> DBQ["db/ — schema.sql + queries/*.sql (sqlc source)"]
+    ROOT --> DBQ["db/, schema.sql + queries/*.sql (sqlc source)"]
     ROOT --> INT["internal/"]
-    ROOT --> BPF["bpf/ — eBPF TC observer (tc_ingress.c)"]
-    ROOT --> WEB["web/ — SvelteKit 5 SPA → go:embed"]
-    ROOT --> CFGDIR["configs/ — example configs + fingerprints/ rule library (YAML data)"]
-    ROOT --> DEPLOY["deploy/ — systemd · nginx · docker · prometheus · openwrt/"]
-    ROOT --> SCRIPTS["scripts/ — backup.sh · fetch-oui.sh"]
-    CMD --> CMD1["server/ — center entrypoint (main · migrations · reset_password)"]
-    CMD --> CMD2["agent/ — distributed agent entrypoint"]
-    CMD --> CMD3["fpimport/ — third-party fingerprint importer (recog/OUI/PEN)"]
-    INT --> API["api/ — handler/ · middleware/ · routes/"]
-    INT --> AGT["agent/ — command_poller · httpclient · reporter"]
-    INT --> AUTHZ["authz/ — scopeql · scoperesolver (network scoping)"]
-    INT --> CHG["changedetect/ — change-detection engine (change_log + Watcher)"]
-    INT --> CFG["config/ — koanf loader (YAML + MIBEE_* env)"]
-    INT --> DBI["db/ — ⚡ sqlc-generated (never edit)"]
-    INT --> DOM["domain/ — DTOs · device types · capability model"]
-    INT --> SVC["service/ — business logic + heartbeat/notification/audit repos"]
-    SVC --> SV2["scannerv2/ — v2 engine: probe · classify ·<br/>handler · store · orchestrator · engine ·<br/>runner · scheduler · taskservice ·<br/>reconcile · cleanup · ebpf · …"]
+    ROOT --> BPF["bpf/, eBPF TC observer (tc_ingress.c)"]
+    ROOT --> WEB["web/, SvelteKit 5 SPA → go:embed"]
+    ROOT --> CFGDIR["configs/, example configs + fingerprints/ rule library (YAML data)"]
+    ROOT --> DEPLOY["deploy/, systemd · nginx · docker · prometheus · openwrt/"]
+    ROOT --> SCRIPTS["scripts/, backup.sh · fetch-oui.sh"]
+    ROOT --> ARS["agent-rs/, the Rust distributed agent (issue #471) — the only agent since 2026-10-09"]
+    CMD --> CMD1["server/, center entrypoint (main · migrations · reset_password)"]
+    CMD --> CMD2["agent/, distributed agent entrypoint"]
+    CMD --> CMD3["fpimport/, third-party fingerprint importer (recog/OUI/PEN)"]
+    INT --> API["api/, handler/ · middleware/ · routes/"]
+    INT --> AGT["agent/, command_poller · httpclient · reporter"]
+    INT --> AUTHZ["authz/, scopeql · scoperesolver (network scoping)"]
+    INT --> CHG["changedetect/, change-detection engine (change_log + Watcher)"]
+    INT --> CFG["config/, koanf loader (YAML + MIBEE_* env)"]
+    INT --> DBI["db/, ⚡ sqlc-generated (never edit)"]
+    INT --> DOM["domain/, DTOs · device types · capability model"]
+    INT --> SVC["service/, business logic + heartbeat/notification/audit repos"]
+    SVC --> SV2["scannerv2/, v2 engine: probe · classify ·<br/>handler · store · orchestrator · engine ·<br/>runner · scheduler · taskservice ·<br/>reconcile · cleanup · ebpf · …"]
 ```
 
 ### Build Pipeline
@@ -87,7 +100,7 @@ flowchart LR
 
 1. Write SQL in `db/queries/*.sql`
 2. Regenerate: `~/go/bin/sqlc generate`
-3. Generated code appears in `internal/db/` — **never edit these files directly**
+3. Generated code appears in `internal/db/`, **never edit these files directly**
 
 ```sql
 -- db/queries/your_table.sql
@@ -99,7 +112,8 @@ SELECT * FROM your_table WHERE id = $1;
 
 1. Edit `db/schema.sql`
 2. Run `~/go/bin/sqlc generate`
-3. Schema is applied automatically at startup from the embedded `schema.sql`
+3. If the change is not compatible with databases created by earlier builds, bump `SchemaVersion` in `cmd/server/migrations.go` (the Rust agent's local DB has its own schema versioning inside `agent-rs/crates/mibee-agent/src/db.rs`)
+4. Schema is applied only when a database is first created; a database stamped with an older version is rejected at startup with guidance, there is no in-place upgrade path
 
 ### Frontend Development
 
@@ -117,13 +131,43 @@ go test -race ./...         # Race detector (what CI runs)
 cd web && npm test          # Frontend tests (vitest run, single-shot)
 ```
 
+### Coverage Ratchet Gate
+
+CI enforces a coverage floor that only moves up (a "ratchet"): the Go job runs
+`make coverage` (a cross-package profile that excludes generated code, sqlc's
+`internal/db` and oapi-codegen's `internal/apiclient` have their own drift
+gates) and fails below the number recorded in `scripts/coverage-floor.txt`.
+The frontend job runs `cd web && npm run test:coverage` with thresholds in
+`vitest.config.ts`.
+
+```bash
+make coverage               # produce cover.out with cross-package attribution
+make coverage-gate          # fail if total coverage is below the floor
+make coverage-bump          # re-pin the floor to the current level (after adding tests)
+```
+
+Never lower the floor to make a red build green, add tests instead.
+
+The Rust agent has the same ratchet (#559): the `agent-rs-coverage` CI job runs
+`cargo llvm-cov` over the whole cargo workspace and fails below the line
+coverage recorded in `agent-rs/coverage-floor.txt` (lcov LF/LH totals — the
+closest analog of the Go side's statement coverage, and immune to
+cargo-llvm-cov's text-table format changes). It needs `cargo-llvm-cov`
+installed plus the `llvm-tools-preview` rustup component.
+
+```bash
+make coverage-agent-rs          # produce agent-rs/lcov.info
+make coverage-agent-rs-gate     # fail if line coverage is below the floor
+make coverage-agent-rs-bump     # re-pin the floor (floor only moves up)
+```
+
 ### Linting & the Format Gate
 
 ```bash
-golangci-lint run           # Go linter (CI pins v2.12.2 — stricter than go vet)
+golangci-lint run           # Go linter (CI pins v2.12.2, stricter than go vet)
 ```
 
-> ⚠️ **Run the format check before pushing** (the #1 "passes locally, fails CI" trap — local `go vet`/`go build` pass but CI's golangci-lint fails):
+> ⚠️ **Run the format check before pushing** (the #1 "passes locally, fails CI" trap, local `go vet`/`go build` pass but CI's golangci-lint fails):
 >
 > ```bash
 > gofmt -l internal/ cmd/      # must print NOTHING
@@ -133,10 +177,36 @@ golangci-lint run           # Go linter (CI pins v2.12.2 — stricter than go ve
 ### eBPF Build (Optional)
 
 ```bash
-make build-with-ebpf       # Requires clang/llvm/bpftool + kernel BTF (run go generate first — see the eBPF page)
+make build-with-ebpf       # Requires clang/llvm/bpftool + kernel BTF (run go generate first, see the eBPF page)
 ```
 
 See [eBPF Passive Observer](ebpf.md) for details.
+
+### Rust agent (`agent-rs/`)
+
+The Rust agent IS the distributed agent (issue #471): the former Go agent
+(`cmd/agent` + `internal/agent`) was retired and removed on 2026-10-09 —
+the full measured comparison and migration notes live in
+[agent-rs.md](agent-rs.md). The Rust implementation lives at `agent-rs/`
+as a self-contained cargo workspace — `crates/mibee-agent` (engine, probes,
+vault, DB, center client) plus `crates/mibee-fingerprints` (the classifier,
+differential-tested byte-identical against mibee-fingerprints-go). It is NOT
+part of the Go module: nested `go.mod` dirs under `agent-rs/difftest/` are
+excluded from `go test ./...` and golangci-lint automatically.
+
+```bash
+make test-agent-rs                     # cargo test (agent-rs/)
+make build-agent-rs                    # static musl binaries, aarch64 + armv7
+```
+
+Toolchain: cargo-zigbuild + `pip install ziglang==0.13.0`. On the Windows
+dev host the zig command env var is REQUIRED (`agent-rs/README.md` has the
+exact incantation — the pyenv python3 shim breaks zig discovery). The
+classifier's gosnmp/SNMP implementations are validated by differential
+testing against real net-snmp (`agent-rs/difftest/`), not just unit tests.
+Behavior reference: where docs and Go code disagree, the Go code wins —
+the Rust engine mirrors `internal/service/scannerv2/` semantics probe by
+probe (deviations are documented in `agent-rs/README.md`).
 
 ## Extending the Scanner
 
@@ -149,7 +219,7 @@ scannerv2 is a five-layer plugin engine; the extension points are exactly two:
 
 The orchestrator and persistence layers need **zero changes**. The startup log `scannerv2 engine ready registry{probes=N classifiers=N handlers=N}` verifies that every layer loaded.
 
-**Many protocols need no new type at all** — they are data-driven:
+**Many protocols need no new type at all**, they are data-driven:
 
 - **Server-class services** (database/mail/remote-access/directory/file-share: mysql, postgresql, redis, mongodb, mssql, memcached, …): add the service name to `serverServiceNames` in `handler/services.go`;
 - **TLS-wrapped services** (https/ldaps/smtps/imaps/pop3s/ftps/ircs/telnets, …): add it to `tlsCollectNames` in `handler/tls_collect.go` and full certificate-chain collection comes for free.
@@ -158,22 +228,22 @@ Only protocols with real per-protocol collection logic (HTTP/SNMP/Camera/RTSP/ON
 
 ### Fingerprint & device-type rules are data, not code
 
-- Device signature rules live in `configs/fingerprints/*.yaml` (format: see [Fingerprint Library — Adapter Specification](fingerprint-spec.md)); after editing you MUST sync to the embed dir: **`make sync-fingerprints`** (before `make build`).
-- The device-type keyword table lives in `configs/fingerprints/device-types/device_types.yaml`, synced via **`make sync-device-types`**; a drift test (`TestDeviceTypesYAML_InSyncWithSourceOfTruth`) fails CI when the two copies diverge — always edit the `configs/` source and sync, never the embedded `runner/` copy directly.
+- Device signature rules live in `configs/fingerprints/*.yaml` (format: see [Fingerprint Library, Adapter Specification](fingerprint-spec.md)); after editing you MUST sync to the embed dir: **`make sync-fingerprints`** (before `make build`).
+- The device-type keyword table lives in `configs/fingerprints/device-types/device_types.yaml`, synced via **`make sync-device-types`**; a drift test (`TestDeviceTypesYAML_InSyncWithSourceOfTruth`) fails CI when the two copies diverge, always edit the `configs/` source and sync, never the embedded `runner/` copy directly.
 - All `build-*` targets already depend on those sync steps; the curated OUI table syncs via `make sync-oui-curated`.
 
 ## Coding Conventions
 
 ### Critical Anti-Patterns
 
-- **NEVER edit `internal/db/*.go`** — they are sqlc-generated
-- **NEVER use `CGO_ENABLED=1`** — use `modernc.org/sqlite`
-- **NEVER bypass the service layer from mutating handlers** — read-only handlers may use `*db.Queries` directly
-- **NEVER register routes outside `routes/routes.go`** — keep routing centralized
+- **NEVER edit `internal/db/*.go`**, they are sqlc-generated
+- **NEVER use `CGO_ENABLED=1`**, use `modernc.org/sqlite`
+- **NEVER bypass the service layer from mutating handlers**, read-only handlers may use `*db.Queries` directly
+- **NEVER register routes outside `routes/routes.go`**, keep routing centralized
 - **NEVER bypass auth middleware** for protected endpoints
-- **NEVER use `$state` runes in `.ts` files** — only in `.svelte` files
-- **NEVER hardcode API URLs** — the frontend goes through `import.meta.env.VITE_API_BASE ?? '/api/v1'` (`web/src/lib/api/client.ts`)
-- **NEVER commit secrets** — use `.env` (gitignored)
+- **NEVER use `$state` runes in `.ts` files**, only in `.svelte` files
+- **NEVER hardcode API URLs**, the frontend goes through `import.meta.env.VITE_API_BASE ?? '/api/v1'` (`web/src/lib/api/client.ts`)
+- **NEVER commit secrets**, use `.env` (gitignored)
 
 ### Request DTO Patterns
 
@@ -241,7 +311,7 @@ Always use JSON with snake_case fields and ISO 8601 timestamps:
 
 ## Contribution Process
 
-### Workflow — Test-Driven Development
+### Workflow, Test-Driven Development
 
 We follow **TDD**: Red → Green → Refactor.
 
@@ -292,11 +362,11 @@ Every commit must carry a `Signed-off-by` line certifying its origin. Pass `-s` 
 git commit -s -m "feat: add new discovery source"
 ```
 
-A CI check (`.github/workflows/dco.yml`) blocks any PR with an unsigned commit. See DCO.md for details.
+A CI check (`.github/workflows/dco.yml`) blocks any PR with an unsigned commit. See [DCO.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/.github/DCO.md) for details.
 
 ### Fingerprint Corpus License
 
-Fingerprint YAML files are licensed under [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Derivative fingerprint corpora must be released under the same license. IEEE OUI and IANA PEN data are factual registries — cited, not copied into the corpus. See [Fingerprint Library — Adapter Specification](fingerprint-spec.md) §8 for the full provenance and license boundary.
+Fingerprint YAML files are licensed under [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Derivative fingerprint corpora must be released under the same license. IEEE OUI and IANA PEN data are factual registries, cited, not copied into the corpus. See [Fingerprint Library, Adapter Specification](fingerprint-spec.md) §8 for the full provenance and license boundary.
 
 ## Documentation Updates
 
