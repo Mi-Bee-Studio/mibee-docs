@@ -73,7 +73,7 @@ mibeecam 是**多合并项目容器**：每个"大集合"（一组相关相机�
 | 场景 | 写法 |
 |------|------|
 | 站内（mibeecam 内互链） | 相对文件名 `xxx.md` |
-| 跨项目（如 mibeenvr 手册） | 完整 URL `https://www.mlsbs.top/docs/mibeenvr/{slug}` |
+| 跨项目（如 mibeenvr 手册） | 完整 URL `https://www.mickeybee.cn/docs/mibeenvr/{slug}` |
 | 源码/仓库文件 | GitHub 绝对链接 |
 | 页内锚点 | 标题锚（渲染器自动生成） |
 

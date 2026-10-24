@@ -13,10 +13,10 @@ The two open-source libraries the Rust edition consumes:
 
 | Library | Crate | Purpose | Docs |
 |----|-------|------|------|
-| [onvif-rs](https://github.com/mickeyzzc/onvif-rs) | `onvif-device-rs` | ONVIF Device server: WS-Discovery, Media, PTZ, Imaging, Security | [ONVIF · Rust](https://www.mlsbs.top/docs/mibeelibs/onvif-rs-discovery) |
-| [gb28181-rs](https://github.com/mickeyzzc/gb28181-rs) | `gb28181-rs` | GB28181 device side: registration / keep-alive, catalog, live, playback | [GB28181 · Rust](https://www.mlsbs.top/docs/mibeelibs/gb28181-rs-server) |
+| [onvif-rs](https://github.com/mickeyzzc/onvif-rs) | `onvif-device-rs` | ONVIF Device server: WS-Discovery, Media, PTZ, Imaging, Security | [ONVIF · Rust](https://www.mickeybee.cn/docs/mibeelibs/onvif-rs-discovery) |
+| [gb28181-rs](https://github.com/mickeyzzc/gb28181-rs) | `gb28181-rs` | GB28181 device side: registration / keep-alive, catalog, live, playback | [GB28181 · Rust](https://www.mickeybee.cn/docs/mibeelibs/gb28181-rs-server) |
 
-In other words: the device's protocol-level interoperability behavior (wire format, state machines, response semantics) is defined and golden-test-constrained by these open-source libraries — independent of whether the device source is public. Integrators can develop against the libraries, verify compatibility, or reuse the same protocol stack for their own products. See the [library overview](https://www.mlsbs.top/docs/mibeelibs/libs-overview).
+In other words: the device's protocol-level interoperability behavior (wire format, state machines, response semantics) is defined and golden-test-constrained by these open-source libraries — independent of whether the device source is public. Integrators can develop against the libraries, verify compatibility, or reuse the same protocol stack for their own products. See the [library overview](https://www.mickeybee.cn/docs/mibeelibs/libs-overview).
 
 ## Capability Overview
 
