@@ -8,8 +8,8 @@
 
 - **Go** 1.26+（禁用 CGO，使用 `modernc.org/sqlite`）
 - **Node.js** 20+ 和 npm
-- **sqlc** — 查询代码生成
-- **golangci-lint** v2 — 代码检查（配置在 `.golangci.yml`）
+- **sqlc**，查询代码生成
+- **golangci-lint** v2，代码检查（配置在 `.golangci.yml`）
 
 ### 启动开发服务器
 
@@ -23,7 +23,7 @@ make dev
 
 运行内容：
 - 前端：端口 5173 上的 `npm run dev`（Vite HMR 热重载）
-- 后端：端口 8080 上的 `go run`（**无热重载**——改后端代码需重启 `make dev`）
+- 后端：端口 8080 上的 `go run`（**无热重载**--改后端代码需重启 `make dev`）
 
 ### 生产环境构建
 
@@ -33,30 +33,40 @@ make build-all              # 交叉编译（linux amd64 + arm64）
 make build-linux-arm64      # 仅 arm64
 ```
 
+### 运行时只面向 Linux——禁止在 Windows 开发机上运行服务
+
+center 与 agent 只发布 Linux 二进制（amd64/arm64/ARMv7）。Windows 开发机上只做
+构建与测试类工作（`make build-linux-*` 交叉编译、`go test`、`npm test`、lint），
+**绝不本地运行 server/agent**——不以服务形式、不开 demo 实例、也不跑
+`scripts/e2e.sh`（后者放到 Linux 主机或 CI 上执行）。运行级验证（部署、功能、
+API、浏览器 UI）一律在 Linux 测试主机上做：构建 linux 二进制、部署上去、对着
+真实实例验证。Windows 机器上做前端开发时，dev server 的代理指向 Linux 侧后端。
+
 ## 项目结构
 
 ```mermaid
 flowchart TB
     ROOT["MiBee Steward 仓库"] --> CMD["cmd/"]
-    ROOT --> DBQ["db/ — schema.sql + queries/*.sql（sqlc 源）"]
+    ROOT --> DBQ["db/，schema.sql + queries/*.sql（sqlc 源）"]
     ROOT --> INT["internal/"]
-    ROOT --> BPF["bpf/ — eBPF TC 观测器（tc_ingress.c）"]
-    ROOT --> WEB["web/ — SvelteKit 5 SPA → go:embed 嵌入"]
-    ROOT --> CFGDIR["configs/ — 示例配置 + fingerprints/ 指纹库（YAML 数据）"]
-    ROOT --> DEPLOY["deploy/ — systemd · nginx · docker · prometheus · openwrt/"]
-    ROOT --> SCRIPTS["scripts/ — backup.sh · fetch-oui.sh"]
-    CMD --> CMD1["server/ — 中心入口（main · migrations · reset_password）"]
-    CMD --> CMD2["agent/ — 分布式采集器入口"]
-    CMD --> CMD3["fpimport/ — 第三方指纹库导入工具（recog/OUI/PEN）"]
-    INT --> API["api/ — handler/ · middleware/ · routes/"]
-    INT --> AGT["agent/ — command_poller · httpclient · reporter"]
-    INT --> AUTHZ["authz/ — scopeql · scoperesolver（网络作用域授权）"]
-    INT --> CHG["changedetect/ — 变更检测引擎（change_log + Watcher）"]
-    INT --> CFG["config/ — koanf 加载器（YAML + MIBEE_* 环境变量）"]
-    INT --> DBI["db/ — ⚡ sqlc 生成代码（勿编辑）"]
-    INT --> DOM["domain/ — DTO · 设备类型 · 能力模型"]
-    INT --> SVC["service/ — 业务逻辑 + 心跳/通知/审计与仓储"]
-    SVC --> SV2["scannerv2/ — v2 扫描引擎：probe · classify ·<br/>handler · store · orchestrator · engine ·<br/>runner · scheduler · taskservice ·<br/>reconcile · cleanup · ebpf · …"]
+    ROOT --> BPF["bpf/，eBPF TC 观测器（tc_ingress.c）"]
+    ROOT --> WEB["web/，SvelteKit 5 SPA → go:embed 嵌入"]
+    ROOT --> CFGDIR["configs/，示例配置 + fingerprints/ 指纹库（YAML 数据）"]
+    ROOT --> DEPLOY["deploy/, systemd · nginx · docker · prometheus · openwrt/"]
+    ROOT --> SCRIPTS["scripts/, backup.sh · fetch-oui.sh"]
+    ROOT --> ARS["agent-rs/，Rust 分布式采集器（issue #471）——2026-10-09 起的唯一采集器"]
+    CMD --> CMD1["server/，中心入口（main · migrations · reset_password）"]
+    CMD --> CMD2["agent/，分布式采集器入口"]
+    CMD --> CMD3["fpimport/，第三方指纹库导入工具（recog/OUI/PEN）"]
+    INT --> API["api/, handler/ · middleware/ · routes/"]
+    INT --> AGT["agent/, command_poller · httpclient · reporter"]
+    INT --> AUTHZ["authz/，scopeql · scoperesolver（网络作用域授权）"]
+    INT --> CHG["changedetect/，变更检测引擎（change_log + Watcher）"]
+    INT --> CFG["config/，koanf 加载器（YAML + MIBEE_* 环境变量）"]
+    INT --> DBI["db/，⚡ sqlc 生成代码（勿编辑）"]
+    INT --> DOM["domain/，DTO · 设备类型 · 能力模型"]
+    INT --> SVC["service/，业务逻辑 + 心跳/通知/审计与仓储"]
+    SVC --> SV2["scannerv2/，v2 扫描引擎：probe · classify ·<br/>handler · store · orchestrator · engine ·<br/>runner · scheduler · taskservice ·<br/>reconcile · cleanup · ebpf · …"]
 ```
 
 ### 构建管线
@@ -87,7 +97,7 @@ flowchart LR
 
 1. 在 `db/queries/*.sql` 中编写 SQL
 2. 重新生成：`~/go/bin/sqlc generate`
-3. 生成的代码出现在 `internal/db/` — **请勿直接编辑这些文件**
+3. 生成的代码出现在 `internal/db/`，**请勿直接编辑这些文件**
 
 ```sql
 -- db/queries/your_table.sql
@@ -99,7 +109,8 @@ SELECT * FROM your_table WHERE id = $1;
 
 1. 编辑 `db/schema.sql`
 2. 运行 `~/go/bin/sqlc generate`
-3. 模式在应用启动时自动从嵌入的 `schema.sql` 执行
+3. 变更与旧版本建的库不兼容时，同步调高 `cmd/server/migrations.go` 中的 `SchemaVersion`（Rust agent 的本地库在 `agent-rs/crates/mibee-agent/src/db.rs` 内自行管理 schema 版本）
+4. schema 只在数据库首次创建时应用；版本不符的旧库启动即拒并给出指引，不做原地升级
 
 ### 前端开发
 
@@ -115,6 +126,34 @@ cd web && npm test          # 运行 vitest
 go test ./...               # 运行所有 Go 测试（make test 等价）
 go test -race ./...         # 竞态检测（CI 会跑这个）
 cd web && npm test          # 运行前端测试（vitest run，单次执行）
+```
+
+### 覆盖率棘轮门禁
+
+CI 强制一个只升不降的覆盖率下限（棘轮模式）：Go 任务执行 `make coverage`
+（跨包归因的 profile，排除生成代码，sqlc 的 `internal/db` 和 oapi-codegen
+的 `internal/apiclient` 有各自的漂移检查），低于 `scripts/coverage-floor.txt`
+里记录的数值即失败。前端任务执行 `cd web && npm run test:coverage`，阈值在
+`vitest.config.ts`。
+
+```bash
+make coverage               # 生成跨包归因的 cover.out
+make coverage-gate          # 总覆盖率低于 floor 时失败
+make coverage-bump          # 把 floor 重新钉到当前水平（补完测试后执行）
+```
+
+不要为了绿灯去下调 floor，请补测试。
+
+Rust agent 有同一机制的棘轮（#559）：`agent-rs-coverage` CI 任务对整个 cargo
+workspace 跑 `cargo llvm-cov`，行覆盖率低于 `agent-rs/coverage-floor.txt` 记录值即
+失败（取 lcov 的 LF/LH 汇总——与 Go 侧语句覆盖最接近的口径，且不受 cargo-llvm-cov
+文本表格列序变化影响）。本地需要安装 `cargo-llvm-cov` 并启用 rustup 组件
+`llvm-tools-preview`。
+
+```bash
+make coverage-agent-rs          # 生成 agent-rs/lcov.info
+make coverage-agent-rs-gate     # 行覆盖率低于 floor 时失败
+make coverage-agent-rs-bump     # 重钉 floor（只升不降）
 ```
 
 ### 代码检查与格式门禁
@@ -138,6 +177,28 @@ make build-with-ebpf       # 需要 clang/llvm/bpftool + 内核 BTF（先 go gen
 
 详见 [eBPF 被动观测](ebpf.md)。
 
+### Rust 采集器（`agent-rs/`）
+
+Rust 采集器**就是**分布式采集器（issue #471）：原 Go 采集器（`cmd/agent` +
+`internal/agent`）已于 2026-10-09 退役并移除——完整实测对比与迁移须知见
+[agent-rs.md](agent-rs.md)。Rust 实现位于 `agent-rs/`，是一个自包含的
+cargo workspace——`crates/mibee-agent`（引擎、探针、凭据库、本地库、center
+客户端）加 `crates/mibee-fingerprints`（分类器，与 mibee-fingerprints-go
+对拍字节一致）。它**不在** Go module 之内：`agent-rs/difftest/` 下的嵌套
+`go.mod` 目录会被 `go test ./...` 和 golangci-lint 自动排除。
+
+```bash
+make test-agent-rs                     # cargo test（agent-rs/）
+make build-agent-rs                    # musl 静态二进制，aarch64 + armv7
+```
+
+工具链：cargo-zigbuild + `pip install ziglang==0.13.0`。Windows 开发机上
+zig 命令环境变量是必须的（`agent-rs/README.md` 有准确写法——pyenv 的
+python3 shim 会破坏 zig 发现）。分类器与 SNMP 实现靠对真实 net-snmp 的
+差分测试（`agent-rs/difftest/`）验证，而非仅单测。行为参照：文档与 Go
+代码不一致时以 Go 代码为准——Rust 引擎逐探针对齐
+`internal/service/scannerv2/` 的语义（偏离之处记录在 `agent-rs/README.md`）。
+
 ## 扩展扫描器
 
 ### 添加一个协议 = 一个分类器 + 一个处理器
@@ -149,7 +210,7 @@ scannerv2 是五层插件引擎，扩展点集中在两处：
 
 编排器与持久化层**零改动**。启动日志 `scannerv2 engine ready registry{probes=N classifiers=N handlers=N}` 可验证各层是否加载齐全。
 
-**很多协议连新类型都不用写**——它们是数据驱动的：
+**很多协议连新类型都不用写**--它们是数据驱动的：
 
 - **服务器类服务**（数据库/邮件/远程访问/目录/文件共享：mysql、postgresql、redis、mongodb、mssql、memcached 等）：把服务名加进 `handler/services.go` 的 `serverServiceNames` 即可；
 - **TLS 包装服务**（https/ldaps/smtps/imaps/pop3s/ftps/ircs/telnets 等）：加进 `handler/tls_collect.go` 的 `tlsCollectNames`，自动获得完整证书链采集。
@@ -159,21 +220,21 @@ scannerv2 是五层插件引擎，扩展点集中在两处：
 ### 指纹与设备类型规则 = 数据，不是代码
 
 - 设备签名规则在 `configs/fingerprints/*.yaml`（格式见[指纹库适配器规范](fingerprint-spec.md)），改完必须同步到内嵌目录：**`make sync-fingerprints`**（`make build` 前跑）。
-- 设备类型关键词表在 `configs/fingerprints/device-types/device_types.yaml`，同步命令 **`make sync-device-types`**；一个防漂移测试（`TestDeviceTypesYAML_InSyncWithSourceOfTruth`）会在两份拷贝不一致时挂掉 CI——永远改 `configs/` 下的源文件再同步，不要直接改 `runner/` 下的内嵌副本。
+- 设备类型关键词表在 `configs/fingerprints/device-types/device_types.yaml`，同步命令 **`make sync-device-types`**；一个防漂移测试（`TestDeviceTypesYAML_InSyncWithSourceOfTruth`）会在两份拷贝不一致时挂掉 CI--永远改 `configs/` 下的源文件再同步，不要直接改 `runner/` 下的内嵌副本。
 - 所有 `build-*` 目标已依赖上述同步步骤；OUI 精简表同步用 `make sync-oui-curated`。
 
 ## 编码规范
 
 ### 关键反模式
 
-- **永远不要编辑 `internal/db/*.go`** — 它们是 sqlc 生成的
-- **永远不要使用 `CGO_ENABLED=1`** — 使用 `modernc.org/sqlite`
-- **变更型处理器永远不要绕过服务层** — 只读处理器可直接用 `*db.Queries`
-- **永远不要在 `routes/routes.go` 之外注册路由** — 保持路由集中化
+- **永远不要编辑 `internal/db/*.go`**，它们是 sqlc 生成的
+- **永远不要使用 `CGO_ENABLED=1`**，使用 `modernc.org/sqlite`
+- **变更型处理器永远不要绕过服务层**，只读处理器可直接用 `*db.Queries`
+- **永远不要在 `routes/routes.go` 之外注册路由**，保持路由集中化
 - **永远不要绕过身份验证中间件**
-- **永远不要在 `.ts` 文件中使用 `$state` 运算符** — 只在 `.svelte` 文件中使用
-- **永远不要硬编码 API URL** — 前端统一走 `import.meta.env.VITE_API_BASE ?? '/api/v1'`（`web/src/lib/api/client.ts`）
-- **永远不要提交密钥** — 使用 `.env`（已加入 .gitignore）
+- **永远不要在 `.ts` 文件中使用 `$state` 运算符**，只在 `.svelte` 文件中使用
+- **永远不要硬编码 API URL**，前端统一走 `import.meta.env.VITE_API_BASE ?? '/api/v1'`（`web/src/lib/api/client.ts`）
+- **永远不要提交密钥**，使用 `.env`（已加入 .gitignore）
 
 ### 请求 DTO 模式
 
@@ -241,7 +302,7 @@ func (h *YourHandler) YourMethod(w http.ResponseWriter, r *http.Request) {
 
 ## 贡献流程
 
-### 工作流 — 测试驱动开发
+### 工作流，测试驱动开发
 
 遵循 **TDD**：Red → Green → Refactor。
 
@@ -263,7 +324,7 @@ func (h *YourHandler) YourMethod(w http.ResponseWriter, r *http.Request) {
 
 PR 合并前必须通过以下检查（`.github/workflows/ci.yml`）：
 
-- 前端构建（`npm ci && npm run build`——产出 `web/dist`，`go:embed` 编译期需要）
+- 前端构建（`npm ci && npm run build`--产出 `web/dist`，`go:embed` 编译期需要）
 - `go vet ./...`
 - `golangci-lint run`（钉死 v2.12.2）
 - `go test -race -coverprofile=cover.out -covermode=atomic ./...`
@@ -292,11 +353,11 @@ CLA 到位前，PR **无法合并**。详见 [CLA.md](https://github.com/Mi-Bee-
 git commit -s -m "feat: add new discovery source"
 ```
 
-CI 检查（`.github/workflows/dco.yml`）会阻止未签名的 commit。详见 DCO.md。
+CI 检查（`.github/workflows/dco.yml`）会阻止未签名的 commit。详见 [DCO.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/.github/DCO.md)。
 
 ### 指纹库许可证
 
-指纹 YAML 文件采用 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 许可。衍生指纹语料库必须以相同许可发布。IEEE OUI 和 IANA PEN 数据为事实注册表——仅引用，不纳入语料库。详见 [指纹库适配器规范](fingerprint-spec.md) §8。
+指纹 YAML 文件采用 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 许可。衍生指纹语料库必须以相同许可发布。IEEE OUI 和 IANA PEN 数据为事实注册表--仅引用，不纳入语料库。详见 [指纹库适配器规范](fingerprint-spec.md) §8。
 
 ## 文档更新
 

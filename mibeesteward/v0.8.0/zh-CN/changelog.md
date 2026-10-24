@@ -1,0 +1,597 @@
+# 更新日志
+
+本页是仓库根目录 [CHANGELOG.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/CHANGELOG.md) 的**中文版**，与英文原文逐版本对应维护（技术名词、配置键、API 路径、议题编号保留原文）。新增或修改英文条目后请在同一 PR 内更新本页，`make docs-changelog-sync` 会校验两侧版本清单一致，CI `docs` 任务据此拦截漂移。
+
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+## [0.8.0] - 2026-10-24
+
+### Added
+- **deb/rpm 原生软件包（#620）**：每个版本起为 Debian 与 Red Hat 系发行版附带 `mibee-steward`（center）与 `mibee-agent` 软件包——`.deb` + `.rpm`，amd64/arm64/armhf（= armv7hl），由新的 nfpm 流水线构建（`deploy/nfpm/` 配方 + `make package-deb`/`package-rpm`/`package-agent-deb`/`package-agent-rpm`；新的 `deb-rpm` release job 复用 release 二进制并自行构建 arm 版 center 二进制；校验和在 `SHA256SUMS.deb-rpm`）。包内布局与二进制部署（方案 A）完全一致——`/opt/mibee-steward`、随包 systemd unit（数字 uid 1000）、以不可覆盖 config file 交付的 logrotate、备份脚本——包安装与手工安装可互换。生命周期沿用 OpenWrt 安装器的纪律：首次安装**生成**配置（随机 jwt_secret、浏览器首启创建 admin 密码、局域网明文 HTTP cookie）并打开 + 持久化 `ping_group_range`；升级永不触碰配置与数据；purge 删除生成配置但刻意保留 `data/`。agent 包新增专用系统级 unit（`agent-rs/deploy/systemd/`，非特权 `mibee-agent` 用户，配置 + `agent.db` 落在 `/etc/mibee`），`network.name`/`cidr` 从默认路由推导，center 凭据填好前服务保持停止。`make check-nfpm`（提交树 CR 扫描 + `sh -n`，接入 CI 打包门）守卫这些源文件。背后的打包格式全景调研（缓办：apt/yum 仓库、HA add-on、Helm；明确不做及理由：snap/flatpak/AppImage/brew/SPK/QPKG）记录于 #620-#624。
+
+- **出口质量窗口胶囊 + 7 天/30 天趋势（#608 后续，2026-10-24）**：质量面板现在回答「随时间怎么样」，而不止「现在怎么样」。窗口胶囊（15分钟 / 1小时 / 6小时 / 24小时）放宽实时矩阵的回看范围——API 本就接受最长 1440 分钟的 `window`（ARM rig 实测 0.57 秒），只是 UI 一直没暴露。矩阵之下的新**趋势**以折线图展示各配置组各视角最近 7 天（小时桶）或 30 天（天桶）的成功率，由 `GET /api/v1/probe-quality/history?days=7|30` 提供：聚合下推到 SQL（每个 目标 × 视角 × 桶 一行——一个月只有几百个桶行而非约 80 万条原始结果），Go 侧按桶回放**完全相同**的判定链（含跨视角 target-down 隔离）；桶内延迟是文档化的近似（成功均值延迟代替 p50）。主组下方的按判定着色色带可一眼扫读。原始拨测结果保持 30 天保留（`retention.probe_results_days`），30 天图从数据实际起点开始；#608 的「无状态表」读时纪律原样保持。测试：服务级 4 个（桶形状、范围/粒度切换、按桶隔离、非 system 排除）+ 页面级 3 个（窗口重取、趋势渲染与范围切换、空态提示）；页面套件 31 个。
+- **拨测选项 + dns 模块（#605，母题 #603）**：拨测目标新增按模块的 `options` JSON 块，存在目标行上、原样下发 vantage agent。http：`method`（GET/HEAD）、`expected_status`（精确状态码集合，留空 = 沿用 <400 判定）、`keyword` + `keyword_mode`（contains / not_contains / regex，正文检查封顶 1 MiB）、`ignore_tls_errors`（默认 false = 校验 TLS，为自签内网站点留的显式豁免）；tcp：连接后即写的 `send` 载荷 + `expect` banner 匹配（`expect_mode`）。同时落地新 `dns` 模块（目标为纯域名；`record` A/AAAA/CNAME/TXT、`resolver` host[:port]（缺省 53，留空 = 系统解析器）、A/AAAA 答案须命中 `expected_ips` 之一）。无选项目标语义逐位不变；不属于该模块的字段在 CRUD 时直接拒绝，而非静默无效。选项刻意全程不设自定义请求头与凭据：它在数据库中是明文，必须保持 agent 命令通道无密钥。演示种子增至四个目标，含一个 dns 示例（`demo-dns`，dns example.com）。
+- **Agent 0.2.0：探测对等 + 能力声明（#604）**：Rust agent 可执行全部五种拨测模块。补齐 tcp 与 dns 执行——tcp 此前是真实 bug（计划照发到 agent，执行却报「unknown module」）；http 现默认**校验 TLS**（行为变更：0.1.x 接受任意证书；`ignore_tls_errors` 是按目标的豁免），与中心姿态对齐；icmp 与 tls 支持主机名（系统解析器）；`cert_trusted` 改为真实的 webpki-roots 校验握手，取代旧的 self_signed 近似；失败的上报批次挂起而非丢弃（100 批有界、旧者先弃队列，1s→8s 四级退避，4xx 终结——上报器的 #554 模式）；各目标首次运行在其首分钟内确定性错峰，新计划不再齐步走。agent 在上报 meta 中声明 `supported_modules` → `agent_status.supported_modules`，中心调度器按声明过滤各 agent 的计划——未声明的旧 agent（≤0.1.x）按 `{icmp, http, tls}` 假定并被扣留 tcp/dns 计划、打一次性升级提示。因此 tcp/dns 的 vantage 目标要求 mibee-agent 0.2.0+。
+- **设备绑定拨测 + 发现即拨测自动生成（#606）**：`probe_targets.device_id` 可选地把目标绑定到已发现资产（`GET /probe-targets?device_id=` 过滤；设备删除时解绑——auto 目标随解绑停用，manual 与 system 目标解绑后继续运行），新的 `probe.autogen` 策略（默认关闭——它会自行写行）从发现的服务自动创建设备绑定的 `source=auto` 目标：http/https 服务生成 http 目标，其余 TCP 服务生成纯端口探测，vantage 优先设备所在网络的 agent（跨 WAN 回程探测量的是隧道而非服务）。生命周期：服务离开扫描即挂起目标（保留历史），回归即复活，手工目标永不触碰，总量受 `max_targets`（默认 100）封顶，15 分钟对账一次。分工口径一次说清并以形态落地：心跳回答设备可达性，拨测回答服务层语义。UI 侧：设备页每服务一键建拨测、绑定目标面板、以及只读的「服务不在最新扫描中」徽章。
+- **`probe.max_concurrency`（#607）**：拨测引擎的并发信号量改为可配置（默认 8——即历史硬编码值；0 = 默认，上限 64）。
+- **网络出口质量（#608）**：`probe.quality` 种入公共拨测点系统矩阵（`source=system`、vantage `all`），从每个视角（中心 + 全部 agent）执行，按网络在滑动窗口上分析（默认 15 分钟，读时聚合、无状态表）。判定链确定——`egress_down > dns_fault > upstream_resolver > degraded > ok`——并做跨视角目标隔离（处处失败的目标归目标侧、从网络判定中剔除；需多于一个上报视角，单视角整体失败仍读作该网络的故障）。诊断语义是结构化的：双公共解析器做 DNS 差分，免 DNS 的直连 IP TCP 腿（223.5.5.5:53）区分「解析坏了」与「出口死了」，204 端点测纯 HTTP 可达，国际组仅作参照——跨境波动是独立信号，不算出口故障。所有取值可配（组、阈值、节奏——无一硬编码）；裸配置默认关闭（normalizer 不强制开启），`configs/config.example.yaml` 以 `enabled: true` 作为推荐值出厂。由 `GET /api/v1/probe-quality?window=` 提供（CapProbeRead）；判定与分数以 `mibee_probe_egress_verdict{vantage,group,verdict}` / `mibee_probe_quality_score{vantage,group}` gauge 经 1 分钟循环导出——只出指标，刻意不做通知联动。重种语义：配置变更刷新 system 行，配置删项连历史删行，UI 删掉的行重启后重种（想彻底删除：从配置移除，或关闭 `probe.quality`），关闭即挂起整个矩阵。
+- **模式第 8 代（#609）**：`probe_targets` 新增 `options`（JSON）、`device_id`（可选设备绑定）、`source`（`manual|auto|system`）与 `dns` 模块 CHECK；`agent_status` 新增 `supported_modules`。「仅首次建库」原则不变——从第 7 代跨过来 = 备份 → 移除旧库 → 全新启动 → 重扫（tcp/dns 计划另需 agent 0.2.0+，见 #604）。
+- **拨测文档漂移修复（#610）**：`docs/{en,zh}/web-ui.md` 的拨测小节自 #277 时代的文案改写起就声称支持 DNS，而 dns 模块并不存在——随 #605 落地，该文本终成事实；所有拨测文档面（features、api、architecture、distributed、configuration、agent-rs、introduction、comparison、product-scope）现在都精确表述模块集为 http/tls/tcp/icmp/dns 及选项/绑定/质量各面；`openapi.yaml` 中漂移的枚举注释已就地修正。
+
+- **自建 opkg feed（#563）**：`make feed-index` 把构建出的 `.ipk` 包（center + agent）变成自包含的 feed 目录——opkg 标准 `Packages`/`Packages.gz` 索引（带 `Filename`/`Size`/`SHA256sum` 字段）——任意静态文件服务即可托管。路由器经 `/etc/opkg/customfeeds.conf` 一次订阅，升级就是普通的 `opkg update && opkg upgrade`（或 LuCI 软件包页）。生成器（`scripts/make_opkg_feed.sh`）从每个 ipk 里挖出 control 元数据（`./` 前缀的 gzip-tar 成员）并兼容 busybox；CI openwrt job 每个 PR 冒烟索引形状。索引条目带每包 SHA256sum，opkg 按取回索引校验下载；索引本身未签名（usign 签名为后续增强）——请部署在你掌控的主机上。rig 实测：路由器订阅内网 feed 后从索引看到 `mibee-steward 0.7.3`，安装状态零变化。
+
+### Changed
+- **拨测页重构为健康优先（2026-10-23，2026-10-24 按 rig 反馈收紧）**：页面现在先回答「现在有没有问题」。顶部总览条领先展示异常目标数（附按模块细分与一键「只看异常」过滤）、每个网络视角的最差出口判定、证书临期计数。目标列表把失败/超时行置顶并加异常底色，失败轨道把错误信息直接印在状态格里（悬停见全文），点击目标名称展开排障行——各视角最新结果、完整错误文本、快捷操作（立即探测 / 历史 / 证书 / 编辑），无需打开历史弹窗；证书列的天数徽章本身即证书链按钮。按模块的总览卡片（建立在单点采样噪声上的成功率，且与分区汇总重复）移除，其唯一有效信号以总览条上的按模块异常细分保留。**第二轮布局迭代（用户反馈：「更友好、默认折叠」）**：出口质量与证书面板上移到总览条与列表之间、折叠为一行标题；三个列表分区默认收起——每个表头带计数、异常红色徽章与「启用/正常/异常」汇总，收起不丢失信号；搜索/过滤命中的分区自动展开、清除后收回。趋势成为质量面板内的子折叠块，查询仅在首次展开时执行。纯展示层变更——无 API、模式或配置改动；页面测试 31 个钉住行为。文档截图经脱敏代理对新布局重拍（probes.webp 与 pb-probes.webp，en/zh），playbooks 演练段落同步改写；web-ui/api 已先行双语更新。
+
+### Fixed
+- **拨测页在 autogen 舰队上的 429 风暴（用户报障 2026-10-24）**：证书徽章在每 10 秒的列表轮询中对每个 tls/http 目标各发一个 `GET /probe-targets/{id}/certificates`——手工管理规模下没问题，但 autogen 舰队（rig 上 50+ 个 http 目标）每轮并发 50+ 请求，打爆全局 600/分钟/IP 限流，浏览器控制台刷满 429。证书由探测引擎**每次运行**采集，现按目标的 `last_run_at` 盖章缓存、仅重取真正跑过的目标——稳态每轮 1-2 个请求；失败也缓存为空等下次运行（限流过的扫描不会重试循环）；冷启动扫描也按 5 个一批限并发。页面测试钉住"每次运行只拉一次"（32 个）。
+- **TestBackfillHostServiceUUIDs 时间炸弹拆除（2026-10-24，#618 遗留）**：#612 回填测试把「较新」设备的 `last_seen` 钉死在硬编码的 `'2026-10-19T00:00:00Z'`，而其「较旧」孪生行按插入时刻（当前时间）播种——测试写下五天后，「较新」就比「较旧」旧了，任何检出都会挂测试套件。现把孪生行显式推到 24 小时前，语义永久成立。未动产品代码。
+- **agent 供数网段的服务身份数据链修通（#612）**：三个互相纠缠的缺陷让 agent 扫描网段长期得不到服务身份数据。(1) 被动发现批次（agent 两次扫描之间的发现扫——agent 重启后还会把整个 LAN 用全空的探测字段重报一遍）进了设备桥，而桥的 UPDATE 无条件覆写 `open_ports`/`detected_services`——一个被动批次就能清空全网段的扫描服务（实测：lan-63 从 33/33 → 0/33）。现在被动批次只断言存活/身份：报文无观测时 store 保留既有服务列（与 brand/model 同款 CASE-keep 纪律），而真正没观测到服务的主动扫描仍会清掉过期服务；首次被被动发现的主机落规范的 `[]` 而非空串保留标记。中心自己的被动发现源获得同款保护。(2) 反熵哈希快路径（`X-Network-State-Hash` 命中 → 跳桥）意味着被清空的行永远无法恢复——清空之后的每个扫描批次哈希都与清空前相同、被永久跳过。快路径现在带治愈骑手：报文携带服务而中心行服务列为空的主机就地补桥（ack 新增 `reconciled` 计数；稳态开销为一次索引 SELECT）。(3) `host_services.device_uuid` 只在写入时解析一次，早于设备行写入的行在从不重跑 RecordServices 的网段上永远空着（全新中心库实测 67/67 全空）——启动 + 每小时的后台巡检按现在持有该 ip 的设备回填（最近可见者优先）。
+- **五个悬空 i18n 键 + 覆盖守卫（用户报告 2026-10-19）**：设备页的错误分支引用了四个在任何语言目录里都不存在的消息键（设备详情页的无效 ID 空状态、CSV 导入预览里的无效 IP 提示、网络列表加载失败角标），TLS 证书行还调用了一个从未存在过的 `certificates.ViewCert` 键（用了可选链，aria-label 静默降级）——全部位于测试没覆盖的错误路径上，所以 CI 一直没抓到。四个缺失键已补进双语目录，证书行改用既有的 `certificates.ViewDetails` 键；新增 vitest 守卫（`i18n-coverage.test.ts`）从此强制三条不变量：en/zh 键集合对齐、英文值不得混入中文、代码中静态引用的每个 `m['…']` 键必须同时存在于两份目录——今后悬空键会在 `npm test` 里失败，而不是等到现场才炸。
+- **HTTP Server 头不再作为设备品牌（宁空勿错，2026-10-17 产品决策）**：“最后兜底品牌” httpServerToBrand 折叠只可能产出黑名单里的 Web 服务器名（nginx/Apache/Caddy/IIS/lighttpd——每一个可能输出都在黑名单内），于是只跑 nginx 网页的无厂商设备在资产台账里显示厂商为“nginx”——一个假的厂商声明（实测 rig 上正好有五行这种数据，含一台厂商显示为“nginx”的 fnOS NAS）。两侧折叠（Go center + Rust agent）现在都不再从 Server 头产生品牌——SSDP 路径早就作了同样的选择，HTTP 路径终于对齐；Server 字符串本身仍在服务/身份证据里可见。store 的垃圾品牌 heal 同步升级：扫描没带真实品牌时也清空存量的黑名单/无字母垃圾品牌（不再等真品牌到达才触发），五行遗留数据下一轮扫描即自愈清空；精心维护的品牌（含用户手工编辑）永不碰。报表里的品牌覆盖率会诚实下降——被清掉的行本就不是真识别。
+- **Web 服务器品牌黑名单改为两栈同读的共享数据层（2026-10-15 日常轮移交项）**：垃圾品牌黑名单（nginx、Apache、MiniDLNA 等——绝不能成为设备品牌的软件名）此前是**两份硬编码数组**，Go orchestrator 一份、Rust agent 折叠层一份，而且已经漂移：Rust 侧缺 `sdk`（fnOS Server 头回归，2026-10-12 实测发现），agent 折出的、center 本会拒绝的品牌在 wire 上畅通无阻。现在单一事实来源为 `configs/fingerprints/web-server-brands.txt`，由新的 `make sync-webserver-brands` 同步进 Go embed（`internal/service/scannerv2/web_server_brands.txt`）和 Rust agent assets；CI 资产 drift 检查在任一副本漂移时报错，两侧测试各自钉住解析出的九项名单（跳注释、小写）。
+- **乱码主机名在所有路径上都有门禁，agent 与本地一视同仁（补完 2026-10-15 乱码移交项）**：center 侧 `plausibleHostname` 门禁 2026-10-16 落地时只盖了四个折叠入口中的两个（hostname 证据与 TLS-CN 兜底），mDNS 和 NetBIOS 折叠仍敞着——Rust agent 更是完全没有门禁，坏掉的 NBNS/mDNS 解码器产出的乱码（实测 rig 上的二进制垃圾主机名行）直接随 wire 进 center。现在**两个栈的每一个写入点**都有门禁：四个折叠入口（hostname 证据、TLS-CN、mDNS、NetBIOS；Rust 语义对齐 Go——合法文本、无控制字符、TL-XDR3040易展版 这类中文营销后缀放行，Rust 额外拒绝有损解码的 U+FFFD 标记），**还有 agent 的被动发现 sweep**（DHCP 租约与 DNS 目击名——实测 rig 上那行乱码正是从这条路径进来的，已活体验证）。center 侧在 agent 报文转换处就把 `Hostname`/`SysName` 挡下，不让它们触及 `devices.name` 或 scan_attributes；再加一个 garbage-name heal，把存量行里的门禁前乱码显示名直接治愈（填空式更新语义下它们本会永远留存；合法名字、含用户手工编辑，永不碰）。
+- **多网段 center：一次扫描跟随任务自己的网络，而不是接线期的单例网络（R68S 零边残留）**：定时扫描任务自带 `network_id`，但 `Run()` 的所有网段相关步骤用的都是启动时从 config `network.name`（空 → "default"）解析出的单例网络——设备归组靠 MAC 主键身份解析侥幸正确，而 ARP 注入、边物化、失联检测、子网记录、本机锚定全部落在什么都沒有的网络里（软路由 rig 上：两个 LAN 扫描都完成、`device_neighbors` 零行）。现在整个收尾链路改用任务网络，并有回环端到端测试钉住。
+- **agent 扫描网段终于有拓扑连线——分布式 rig 上"零边图"的根治（2026-10-16 走查）**：三个断点叠加，使所有 agent 网段的拓扑图没有任何连线。(1) `deriveTopologyEdges` 只在本地扫描的收尾步骤运行，agent 上报的邻居边永远停在 `device_neighbors`、等不来 `topology_edges` 物化——agent 报告落库路径现在在每批应用后立即物化。(2) 无网管交换机的网络里 agent 从不上报任何邻接：agent-rs 0.1.8 在每次扫描后用自己的 `/proc/net/arp` + `/proc/net/route` 推导网关星型（网关择取：默认路由网关位于被扫网段**内**时直接采用 → ARP 表里存在网段首地址（.1）时采用 → 路由器视角兜底，agent 自身即网关，用 ARP 表 device 列定位 LAN 接口、从 sysfs 读自机 MAC 作星心），为每个存活主机附带一条 `ARP` wire neighbor。(3) center 本地 ARP 星在路由器本体上选错星心：默认路由指向 WAN 上游（不在任何被扫网段、也没有设备行），软路由 center 上所有边都解析不到任何设备、该步骤零产出——现在同样按"限定被扫 CIDR + 自机锚定接口兜底"的三级择取。两处修复上线后，rig 图上呈现真实的网关星型（lan-62 与 lan-63 均以桥接路由器为中心）加既有的 route-table 边。
+- **未绑定网络的任务按目标 CIDR 归属网络（R68S 残留第二层）**：上一条任务网络修复假设任务带 `network_id`，但 rig 上数据平移时代创建的任务该列为 NULL——早于按任务绑定网络的功能，只有目标 CIDR 标识归属。这类任务现在会解析出 cidr 包含首个可解析目标的网络（完全相同的 CIDR 或包含它的行），让整个收尾链路即使面对旧任务行也落在正确网络上；回归测试钉住 NULL network_id 形态。
+- **"扫描结果"页在纯 agent center 上不再恒空**：`scan_results` 此前只由本地 Runner 的 persistHost 写入，所有网段都由 agent 扫描的 center（即分布式 rig）一边每轮扫描、仪表盘记录运行，一边"扫描结果"页永远"暂无扫描结果"。现在 scan 来源的 agent 报告会按主机写 `scan_results`，挂到该网段待关闭的 dispatch-run 上（即 `backfillAgentRunStats` 关闭的那个 run），字段形状与本地路径一致；被动涓流与无 run 批次跳过（没有诚实的关联可挂）。
+- **"上次确认存活"不再在持续在线的 agent 设备上冻结**：`last_online_at` 取自 `device_liveness` 序列，但只有状态**翻转**才会采样——lease sweeper 只在离线→在线恢复时写 online 判定，而 center 侧心跳探测又明确跳过 agent 网段，于是连续在线数周的设备详情页停留在上一次翻转（rig 上停在 10 月 7 日），旁边却是几分钟前刚扫到它的记录。`RecordAliveSnapshots` 现在为每个存活主机按报告采样 online 判定，心跳服务内按"每设备每 5 分钟至多一条"节流——序列获得诚实性而不放大写入。
+- **心跳配置不再显示"间隔: 0秒 · 超时: 0秒"**：agent 上报的心跳配置 interval/timeout 为 `0` 时含义是"跟随服务默认值"（探测侧回退 30s/5s），设备详情页却把裸 0 打印了出来。现在 0 渲染为本地化的"默认"（悬停提示：跟随全局心跳设置），编辑表单也用生效默认值预填，而不是打开一个非法的 `min=1` 零值。
+- **"远端"徽标提示不再把普通 agent 网段说成联邦镜像**：所有只读镜像设备（agent 管理或联邦对端）此前一律显示"镜像自联邦对端网段"——对自家 agent 扫描的家庭局域网是错误文案。徽标现改为"该网段由采集器 / 联邦对端管理：本端为只读镜像，编辑需在数据来源侧进行"；拓扑图层筛选 pill 也像其它切换 pill 一样补上 `aria-pressed`。
+
+- **根路径 `GET /health` 返回健康 JSON 而非 SPA HTML（#571）**：按惯例探测 `/health` 的外部监控、容器探针与负载均衡此前拿到的是 SPA fallback 的 `200 + index.html`——API 挂了但 SPA 还在服务的进程会被误报健康。根路径现在返回与 `/api/v1/health` 完全相同的 JSON（注册在 `/metrics` 旁；OpenAPI parity 测试扩展、双语文档注明别名）。
+- **`DELETE /api/v1/users/{id}` 端点补齐（#568）**：UI 行内删除按钮一直在调一个从未实现的端点——每次单用户删除都命中 chi 子路由 404，列表行却还在（此前只有批量端点）。新增 UserService.DeleteUser + handler 沿用批量路径的自删防线、对不存在 id 返回真 404、审计记录 `admin.user.delete`；OpenAPI 声明该操作、Go/TS 客户端再生成、handler 测试钉死成功/404/自删/非法 id 四态。
+- **demo 横幅不再破坏应用外壳布局（#566）**：demo 横幅此前是 `h-screen` 外壳的 flex 子元素（位于侧栏与主区之间），被 stretch 成全高竖列——1280px 下仪表盘被挤到 ~440px、标题竖排，任意宽度中间都有一条拦截指针事件的全高死区。横幅改为 `fixed bottom-0` 底部条、除自身按钮外指针穿透，主区预留条高使滚动内容停靠其上。
+- **modal 关闭不再依赖动画完成（#567）**：Svelte 退场 transition 等待 Web Animations 时钟，而在 document timeline 不推进的宿主（旧平板/kiosk 的嵌入式 WebView、jsdom、部分 Electron——本产品 LAN 监控的真实访问端）里 `onfinish` 永不触发——`open` 已翻转但 backdrop+dialog DOM 永久残留、吞掉其下所有指针事件；X/取消/Escape/保存成功全部"无效"，只能 F5。关闭现在即刻移除 DOM（无退场动画），入场改纯 transform（`in:scale`）：冻结时钟下退化为 0.95 缩放、完全可见可用，而不是把遮罩钉在透明态的 opacity 类 fade。新增组件测试在 onfinish 永不触发的 animate 桩下钉死全部关闭路径。
+- **toast 鲁棒性 + ECharts 卸载竞态（#573）**：相同 type+message 的重复 toast 合并为一行 ×N 计数并重启计时窗，不再堆叠重复行；悬停现在真正暂停自动消退（此前只有 CSS 进度条冻结、store 计时器照跑，读到一半就消失）；toast 移除不再等待退场动画（与 #567 同一冻结时钟病灶——store 已删、DOM 残留）。心跳 tab 首开偶发的 `Cannot read properties of undefined (reading 'off')` 修复：Chart 事件绑定 effect 的清理函数读取响应式 instance 变量，卸载时 onMount 清理先 dispose 并置 undefined——清理改为解绑其绑定时捕获的同一实例。
+- **快速扫描不再在长同步扫描上假失败（#570）**：API client 此前对所有请求硬编码 30s 超时，而 `POST /scanner/scan` 全程占住请求（demo /28 不可路由 IP × 2s 超时实测 36s）——UI 数秒报 "request timeout" 时服务端正常完成，诱导重复提交。client 新增 per-request `timeoutMs`，扫描请求给 5 分钟预算（取消按钮仍即时中止）；假时钟 + 悬挂 fetch 测试钉死默认值与覆盖两条。
+- **i18n / a11y 批量（#569）**：后端错误是英文原文字符串（线上无错误码）且直接裸露在中文 UI——getErrorMessage 现在把用户实际会遇到的串（保留地址段扫描守卫 #317、同密码/弱密码守卫、自删守卫、扫描超时）映射为本地化文案，新增双语 message keys，未知串仍原样透传以保留精确诊断。拓扑链路/节点详情面板关闭按钮改用本地化 aria-label（读屏不再读英文 "close"）。用户页弹窗表单输入框补全 label for/id 关联。登录成功打开强制改密弹窗时清除下层表单残留错误。
+- **Escape 在所有派发形态下关闭弹窗（#582，#567 残留）**：弹窗此前只响应能冒泡到 backdrop 的 keydown（Svelte 委托），合成 KeyboardEvent 默认 `bubbles:false`（自动化/按键注入——#582 的复现路径）到不了任何 handler；焦点在弹窗外时事件也根本不经过 backdrop（应用外壳里恰好有个只补了这半边的 querySelector 点 X 补丁；两个半吊子补丁一并退役）。Modal 打开期间经 document 捕获阶段持有 Escape：捕获看得见任意目标/焦点/是否冒泡的按键；open-modal 栈保证叠层弹窗只有栈顶响应、事件被独占（不会双关/双 onClose），closable=false 的进行中锁保持"请求结束后 Escape 恢复可用"语义。
+- **拓扑边类型图例 + 弱证据分层 + 端口缺失解释（#583）**：图上有七种边线型但图例只解释节点分层——灰色点线 ARP 推断（l3，置信 0.5）读起来和绿色实线 LLDP 接线事实（l2，0.85）一模一样。图例现在列出当前图上实际出现的每种边类型（线型色样 + 协议 + 条数，硬事实在前）；点击 pill 整类开关（与分层 pills 同交互）；弱证据类型（ARP、speaks-with）满可见度下也以 0.4 透明度淡显并带"弱证据"标签；链路面板对裸破折号端口按协议解释——ARP 由网关表推断、speaks-with 无端口概念、LLDP/CDP 邻居未上报、Bridge/STP 需绑 SNMP 凭据——图上最值钱的排障信息有了出路。
+- **拓扑边新鲜度上线 + 幽灵边淡显（#585）**：`topology_edges` 一直记录 last_seen 但 API 丢弃、UI 把每条边画成"现在的连接"——WiFi 客户端断开后琥珀关联永驻（#539 修了数据侧、明确遗留 UI 半边）；设备离线后其边满强度绘制。topology 载荷现在对全部三族边携带 last_seen（邻居派生、speaks-with、物化 route-table；OpenAPI + 客户端再生成），超阈值（通用 10 分钟≈2×扫描周期、WiFi 5 分钟）的边淡显 + 虚线化、任一端点离线同样淡显，tooltip/链路面板显示"最后可见 N 分钟前"+ 疑似陈旧标记；未知年龄永不淡化。
+- **拓扑孤点海洋归组 + 丰富引导（#584）**：默认部署形态下图只有 ARP 星甚至更少（demo 实测：4 条边、15 个孤点=75%）——孤点随机漂浮零信息量，页面也不解释怎么点亮更多。度 0 节点现在默认收进一个虚线群组节点（"未接入拓扑数据（N 台）"），点击开成员列表（逐行链设备详情）；工具栏 pill 展开/收起；missingEnrichmentFamilies 推导零在场边类型族，提示行逐条链到 /settings（hostapd / eBPF 被动观测 / SNMP 凭据）——拓扑页从"展示"升级为"点亮数据源"的入口。
+- **demo 拨测种子只在文档命名空间（#572）**：demo 种子的 tcp 拨测目标此前是 `1.1.1.1:53`——真实 Cloudflare anycast 地址，demo 实例每 60s 对真实基础设施发包，违反 demo 约定（仅 RFC 5737 段 / RFC 2606 域），隔离 demo 环境常驻失败噪音。种子目标改用 TEST-NET-3 与 example.org 域，种子测试按设备 IP 的既有方式钉死该约定。
+
+## [0.7.3] - 2026-10-13
+
+### 新增
+- **agent-rs 覆盖率棘轮（#559）**：Rust workspace 现在有了与 Go 侧同款的覆盖率下限——独立的 `agent-rs-coverage` CI 任务对整个 workspace 跑 `cargo llvm-cov`，行覆盖率低于 `agent-rs/coverage-floor.txt` 钉住的值即失败（取 lcov 的 LF/LH 汇总，与 Go 语句覆盖最接近的口径；按文件汇总记录计算，cargo-llvm-cov 文本表格列序变化破坏不了门禁）。`make coverage-agent-rs{,-gate,-bump}` 与 Go 目标一一对应，floor 只升不降，初始保守值吸收本机与 CI 的测量差异（首跑后按 CI 实测重钉）。本地已对真实测量双向验证门禁（当前 76.6%，初始 floor 73.0）。
+- **联邦二期：镜像新鲜度 + 跨网段桥接（#556、#557——#379 关闭时挂出的两个后续项）**。agent/peer 管理的网段，其数据只随 owning agent 的最近上报而新鲜——2026-10-12 换库期间一台 agent 静默了 19 分钟而 UI 上无迹可查（#554 的现场发现）。networks 列表现在携带 `agent_last_used_at` 与派生的 `agent_stale`（5 分钟窗口，与 Agents 页 Active 口径一致，随请求现算——不落任何状态，恢复全自动）：过期网段把中性的"远端"徽标换成琥珀色"远端 · 过期"（悬停显示最近上报时间）、淡化该网段设备行、在网段筛选旁给出提示，网段管理页对每个 agent 网段显示最近上报。viewer 天然可见——事实挂在普通 /networks 读路径上，不依赖 agent 管理 API。图侧，#526 的多归属在场事实终于有了面孔：同时在多个网段在场的设备（双网卡路由器、桥接两段 LAN 的主机）就是跨网段链接点，拓扑图对这类节点打蓝色描边 + 标签记号并给出计数，节点卡的每条在场记录具名显示所属网段（`名称 · CIDR · 地址` + 上报视角，由服务端水合进拓扑载荷），不再是裸 `#id` 芯片。OpenAPI 与双端生成客户端同步更新。
+- **复审核销：#539 的 P2/P3 清单 21 项全部处置完毕**（修复、文档化或明示接受）：SSDP 描述抓取增加按 USN 的 10 分钟冷却（每轮扫描不再重复 GET 每台 UPnP 设备）、误导性的剩余预算参数删除（抓取在监听窗后自带固定 2s——#506 的实际设计）、传输中断即放弃分类而不是解析截断的 XML、LOCATION 主机落在 loopback/链路本地/未指定/组播段直接拒绝（#317 保险带）。语料：ssdp-description 规则透传 model_number/udn/device_type，friendly_name 走 hostname 通道（0.8，与 NetBIOS 同档），eBPF mDNS 捕获得到按 query 键的 0.5 兜底身份（此前它打不中任何规则），Android opt-55 规则序列收紧为 28,51,58,59（两种已知 AOSP 变体都含）。BPF：opt-55 窗口读失败不再渲染零值、ARP op 3/8（InARP/ATM）不再记为 reply。观测器：被动缓冲 map 上限 1 万 IP（超限减半——按 IP 的上限管不住 IP 数量）、启动失败立即释放已加载的 BPF 对象。RecordNeighborsByMAC 对重复 MAC 行采用与 ResolveDeviceIdentity 相同的（status='online', last_seen）排序。hostapd：空关联列表也更新上一轮集合（离开又回来的 STA 会被再次上报）。snmptrap：企业 OID 子标识符按 BER base-128 解码（此前 PEN 8072 渲染成 .190.56）。发布校验和显式列出四个 center 产物而不是通配。前端：#505 说明里承诺的 WiFi 边样式（琥珀虚线）真实存在了。docs/zh/changelog.md：未发布节的十条与 0.7.1 缺的四条全部补译。注释漂移对齐（事件 v3/v4、opt55 12B/name 32B）；ND 链路项留在 #522、mac_aliases JOIN 的决策随 #472 在查询处文档化。
+- **WS-Discovery 主动探测，这次真的交付了（#507）**：原 PR #519 是空合并（其唯一提交属于 #506 的 SSDP 修复）——复审发现探测从未进入 main 后重开本议题。重交付内容：向 239.255.255.250:3702 发送 WS-Discovery Probe（SOAP-over-UDP，2 个数据报、2 秒有界监听窗），收取 ONVIF 摄像头/编码器等 WS-D 设备的 ProbeMatches——这是被动观测器已经在嗅探的同一协议栈的主动通道。响应按严格源 IP 过滤（一个组播 Probe 会被网段内每台 WS-D 设备应答；不过滤的话 /24 扫描会把身份互相涂抹——与 mDNS/SSDP 同一纪律），解析器拆出 ONVIF 身份：Types、XAddrs、EndpointReference 地址，以及 onvif://www.onvif.org/... scope URI（百分号解码：name/hardware 成为直接语料键，`Front%20Door` → `Front Door`）。语料新增 wsd-onvif-camera 规则（NetworkVideoTransmitter 或 scope 身份 → camera @ 0.85）；agent-rs 增加字节对偶探测（同一数据报、同一窗口、同一过滤，标签文本 XML 提取——零新依赖）。两侧注册表均注册为 `active:wsdiscovery`。真机验证：测试局域网两台 ONVIF 摄像头应答并落成 wsdiscovery 服务行（0.9775 融合置信，inferred_type=camera）。
+- **eBPF 构建卫生：生成受 tag 保护、build-with-ebpf 自包含（#537，复审发现 #512 的缺口）**：bpf2go 的 `go:generate` 指令缺 `-tags WITH_EBPF`，生成的绑定（内嵌完整 eBPF ELF）只带架构约束——任何跑过 generate 的工作树上它们都会无条件编进默认构建，"默认构建零内核产物"的红线一直只靠 .gitignore 卫生撑着。指令现在带上 tag（生成物获得 `&& WITH_EBPF`）；`make build-with-ebpf` 在产物缺失时按需自动生成（fresh clone 不再需要手工第一步；无消费者的 `tc_ingress.o` 预构建从配方中删除）；过期的"运行时需要 ≥5.8"注释更正为实际的 6.6 TCX 门槛；CI optional-tags 任务断言整套契约：指令保留 tag、生成产物永不入库、生成之后默认构建仍然通过（ELF 不泄漏）且 tagged 构建链接加载器。
+- **安全修复：SNMP trap 接收器现在真的校验 v2c community（#534，复审发现 #509 的回归）**：gosnmp 的 TrapListener 从不校验收到的包的 community（其 Params 只影响自己发送的包），接收器开启时任何能向 bind 地址发 UDP 的主机都能落 0.9 置信证据、并向发现漏斗伪造 coldStart/linkUp 目击。接收器现在在节流之前用常数时间比较拦截每个包（伪造包再也不能吃掉真包的 10 秒窗口），丢弃计数进新指标 `mibee_snmp_trap_community_drops`，并给 gosnmp 自带日志接上掩码 slog 适配器（畸形包此前被静默吞掉；适配器掩码引号串使 community 永不进日志）。因错误原因变绿的 e2e（两个 trap 都入库、len==1 靠节流巧合）改为真·先负后正：错 community → 0 行，然后对 community → 恰好 1 行。
+- **修复：PKG_DEPS 现在真的写进路由器包依赖元数据（#535，复审发现 #499 的回归）**：打包脚本读 `PKG_DEPENDS` 而 Makefile、文档与 CHANGELOG 全都写 `PKG_DEPS`——ipk `Depends:` / apk `depend =` 行从不写入，eBPF 变体包能顺利装上缺 `kmod-sched-bpf` 的路由器、直到 observer 挂载时才失败。两侧脚本现在读 `PKG_DEPS`；CI 新增打包冒烟——设置变量重跑 mkipk.sh 并解开 ipk 的 gzip(tar(...)) 双层结构 grep control 中的 Depends 行；依赖矩阵全面更正：center 加载器经 TCX 挂载（内核 ≥ 6.6）不需要 clsact qdisc 也不需要 `tc` 用户态——eBPF 变体推荐依赖现在只有 `+kmod-sched-bpf`（旧的 `+kmod-sched-cls-act +tc` 推荐描述了一个并不存在的经典 TC 回退；更老内核直接降级）。
+- **安全修复：GET /api/v1/subnets 在 ?network_id= 指向未授权网络时不再跳过范围过滤（#536，复审发现 #503 的回归）**：旧过滤只在参数缺省时运行，受限（非管理员、closed 模式）调用者只要点名 id 就能读任意网络的子网 CIDR/网关/VLAN——与拓扑图的拒绝语义、该端点自己的 changelog 声明都矛盾。范围交集现在适用于每条路径：未授权显式 id → 空集，已授权 id → 该网络，缺省参数 → 授权聚合；全局范围不变。新增四腿 scope 测试（漏洞分支此前零覆盖：测试 mini-router 不挂 NetworkScope 中间件——scope 直接注入请求上下文）。
+- **agent-rs：dns_log 尾随读取有界化 + source 串统一（#538，复审发现 #504 的回归）**：每轮 discovery sweep 把整个日志文件读进内存再切新尾——在常见的 `--log-queries` 进 syslog 布局（无界的 /var/log/messages）上是每分钟 O(文件大小) 的分配。sweep 现在 seek 到续读偏移并 read_exact 恰好新增字节区间（Go DNSLogSource Seek 对偶）；轮转/截断语义不变（现有测试原样通过），新测试结构性钉住上界（8 MiB 历史 + 1 行尾 → 读取恰好这行）。证据 source 串统一：center 的 dns_log source 是唯一无前缀的，现在发 `discovery:dns_log`，与兄弟源及 Rust agent 一致——无消费方按旧串过滤。
+- **流遥测：speaks-with 边 + 资产异常事件（#500）**：TC 观测器升级为流量记账——每个 IPv4 TCP/UDP 包更新一张 LRU flow map（`(src,dst,proto,dport) -> bytes/pkts`，容量 `scanner.ebpf.flows.map_entries` 默认 16384），用户态导出器每 `scanner.ebpf.flows.export_interval`（默认 30s）排空一次，并把每批折叠成**仅设备级聚合**（#500 隐私红线：原始按端口流永不离开内存）。受管设备之间的会话成为 `speaks-with` 拓扑边（淡点线，悬停显字节总量）+ 设备详情流量画像面板（`GET /api/v1/devices/{id}/speaks`）；受管设备对首次被观测发出 `speaks_with_new` 变更事件（横向移动告警；外部首见对只进画像——每个 CDN 都是"新"的）。新增监听差分源 `listen_watch.*`（默认关、无需 eBPF/特权）：差分 `/proc/net/tcp{,6}`，新开监听套接字发 `listen_port_added` 事件；两类事件都可在通知规则中端到端选择。Schema v5（跨版本边界需重建库）：新表 `device_speaks_with`、保留期 `device_speaks_days`（默认 30 天）、OpenAPI 与双端生成客户端、双语文档同步更新。
+- **Rust agent：被动 eBPF 观测器，feature 门控（#498）**：center 的 TC 观测器以默认关闭的 `ebpf` cargo feature 进入 agent-rs，每个 agent vantage 都能跑被动漏斗而不需要 center 在机。内核侧程序共享而非重写——新 `crates/mibee-ebpf` 内嵌与 center bpf2go 产物逐字节相同的对象（`go generate` 一条命令刷两份拷贝，漂移测试钉住；一份实机验证过的 verifier 产物、两个加载器）——用户态加载器是 aya（纯 Rust、无 libbpf/BCC、musl 静态完好）。共享 C 程序段名改为规范 `classifier`（两个加载器都认；`tc` 别名仅 cilium 认、aya 解析器直接拒——首次实机加载发现）。路由镜像 center 漏斗：ARP 在网按 IP 首次目击上报被动主机并种入 MAC；签名类（SSH/RTSP/HTTP/WS-Discovery/DHCP/TLS-SNI/mDNS/SSDP）成为 `passive:ebpf:tc` 种子证据随下次扫描上报——既有通道，零协议变更。内核门槛 5.8（aya 在 ≥6.6 走 TCX、更低走经典 clsact/netlink——比 center 仅 TCX 的 6.6 低一档）；root 或 CAP_BPF+CAP_NET_ADMIN；BTF 可选。降级机 1:1 移植：不支持的主机/老内核/缺 caps/加载失败只打一行 warn，主动探测不受影响。默认构建逐字节不变（可选、仅 Linux 的依赖）；`make build-agent-rs-ebpf` 构建两个 musl 架构；CI 每跑 feature 套件 + aya 对象解析守卫。armv7 rig 实机验证（内核 6.18.44，root）：加载/挂接 LAN 口，真实流量全链路（ARP/ND 在网、SSDP/HTTP/RTSP banner、WS-Discovery、双向 DHCP），注入的 Android vendor-class DHCP REQUEST 走完整链条落成 center 设备记录上的 dhcp 服务行；0.0.0.0 发送方被网外门正确丢弃。无特权形态单行降级实测；该 sunxi 内核 ambient-caps 形态会挂死 BPF 加载（已文档化的同族怪癖），该 vantage 以 root 运行。默认构建实测 +3,744 B（+0.08%，配置面 + 自解释 warn），默认依赖图零新增。
+- **可选构建 tag：发布矩阵、doctor 预检、能力文档（#502）**：每次发布按架构附带 `-full` center 变体（WITH_LLDP + WITH_CDP + WITH_ARPSCAN，纯 Go、仍免 CGO；运行时需 CAP_NET_RAW）与默认无特权变体并列，扁平命名 SHA256SUMS.center 覆盖两变体。`make build-full` 本地构建同组 tag；CI 新增 optional-tags 任务每 PR vet/test/link tagged 构建。`mibee-steward doctor` 按源报告状态（lldp/cdp 监听、arp 扫描），与 eBPF 检查同一哲学：warn = 已构建/已配置但环境不给力，skip = 未构建/未启用。新增双语文档页 build-variants.md（tag × 特权 × 内核 × 数据产出全矩阵）。arm64 测试 rig 实测：首轮 ARP 扫描发现 54 台真实主机（史上首次实机）；doctor 实况报告每个状态迁移；帧监听器挂接并收到——该轮暴露的邻居锚点缺口立项 #522。
+- **agent-rs 被动发现对等（#504）**：Go center 源与 Rust agent 之间三个行为缺口关闭。(1) conntrack LAN 端点按 IP 首次出现上报新主机目击（原来只标 known）——解析器补齐 Go 语义：流的 LAN 侧是 CIDR 内的那一端（入向流在 dst=）、LAN↔LAN 流贡献两端、[UNASSURED] 不算存活。(2) mDNS 单播查询（`scanner.mdns.unicast_queries`）：每个查询同时直发目标 5353，触达只答单播不答组播的设备。(3) dns_log 源（`scanner.discovery.dns_log`）：尾随 dnsmasq --log-queries 输出，字节偏移续读/轮转重置/首扫 EOF 跳过；每个查询域名成为扫描种子、每个查询主机只报一次。线协议不变（复用 report_passive / ReportedHost）。Rust 套件：144 测试。
+- **eBPF 观测器的 ARP/IPv6-ND 被动在网（#497）**：TC 程序识别 ARP（任意 op；发送方 IP+MAC）与 IPv6 NS/NA/RS（发送方 IPv6 + 以太网 MAC），发出 `arp_sighting`/`nd_sighting` 事件。它们是线级在网事实而非服务证据：经新的主机目击回调进发现通道（`source=passive:ebpf:arp`），与其余源走同一去重/已知主机/identify 漏斗——继主动扫描与 DHCP 租约之后睡眠设备的第三条捕获路径。节流在 BPF 程序内（LRU map，每发送方每 ~30s 桶一次）：rig 实测 1000 帧免费 ARP 风暴恰好一个事件、零环形缓冲丢弃。DAD 探测（发送方 0.0.0.0）在 BPF 层过滤。ND 目击解码发送方 IPv6 但等 #522 的 MAC 键通道。arm64 rig 实测（内核 6.18.44，root）：真实 LAN ARP 数分钟内纯线缆发现 3 台活主机，4 秒间隔的相同帧对恰好一个发现事件。
+- **SNMP trap 接收器（#509）**：主动说话的设备——linkDown/linkUp/coldStart/authenticationFailure 以 `snmp_trap` 被动证据落在源设备上（gosnmp 监听器、v2c community 校验 + v1；每源每 trap 10s 一行，翻动链路不会灌表），coldStart/linkUp 额外喂发现漏斗。严格 opt-in（`snmp_trap.enabled`，默认关）——bind 失败只打一行日志、绝不阻塞服务。":162" 需要特权（已文档化）；":1162" 无特权运行。Inform 由监听器自动 ACK；绝不发送其他任何内容。v3 trap（对金库的 USM）是设计的后续——目前无 v3 配置键。
+
+### 修复
+- **Rust agent 0.1.7：中心返回 401 不再让上报通道整体静默（#554，2026-10-12 主中心换库实测发现）**。上报器此前把 4xx（除 429）一律当终结态——换库期间约 3 分钟的令牌恢复空窗里，两个 agent 都收到 401，批次被当"已送达"丢弃，其中一个 agent 的上报与扫描双双停摆，直到人工重启才恢复（systemd 全程显示正常）。但 401 并不说明这批数据有问题，只说明中心**此刻**不认识这个令牌——而"换库后原令牌即将恢复"、"令牌轮换"从外面看正是这个样子。现在：401 会把批次压入待重试队列（数据活过空窗；空心跳直接丢弃——它不携带数据），随后每个 5 分钟冷却窗口静默重试一次，令牌恢复后第一个窗口即全部补齐——中心重建后原样恢复令牌的场景，agent 侧零人工干预。对永久吊销的令牌，代价也只是每个窗口一次探测请求。其余 4xx（400/403/409）仍为终结态（Go 语义：这批数据确实不可送达）；`stop_flush` 在两条入队路径上都有界——停机时只重试一轮即止，不再在排不空的队列上无限空转。契约测试钉住整条链：入队 → 冷却期零请求 → 恢复窗口补投（不带 state hash、空窗前的主机存活）→ 冷却清除后立即可投；空心跳 401；400 终结；对持续 401 与中心宕机两种停机均有界。
+
+## [0.7.2]（2026-10-10）
+
+### 修复
+- **固件把 LAN 地址存成 CIDR 形式时，LuCI"打开管理界面"链接不再损坏**（0.7.1 发布数小时后在另一台 iStoreOS 24.10 实机发现：`uci get network.lan.ipaddr` 返回 `192.168.60.1/24`，状态页拼出 `http://192.168.60.1/24:8080`——主机位混入 `/24` 的死链）。LuCI helper 现在在输出 `lan_ip` 前剥掉 `/前缀` 后缀。安装脚本里同一处裸读取有两份：收尾摘要会打印同样畸形的 URL；而且当固件把前缀放在 `ipaddr` 里、没有独立 `netmask` 键时，首次安装的网段推导会静默产出空 `network.cidr`——现在会用前缀为常见路由器前缀（/8、/16、/24–/30）合成点分掩码，生成的配置能拿到正确扫描范围。
+
+## [0.7.1]（2026-10-10）
+
+### 修复
+- **LuCI 被动发现开关不再"报成功但什么都没改"**（v0.7.0 正式包安装验证期间于 iStoreOS 24.10.8 实机发现，#515）：`luci-helper.sh set_source` 只会改写**已存在**的 `KEY:` YAML 块，于是在缺少 `conntrack` / `hostapd` / `dns_log` 块的配置（遗留或手工精简配置）上，路由器的 服务 → MiBee Steward 设置页会闪出"已更新，服务已重启并健康"，配置却纹丝不动——开关静默无效，服务还白白重启一次。现在缺失的块会作为全新的 `KEY:` / `enabled:` 对追加到父级 `discovery:` 块**末尾**（作为 `dhcp_leases` 的兄弟块——而不是紧贴 `discovery:` 头部，头部自身的 `enabled:` 必须保持为其第一个 enabled 形态的行，否则 `read_source(discovery)` 会读到兄弟块的值）；块存在但缺 `enabled:` 行的会补插一行；完全没有 `discovery:` 父块时 helper 响亮报错，页面如实显示失败。另外，自启保存失败此前不显示任何反馈（闪现消息表缺 `enabled_fail` 条目）——现在会报告失败。
+- **eBPF 被动观测器此前从未真正工作过；现在可以加载、挂载并优雅降级。** 三处相互独立的损坏导致没有任何 WITH_EBPF 二进制能跑起观测器：loader 用了 cilium/ebpf v0.22（锁定依赖）已移除的 `link.AttachTC`；不带 `-tags WITH_EBPF` 时 `go generate` 静默产出为空（生成器本身在带 tag 的文件里）；TC 程序自身过不了 verifier——TCP 分支在 8 字节边界检查下读取头部偏移 12 处的 `doff` 位域容器（边界现在覆盖完整 20 字节头；首次真实加载时发现）。观测器现在经 TCX 挂载（内核 ≥6.6），BPF 目标文件免 CO-RE（自包含 `bpf/bpf_standalone.h`：仅 UAPI 类型、静态指针风格 helper），任意主机只需 clang 即可构建——不需要 bpftool、内核 BTF、libbpf 头——且无 BTF 内核也能加载（#492、#493、#494）。
+
+### 新增
+- **WiFi 关联现在产出拓扑边与可见遥测（#505）**：hostapd 发现源早已捕获 STA 关联（信号 dBm / SSID / 连接时长），但数据只进不出、无线客户端在拓扑图上凭空出现。每轮 sweep 现在把按 AP 接口分组的完整关联列表上报给邻居 sink，经 #501 的 MAC 键路径持久化为 AP→STA 边（协议 `WiFi`、本地端口 = wlan 接口、关联存续期间刷新 `last_seen`）。`edgeSemantics` 把 WiFi 映射为独立的 `wireless` 边类型（0.90——来自 AP 本身的硬 L2 事实）。拓扑视图以专属样式绘制 WiFi 边（琥珀虚线，区别于既有五类；OpenAPI 协议枚举与两个生成客户端同步扩展），设备详情 Discovery 页展示 enrich 路径一直在写的 `scan_attributes.wifi` 字段（SSID / 信号 / 连接时长 / 见于时间）。rig 验证还暴露并修复了一个潜伏协议 bug：hostapd ctrl 客户端拨号 unixgram 未绑定名字，而数据报服务端只能 sendto() 到收包地址——ctrl 路径对任何真实 hostapd 都是聋的（只有 iw 回退碰巧能用）；现在绑定抽象地址，由 Linux-only 协议级往返测试钉住。
+- **SSDP 设备描述现在被抓取并分类（#506）**：SSDP LOCATION 指向的 UPnP 文档（friendlyName / manufacturer / modelName / modelNumber / UDN）是 UPnP 设备能给出的最权威结构化自述——此前从未抓取。SSDP 探测现在在 M-SEARCH MX 窗口内抓取目标自己的 LOCATION（监听从 3s 缩到协议正确的 2s，为抓取留预算），解析 device 节点并把身份字段并入 ssdp 证据。新语料规则（`ssdp-description`，model_name 存在即中、置信 0.9 融合至约 0.98）把型号/厂商/描述带进服务身份与设备记录。抓取带 SSRF 守卫：只抓 host 等于目标 IP 的 http(s) location（不跟随重定向、64KB 上限）——实测路由器宣传 docker 网桥地址时被正确拒绝。
+- **eBPF 被动签名：DHCP、TLS SNI、mDNS、SSDP（#496）；DHCP 证据分类（#508）**：观测器从四个签名扩到八个。DHCP（UDP 67/68）解析选项表：消息类型（53）、vendor class（60）、参数请求表（55，逗号连接十进制）——全部读取为标量偏移上的 helper 调用，程序保持零包指针算术。部分内核上 ambient-caps 形态加载有界选项循环会 EFAULT 拒载而 root 正常（6.18.44 sunxi 实测）；观测器按 #493 规则降级、服务继续运行——被咬到就把该 vantage 跑 root。TLS ClientHello 走到 SNI 扩展捕获主机名；mDNS 捕获首个查询名；SSDP 记录存在。事件布局 v2（124 字节）与按类置信：DHCP 自述 0.8（与主动 mDNS/SSDP 种子同权）、SNI 0.7、纯存在 0.6。识别侧（#508）：新语料文件 `configs/fingerprints/dhcp.yaml`（Android/Windows vendor class、标志性 Android 26,28,51,58,59 与 Windows 44,46,47 的 option-55 序列、BusyBox udhcp、存在兜底）+ DhcpHandler 把 inferred_brand/type 带进设备记录——对什么都不答的设备（睡眠 IoT、目击前手机、静态设备）的指纹通道。arm64 rig 实测（内核 6.18.44，root vantage）：注入 DHCP/mDNS/SSDP 帧与真实背景流量以干净字段提取落成被动证据，Android vendor-class 规则纯凭被动证据驱动 dhcp 服务与设备品牌推断。
+- **eBPF 变体路由器包（#499）**：OpenWrt 打包路径接受 `PKG_TAGS`（暂存 center 二进制的可选构建 tag）与 `PKG_DEPS`（运行时依赖进 ipk `Depends:` / apk `depend =` 元数据）。eBPF 变体命令带内核侧调度器钩子依赖；无 libbpf（Go 二进制自带加载器与 CO-RE free 对象），procd root 满足能力要求，双语 OpenWrt 文档新增变体节（桥接物理口挂载要点与 <6.6 降级说明）。路由器实机验证（iStoreOS 24.10 / 6.6 档内核、页面上传通道）排在下一个发版窗口。
+
+- **Web 界面可见运行版本**：侧边栏底部与登录页现在显示部署构建的版本串（`MiBee Steward vX.Y.Z`），数据来自公开的 `/api/v1/health` 端点——每个浏览器会话只取一次（共享 store，首次取空则允许重试），取不到就不显示该行。此前运行版本只能通过 API、`mibee-steward -version` 或路由器安装上的 LuCI 状态页看到（2026-10-10 现场需求，与上一条同一场实机验证中提出）。
+- **观测子网可见（#503）**：`GET /api/v1/subnets` 暴露每次扫描收尾写入的 subnets 表（CIDR、路由表默认网关、VLAN 关联）——数据早已存在但一直没有消费方。可选 `?network_id=` 过滤；非全局权限只能看到被授权的网段；`{subnets, total}` 信封与 VLAN 列表一致。网络页新增只读"观测子网"卡片（CIDR / 网络 / 网关 / VLAN / 最近发现）。OpenAPI 规范、Go client 与 TS 类型已再生成。
+- **裸帧 LLDP/CDP 邻居落库进拓扑（#501）**：`WITH_LLDP`/`WITH_CDP` 裸帧监听器此前丢弃所有采集到的邻接——主机事件路径正常，但 `neighborSink` 被接成 nil，裸帧永远到不了 `device_neighbors`。新增按 MAC 为键的仓储方法（`RecordNeighborsByMAC`）把监听接口的 MAC 解析为本端设备（重复行取最新），并以与扫描/agent 上报邻居完全一致的 `(device_id, neighbor_mac, protocol)` 合并语义 upsert（空端口不会覆盖已记录值、`last_seen` 刷新）。边在网络下一次扫描时经既有 `deriveTopologyEdges` 物化进 `topology_edges`（LLDP→l2/0.85，CDP→l2/0.80）。sink 跑在监听 goroutine 上且只以短事务写 `device_neighbors`，不会与发现协调器的串行设备 upsert 交错。没有 SNMP 管理面的网络现在也能仅凭裸帧贡献真实 L2 边。
+- **eBPF 运行时能力检测与优雅降级（#493）**：观测器在触碰内核前探测内核版本、生效能力（点名缺的是 `CAP_BPF` 还是 `CAP_NET_ADMIN`）与 BTF 存在性，并报告生命周期状态（`active`/`degraded`/`unsupported`/`failed`/`pending`/`disabled`/`not-built`）与可执行的失败原因。红线：任何 eBPF 问题只让观测器静默——绝不崩溃 server、绝不阻塞主动扫描。接口挂载按接口容错（部分挂载 = degraded）；ring-buffer 排空带连续错误熔断，热错误循环转不起来；`interfaces: []` 现在真的会挂载到全部非回环、up 状态的接口（旧代码返回 nil 并启动失败，与自己的文档注释相矛盾）。`mibee-steward doctor` 新增 `ebpf observer` 检查项，主动回答"这台主机上 eBPF 能不能用"——内核版本、BTF、能力，附 systemd drop-in 修复提示（`deploy/mibee-steward-ebpf-dropin.example.conf`）。
+- **已在 arm64 rig（内核 6.18.44）两种权限形态下实测**：root 与 systemd drop-in 形态（非 root 用户 + ambient CAP_BPF/CAP_NET_ADMIN）——观测器挂载成功、报告 active，真实局域网流量（SSH/HTTP banner、ONVIF WS-Discovery 多播）以 `passive:ebpf:tc` 证据行落地（对 4 台主机两轮扫描得 11 条被动行、约 90 条主动行；观测器 RSS 开销对比实例 <1 MB）。rig 还暴露一个 verifier 细节并已在同一 PR 修复：带变偏移包指针算术的加载即使有 ambient CAP_BPF 也会被非 root euid 拒绝（"pointer arithmetic prohibited for !root"，内核 6.18）；程序现在完全经 bpf_skb_load_bytes 读入栈缓冲（零包指针算术、跳过 IP 选项包），在该形态下干净加载。无能力的非特权运行降级为 `unsupported` 并点名缺失能力，扫描不受影响；doctor 两种形态都能报告。
+
+## [0.7.0]（2026-10-10）
+
+### ⚠️ 破坏性变更
+- **Go 分布式采集器（`cmd/agent`）退役并移除；Rust 采集器（`agent-rs/`）成为唯一采集器。** 完整实测对比——二进制小 4.2 倍、同板中位 RSS 低 4.5 倍（54.1 MB → 11.9 MB）、/24 扫描快约 1.7 倍、全量语料对拍实现分类器逐字节一致、对真实 net-snmp 的线上差分——见 `docs/{en,zh}/agent-rs.md`。随 `cmd/agent` 一并移除的还有：`internal/agent` 库（唯一使用方）、`make build-agent` / `build-agent-linux-*` 目标、OpenWrt 采集器路由器包（`.ipk`/`.apk`/tarball 及 Go 采集器 init）、Go 采集器发布制品。存量 `agent.yaml` 无需修改即可用于 Rust 采集器（同键）；Go 采集器的本地 `agent.db` 不随迁（它只是影子/台账——中心的资产台账才是记录源，首次扫描即回填）。Rust 采集器路由器打包（`.ipk`/`.apk`）为已登记后续项；tarball + procd init（`agent-rs/deploy/openwrt/mibee-agent.init`）是文档化安装路径。
+
+- **不再迁移旧版数据库。** v0.7 移除整个启动迁移链：`db/schema.sql` 成为唯一 DDL 来源，仅在数据库首次创建时应用；schema 版本与本构建不符的数据库在启动时直接拒绝，并提示重建。从旧版升级到 v0.7 需备份数据目录后使用全新数据库（设备会在下次扫描时重新登记）。此举根除双 DDL 来源这一缺陷类别（#328、#431、#437）。agent 本地 mini-DB 同策略，本地扫描历史与本地 SNMPv3 凭据库不随迁。
+
+### 新增
+- **Rust 采集器路由器包**（`make package-openwrt-agent-rs{,-ipk,-apk}`）：采集器提供与中心相同的 OpenWrt/iStoreOS 三种安装形态——tar 包（实测过的 `agent-install.sh` 流程，已适配 Rust）、`.ipk`（opkg）、`.apk`（24.10+ apk）。staging 规则默认经 cargo-zigbuild 构建 musl 二进制，`AGENT_BIN` 指向预制二进制时直接复用（发版流水线即如此）；`preinst` 保留 uname 闸门 + `-version` 冒烟，`postinst` 跑同一套首装配置生成（uci 推导 LAN、center 凭据留占位且服务在填好前不启动——升级保留配置）。发版 tag 将 `mibee-agent-openwrt-arm64-*.tar.gz` / `mibee-agent_*_arm64.ipk` / `.apk` 与二进制一同挂出。
+- **Rust 采集器进入发布制品与 CI 测试门禁**：打 `v*` tag 发版时，采集器的静态 musl 二进制（amd64 / arm64 / armv7，约 4.8MB，经 `MIBEE_AGENT_VERSION` 以 tag 注入版本串）与中心二进制一同构建，以 `mibee-agent-linux-*` 挂上 GitHub Release。CI 新增 `agent-rs` 任务在每个 PR 上跑 cargo 全量测试——此前这 172 个测试只在开发机上运行，任务上线当天就抓到一个在语料批次中静默断裂的规则计数断言（现已改为容忍增长的 Floor）。
+- **用户手册 + 采集器实现报告**：`docs/{en,zh}/user-guide.md` 是 Web 界面的完整导览（每个页面、一段话说清身份规则、故障速查表）；`docs/{en,zh}/agent-rs.md` 是支撑退役决策的 Go vs Rust 采集器工程对比，每个数字都标注了测量来源。
+
+- **网页端指纹语料管理（设置 → 指纹）**：管理 UI 现在可以上传语料（tar.gz/zip 封套，或单个 `.yaml` 只替换该文件）、回滚到上一版、检查在线上游的更新（版本 + 新增/移除规则 diff）并一键应用——每条路径在激活前都经规则引擎自己的加载器校验（坏语料带引擎错误被拒收，在用语料继续运行），激活无需重启中心即热重载引擎，并推进分发版本号让开启同步的 agent 自动收敛，每次变更均记审计日志。舰队视图显示每个 agent 正在运行的语料版本（agent 舰队元数据新增 `fingerprint_rev`；schema v4 新增 `agent_status.fingerprint_rev` 列）。新增能力 `fingerprint:manage`；托管语料位于数据库目录下（`scanner.fingerprint_managed_dir` 可覆盖）；`scanner.fingerprint_upstream.url` 让在线更新检查对准一个 `{corpus_version, tarball, sha256?}` JSON 清单。
+- **指纹语料分发通道（`GET /api/v1/agents/fingerprints`）**：agent 现在无需触碰任何二进制或包即可让指纹语料与中心保持同步。中心将其活跃语料（配置了 `scanner.fingerprint_path` 目录时用该目录——在那里编辑/投放 YAML，舰队下次轮询即拾取，中心无需重启——否则用内嵌语料，因此每次中心升级都会自行传播到全网）以经版本协商的确定性 tar.gz 提供；agent 经 `center.fingerprint_sync.enabled` 选择加入（默认关闭），换用前先用规则引擎自己的加载器校验每个封套（坏语料永远不会顶掉正在工作的语料），激活采用限速重载（5 分钟窗口；连续变更合并为一次），加载优先级为 `scanner.fingerprint_path` → 同步目录 → 内嵌。这与下文的 `mibee-fingerprints-go` v0.1.1 一起补全了免重编译的指纹更新故事。
+- **指纹规则惰性编译（依赖：`mibee-fingerprints-go` v0.1.0 → v0.1.1）**：正则规则现在由可证明必需的字面量门控、按需编译，并共享一个 LRU 缓存——行为一致性由全量语料的“门控 vs 非门控”等价测试钉住。在 armv7 测试 agent 上实测：语料加载的活跃堆从约 50 MB 降至约 4 MB（启动时零正则编译），真实扫描后的稳态 RSS 从约 110 MB 降至 45–55 MB。同时移除了加载期对 `regex_capture` 匹配模式的旧双重编译。
+- **型号识别管道（主机名→型号）**：iot-identity 米家主机名规则现在通过语料的 `regex_capture` 提取型号词元（`viomi-waterheater-e13_miap5E55` 中的 `e13`），完整管道把它送进 `scan_attributes.inferred_model`、`devices.model` 列（只填空槽，绝不覆盖用户手工值或 SNMP 得到的型号）、agent 上报线格式（`inferred_model`）与实时扫描 API 响应。经 10 个真实主机名实地验证；一次重扫后型号列从 0% 覆盖升到每个米家主机都带型号词元。
+- **指纹语料刷新（recog + IANA PEN + OUI）**：`recog-imported.yaml` 从上游 Rapid7 Recog 重新生成（2534 → 2547 条，净 +13 并刷新匹配）；`snmp-data.yaml` 选择性导入 16 条经核实的 IANA PEN 企业 OID（Fortinet、Reolink、Uniview、Epson/Canon/Brother 打印机，Dahua/QNAP/TP-Link/Huawei/Aruba/Axis 的第二/续期 PEN）；精选 OUI 表新增小米生态模块 OUI（13 个前缀）、常见 Espressif ESP32 段（12 个）、NVIDIA Jetson 板载网卡（2 个），以及第二批经实地发现并逐条对照 IEEE 注册表（经 TShark manuf 生成核验）的 22 个厂商前缀（Synology、QNAP、Seiko Epson、Vatilon、D-Link、TP-Link、水星、GL.iNet、华硕、合肥Bitland、华来、另四个小米/Lumi-United 段、另五个 Espressif 段）——此前表里没有任何小米条目。会误导品牌的模组硅片厂商（Intel、AMPAK、Fn-Link）与注册表快照中不存在的前缀被有意排除。
+- **音箱 / 联名 / 开发板主机名指纹**：`iot-identity.yaml` 新增规则从小米智能音箱主机名提取型号代码（`MiAiSoundbox-LX06` → 型号 `LX06`、`XiaoAiTongXueX6A` → `X6A`）、为飞利浦联名米家设备定品牌（`philips-light-sread9_mibtXXXX` → 品牌 Philips + 型号；原通用后缀规则只提取到型号）、从树莓派主机名提取板型（`rpi3b-*` → `3b`、`rpi400` → `400`），并为 `redmi-*` / `jetson-*` 开发机主机名定品牌。`http-tls.yaml` 的证书主题 CN 关键词映射新增 `miwifi` → 小米（小米路由器原厂固件用 `MIWIFI *` CN 签名）。
+- **ESP32/MiBeeCam 主机名指纹**：`iot-identity.yaml` 新增规则为 ESP32 开发板（`esp32c3-*`、`espressif.*`）与 MiBeeCam AI-Thinker 模组按 DHCP 主机名定品牌。
+- **多台随机 MAC 持有者的停放不再失败**：随机 MAC 守卫通过把槽位持有者的 IP 清空为 `''` 来停放——但 `(ip_address, network_id)` 唯一索引下每个网络只允许一个空 IP 行，同网络的第二次及以后的停放撞约束，停放失败后随机客户端在争议 IP 的建行也失败，且每轮扫描重试（实地四个持有者 ≈340 WARN/天）。现在每台持有者停放到按行的 `#park:<id>` 哨兵——构造上唯一、不匹配任何按 IP 的查询、按 MAC 重解析语义不变。
+- **孤儿心跳配置回收**：主库不开 SQLite `foreign_keys`，`heartbeat_configs` 的 ON DELETE CASCADE 从不生效——删除设备行（静默设备清扫、reconcile ghost 清理）后心跳配置残留，仍启用的配置对一个已消失的 IP 永久探测（实地两个孤儿贡献了上述 ~2300 ERROR/天的大头）。保留维护清扫现在回收 `device_id` 已无主的可配置，分批执行。
+- **HTTP/ICMP 探测失败全面接入 #271 连败分级日志**：周期探测降噪器（首败 WARN、后续采样 DEBUG）此前只接了 http 建请求与 icmp 运行分支——http 的 `client.Do` 失败与 icmp 的 `NewPinger` 失败两处仍直打 `slog.Error`。实地一台 center 有五个半死 IoT http 服务，恰恰经由这两条分支刷出 **~2300 ERROR/天**；两处均已改走 `logProbeFailure`。
+- **乱码主机名不再进入设备记录（2026-10-15 实地批次）**：探针名字解码器（NBNS/mDNS）对不规范应答可能产出乱码，实地一台设备展示了二进制垃圾主机名（无效 UTF-8 + 控制字符）并泄入 scan_attributes。主机事实折叠的两个主机名入口（rDNS/NBNS/mDNS 证据与 TLS-CN 回退）现在都过 `plausibleHostname` 闸门——合法非 ASCII 名（CJK 营销后缀）照常通过。
+- **Recog 语料刷新（2548 → 2550）**：上游在 2026-10-10 导入后新增两条 SNMP sysDescr 指纹。经 `fpimport recog` 重导；零删除。
+- **停放的随机 MAC 持有者不再被 reconcile 计为漂移**：随机 MAC 守卫把槽位持有者停放到 `#park:<id>` 哨兵 IP——不是空串——网络 reconcile 的 mismatch 扫描因此每轮都把停放行标记为网外漂移（实地一台 rig 每天刷 ~7 次 WARN，样本 IP 全是停放行）。扫描现在像排除空串一样排除哨兵：停放行根本不持有 IP 主张。
+- **GL.iNet 路由器主机名点亮随机 MAC 设备（2026-10-13 实地批次）**：GL.iNet 固件默认设备名为 `GL-MT<型号>`（`GL-MT2500` = Opal）——随机 MAC 的设备没有 OUI 可用，主机名是唯一厂商信号。新规则 `iot-host-glinet-mt` 提取品牌 GL.iNet + MT 型号词元。
+- **`SDK` 加入网页服务垃圾品牌黑名单（2026-10-12 实地批次）**：fnOS（及其他 NAS/网页 SDK 前端）发送字面 `Server: SDK` 头——一台 fnOS 盒子的品牌在两轮扫描间退化成 "SDK"，与当年 nginx/Portable 的路径一模一样。折叠守卫跳过它、垃圾品牌治愈可清除它，与既有条目同族。
+- **TP-Link TL-XDR 路由器型号提取（2026-10-11 实地批次）**：TP-Link 国行路由器自命名 `TL-XDR<型号><营销后缀>`（`TL-XDR3040易展版`——后缀为 CJK 且随 SKU 变化）。品牌已由 OUI 给出；新规则 `iot-host-tplink-xdr` 提取 XDR 型号词元并容忍 CJK 尾部（顺手关闭挂了很久的 "TL-XDR3040易展版 当作 brand" 归一化观察项：营销尾词不再进入身份）。
+- **Recog 语料刷新（2547 → 2548）**：上游 Rapid7 Recog 的 xml 路径解冻（六个提交，2026-08-17 以来首次）——净效果为一条新 http title 指纹（Sangoma Switchvox）。经 `fpimport recog` 重导；零删除。
+- **Seeed Studio XIAO ESP32 主机名规则（2026-10-08 实地批次）**：Seeed 的 XIAO 固件默认 DHCP 名为 `Seeed-<模组>`（实地样本 `Seeed-esp32c6`）——既有 ESP32 规则锚定 `esp32…`/`espressif…`，看不到厂商前缀。新规则 `iot-host-seeed-esp32` 品牌 Seeed Studio、模组作型号（共享 esp32-host 组内优先级 116 赢平局）。
+- **中继器主机名判 iot（2026-10-07 实地批次）**：小米 WiFi 中继器公告 `XiaoMiRepeater_V2`——hostname 规则已提取出完整 miot 身份（品牌 Xiaomi、型号 V2），但 `device_types.yaml` 没有中继器关键词，设备拿着完整身份却被判 "other"。`repeater` 加入 iot 主机名关键词（各厂商的 WiFi 放大器名字都带它）。
+- **TLS 证书 CN 进入主机名规则（2026-10-06 实地批次）**：路由器把型号签进证书 CN（`R68S`），orchestrator 的主机事实折叠早已把 CN 作为 node_hostname 回退——但折叠在分类之后，语料的 hostname 规则（kind `hostname`）从未见过它，设备在规则完全匹配的情况下没有型号。TLS 探针现在在叶证书 CN 是单个 DNS 标签（无点/空格/通配符；回退信任级 0.7，低于 rDNS/NBNS 的 0.8）时同步产出一条 hostname 类证据，与 NBNS 修复构成完整的证据通道家族。
+- **NetBIOS 主机名进入规则引擎 + 路由器型号规则（2026-10-05 实地批次）**：NAS 系统盒子（fnOS/Samba）只通过 NBNS 公告主机名，而探针把它发成 `kind: netbios` 证据——语料的 `kind: hostname` 规则永远够不着，设备在名字完全匹配规则的情况下始终无品牌。NBNS 探针现在同时产出一条 hostname 类证据（信任级与 rDNS 相同）；语料新增 `iot-host-r68s`（`R68S` DHCP 名 → 型号 R68S——路由器自己的名字就是硬件型号，SSDP 已自报 FastRhino）。
+- **开发板 / NAS / 网关主机名指纹（2026-10-04 实地批次）**：`iot-identity.yaml` 新增香橙派开发板（`orangepi-zero3` → 品牌 Orange Pi + 板型代码作型号）、FriendlyElec NanoPi 开发板（`nanopineo` → 型号 neo；改跑 NAS 系统的 `R4S-FNOS` 保留板子身份 → 品牌 FriendlyElec、型号 NanoPi R4S——硬件身份不因后装系统改变）、极空间 NAS（`Z4S-2PSE` → 型号 Z4S，SKU 后缀多变）、米家智能网关 V2（`Mijia_Hub_V2-<hex4>` → 型号 Hub V2，注意下划线分隔）的主机名规则。`device_types.yaml` 新增 `mijia_` 关键词（下划线拼写的米家主机名此前漏过 `mijia-` 规则被判 "other"），精选 OUI 表新增三个经 IEEE 核验的 Espressif 前缀（DC:06:75、14:C1:9F、54:32:04）。
+- **主机身份语料：域名容忍匹配 + 六个厂商家族**：手机/平板/电视主机名规则现在接受可选的尾部 DNS 域名（即 2026-09-30 的惰性分段习语），`iot-identity.yaml` 新增华为零售码手机主机名（`…-AL00U` → 品牌 + 码作型号）、小米出厂日期码手机主机名（7 位数字 + 字母，只定品牌——该码映射不到稳定的公开型号名）、小米中继器（`xiaomi-repeater-v2_miio<序列号>`，序列号不进型号）、MacBook（`MacBookPro.<域名>` → 品牌 Apple，无型号——macOS 不公告型号数字）、香蕉派开发板（`bananapim5` → 型号 m5）、以及 ESP32 主机名的芯片变体型号（`esp32c6-<后缀>` → 型号 esp32c6，MAC 派生后缀排除）的规则。`device_types.yaml` 新增 `-pad`/`ipad` 手机关键词（此前平板主机名被判 "other"）与域名边界的 `pc.` 关键词。
+
+### 修复
+
+- **e2e 冒烟套件恢复全绿**（自两个行为变更落地以来一直失败）：#353 强制改密闸门把首启登录后的每个已认证调用都 403（冒烟现在先改密码再重新登录）；#317 保留网段守卫拒绝了冒烟自己的环回扫描（`127.0.0.1`——临时冒烟实例现在设置文档记载的 `scanner.allow_reserved_targets` 逃生开关）。已在 Linux 上完整验证 13/13。
+- **上游"检查更新"端点不再泄漏 staging 目录**：`GET /api/v1/fingerprints/upstream` 会把上游语料拉取并校验到数据根目录下的 `fp-upstream-*` 临时目录，但成功后直接丢弃路径——每点一次检查就留一个目录（实地发现：一次配置会话后残留四个）。现在 diff 计算完即删除 staging 副本；apply 路径原本就有清理。
+- **无信号的 "other" 类型不再冒充 protocol 结论**：缺省 source 的默认逻辑把 agent 上报的回退类型 "other"（agent 侧桥接器没找到任何类型信号）盖成 `inferred_type_source: "protocol"`，类型黏滞随后拒绝一切后续启发式升级——遗留的 "other" 行即使等到了配套的主机名关键词也永远无法自愈（实地：米家网关主机名在 `mijia_` 关键词上线后仍是 other）。现在该默认只作用于真正的 handler 结论；黏滞对 "other" 行也豁免（即使旧行带着错误标记的 source），存量行下次扫描即自愈；真正的 protocol 类型保持防抖保护（守护测试钉住）。
+- **port-0 服务身份不再破坏重扫持久化**：RecordServices 的范围 DELETE 只按 >0 的端口圈定，主机名推导的 miot 行（端口 0）被排除——重扫要么整体空转（纯 port-0 上报让 IN 列表为空直接返回），要么重插同一行撞 UNIQUE(ip, service, port)，在网络开始按计划重扫后每台每扫一条告警（在路由器 agent 网段首次启用周期扫描当天实地发现）。现在上报带 portless 身份时，端口 0 一并纳入删除范围。
+- **带域名的主机名从未命中手机/平板/电视规则**：那四条 2026-10-01 的正则以 `$` 结尾锚定，rDNS/mDNS 实际产出的名字（`…-pad-6.<域名>`）过不了锚点，实地一台平板在规则存在的情况下依然无标识；四条规则现在都容忍尾部点分域名（实地发现，脱敏样本已钉入测试）。
+- **agent 上报的主机丢失 SSH banner 操作系统**：agent 线格式没有顶层 OS 字段，`hostToReported` 丢掉了 banner 推导的 `os_type`（`OpenSSH_for_Windows_9.5` → Windows），agent 扫描的主机落到端口形态分型（实地：一台 Windows 机器被 smb:445 判成 nas）。`ReportedHostToReport` 现在从 ssh 服务 metadata 恢复 OS，agent 上报主机的 `os_rules` 分型与 `scan_attributes.os` 恢复工作。
+- **当 AirPlay 接收器的 MacBook 被判成 iot**：macOS 可以公告 `_airplay._tcp`，mDNS 协议裁决（"iot"）压过了所有主机名信号；协议来源的 iot 裁决现在让位于强 PC 主机名信号（与端口来源的 camera 例外同构，指纹/SNMP 裁决仍然权威不受影响）。
+- **主机名型号提取不再抓走 DNS TLD**：米家型号提取正则使用贪婪 `(?:.*[-_.])?` 前缀加 `$` 锚，带 DNS 后缀的主机名（Tailscale `.ts.net` 名、mDNS `.local` 名）让贪婪段跨越了点，捕获组拿到的是顶级标签——实地一台 Aqara 网关主机名产出 `inferred_model="net"` 并写入 `devices.model`。全部 11 条规则改用分段不能包含分隔符或点的惰性习语（`(?:[^-_.]*[-_])*?`），并加显式尾域名组（`(?:\.[0-9a-z-]+)*$`）；完整实地样本集（裸主机名、`_miap`/`_mibt` 后缀、带域名）已钉入测试。
+- **换板后新 MAC 不再丢弃整份上报**：设备 MAC 首次出现而 IP 槽位已被占用（换板，或繁忙槽位上的新 DHCP 身份）时，身份解析返回 IsNew，INSERT 撞上 `(ip_address, network_id)` 唯一索引，agent 对该主机的整份上报丢失（实地表现为上报摄取反复 `UNIQUE constraint failed`）。解析现在返回 TakeOver 裁决（槽位持有者对自己的槽位是权威）：apply 路径强制覆盖持有者 MAC 同时保留身份列的填空语义，与库内已有的漫游/替换语义一致。
+- **历史垃圾品牌在下次重扫时自愈**：身份 UPDATE 是填空式，fold 期垃圾守卫出现之前写入的 Web 服务器软件名（`nginx`、`Apache`、`Caddy`、`MiniDLNA`、`Portable`…）或无字母值（`"0,1,2"` mDNS 能力位）会永远留在品牌字段（实地：NAS 卡在品牌 `Apache` 而 OUI 明明是 QNAP）。现在扫描带有真实品牌时，恰好这两类垃圾会被纠正覆盖；精选的非垃圾品牌（含用户手工值）永不被覆盖。
+- **agent 并发扫描下反复 `database is locked (517)`**：agent 的先读后写 enrich 事务跑在 DEFERRED SQLite 事务里；并发扫描写者在读与写之间提交时，写锁升级立即以 SQLITE_BUSY_SNAPSHOT（517）失败——`busy_timeout` 无法重试的一类——每个扫描周期都以 `enrich device failed` 现身。新的 `dbopen.OpenTxLock` 追加 modernc 的 `_txlock=immediate` DSN 参数，agent 事务在 BEGIN 就拿写锁（干扰写者排队等 `busy_timeout`）；延迟失败模式与立即修复都钉进了并发测试。
+- **多宿主主机在网卡切换时不再弹跳身份（#472，存储语义）**：以太网 + WiFi 在同一 IP 上轮换的主机过去每份上报都走接管/替换路径——强制覆盖槽位 MAC、品牌乒乓、每轮把自己的另一网卡行标记下线（实地：一块开发板约每 15 分钟切换一次网卡）。强制覆盖前，槽位此前的 MAC 现在记录进 `scan_attributes.mac_aliases`，MAC 是槽位持有者已记录别名的那份上报按普通更新解析（仅刷新状态）。别名行的 UI 侧聚合留作后续。
+- **同一 MAC 持有两个活 IP 不再让设备行乒乓（多宿主稳定性）**：双网卡绑定的机器、或带一条陈旧 + 一条现行 DHCP 租约的设备，会在同一份上报里以同一 MAC 报两个 IP，而 MAC 优先的身份解析把每个孪生 IP 都读成"漫游到空闲 IP"——每轮搬迁设备行，使其在两个 IP 间以满扫描节拍翻转（实地：每设备每小时 3–4 条 `change_log` IP 搬迁，rig 上两台设备同时中招）。上报摄取现在先按 MAC 建批索引，把该 MAC 持有的其他 IP 告知 bridge；当批次本身证明行的当前 IP 仍然存活时，漫游降级为原地更新，被扫 IP 记入 `scan_attributes.extras.ip_aliases`（去重、上限 8 条、值不变不回写——不触发变更检测抖动）。真漫游（孪生 IP 不在上报中）仍照常搬迁。"一 MAC 多 IP 仍一行"的教义不变：别名仅作信息展示。
+- **enrich 不再把外来 MAC 盖到已占用槽位上**：RecordDevice/enrich 路径曾把上报 MAC 无条件填进按 IP 匹配的行；现在只在该行 MAC 为空时填充（文档的"新解析"契约），MAC 迁移专属身份机制。动机是 2026-10-01 观察到的同 MAC 影子行（数小时内自我下线、被 7 天清扫剪除）。
+- **agent 扛得住保留清扫的 VACUUM**：`busy_timeout` 从 5 秒提到 15 秒，约 11 秒的 VACUUM 窗口（约 44 MB 本地库上的 6 小时清扫）不再让调度器的陈旧运行清理一天两次记录 `SQLITE_BUSY`。
+- **SSH banner 版本不再携带二进制密钥交换字节**：SSH 服务器把问候与二进制 KEX_INIT 放在同一个 TCP 段里；banner 探测读到换行即止但返回了整个缓冲区，于是 dropbear 路由器的 SSH "版本"成了 `dropbear\r\n\x00\x00…curve25519-sha256…`。banner 现在截到第一个换行。
+- **Web/媒体服务器软件不再冒充设备品牌**：编排器的 HTTP-Server 证据 fold 跑在 handler 增补之前，nginx 前置的小米网关被定品牌 "nginx"；SSDP 的产品词元把 NAS 定成 "MiniDLNA"、fnOS 主机定成 "Portable"。软件名拒绝清单扩充（nginx/Apache/Caddy/lighttpd/IIS + MiniDLNA/ReadyMedia/Portable），miot 生态品牌现在覆盖 Web 服务器品牌（与 TLS fold 同规），SSDP 产品提取彻底跳过软件名。
+- **mDNS TXT 标志列表不再变成品牌**：AirPlay 接收器发布 `txt.md="0,1,2"`（能力位）曾被原样当作设备品牌；完全无字母的值现在在品牌 fold 里被拒绝。
+- **9100 端口不再把 node_exporter 主机判成"打印机"**：JetDirect 回退规则对任何开放的 9100 触发，而 node_exporter 用同一端口（实地：一台 GL.iNet 路由器被判 "printer"）。端口规则新增 `exclude_services` 否决（仅当被排除服务在该端口已被分类时触发，无 banner 的真打印机不受影响），路由器主机名关键词新增 `gl-inet`。
+- **agent 本地 mini-DB 不再无限增长或保留死影子设备**：agent 此前没有保留清扫（实地测试：一周 95 MB，七个被中心早已丢弃的静默无 MAC 影子行）。现在 6 小时一次的清扫剪除静默设备（24h 无 MAC、7d 有 MAC，镜像中心保留语义，MAC 取自 `mac_address` 或 `scan_attributes.mac`）、老化 `scan_results`（72h——实测每天约 1 万行已摄取证据，此前的 14 天窗口意味着小闪存盒上约 180 MB 稳态文件）与 `scan_task_runs`（30d），并在实质剪除后 `VACUUM`（SQLite 的 DELETE 从不收缩文件；实地：116.8 → 41.7 MB 一次完成）。
+
+### 安全
+
+- **示例/测试网段的向前脱敏**：全部受跟踪文件把示例/测试网段迁移到文档网段 192.168.2.x/1.x（与截图脱敏代理同一映射），个人设备名泛化。历史提交不可变；自本变更起，全新克隆不含任何可关联部署网段的标识。代理运行时仍显式接收真实上游。
+
+## [0.6.0] - 2026-09-20
+
+**路由器原生版本：OpenWrt/iStoreOS 成为一等部署形态、被动发现驱动的指纹识别、wire-truth API 契约。** v0.6.0 从三个方向补完分布式 agent 故事。**形态**：OpenWrt 一键安装包（tarball/.ipk/.apk）+ LuCI 状态/设置页、Tier-1 被动发现默认开启、管理员首启设置全程在浏览器完成（无需 SSH、不打印临时密码）、可配置的密码策略与登录锁定。**识别**：被动观察（DHCP 租约、旁听的 mDNS/SSDP 公告）现在会喂给指纹分类器，包括为 12+ 个"除此之外一问三不知"的设备家族提供品牌识别的米家生态主机名语料，双宿路由器上的发现目击也能归属到正确的网络。**契约与耐久性**：REST API 收敛到统一分页包裹，OpenAPI spec 同时生成 TS 与 Go 两个客户端（CI 漂移检查）；agent 把 SNMPv3 凭据保存在自己的本地库、命令通道只传名称；租约/清扫模型在设备漫游与孤儿行下不再产生弹跳循环；CI 覆盖率棘轮锁定 85% 覆盖的代码库，其背后的战役揪出并修复了四个真实缺陷（心跳停机丢数据、从未生效的身份唯一索引、遗留升级丢列、SNMP 索引解析失效）。一轮 GUI 黑盒测试加固了 SPA 的登录与设备详情面。
+
+### 新增
+
+- **发布产物现包含 OpenWrt AGENT 包（#449）**：路由器形态 B（agent 在路由器上、向远端中心上报）现以与中心相同的三种安装形态发布，tarball（`scp` + `./agent-install.sh`）、`.ipk`（opkg）与 `.apk`（OpenWrt 24.10+），经 `make package-openwrt-agent{,-ipk,-apk}` 构建。安装器从 uci 派生 `network.name/cidr`、保持路由器 Tier-1 被动源开启，并处理好它唯一无法自己发明的东西，中心地址与 agent token：要么命令行内联（`--center-url`/`--token`），要么生成占位配置并保持服务**不启动**直到运维填好（收尾摘要打印确切步骤）。mkipk/mkapk 增加 `center|agent` kind 参数（包名、描述、生命周期接线）。已在 R68S/iStoreOS 的 opkg 上端到端实地验证：安装 → 占位分支 → 填凭据 → 启动 → `report accepted` → 中心 agent 状态实时可见 → 卸载。实地验证还在发布前抓住一个真生成器缺陷：空凭据回退把引号包了两层（`url: """"` → YAML 崩溃循环）；生成器的健全性守卫改为整行匹配，整类缺陷一并拒收。
+- **Agent 侧 SNMPv3 凭据库（#401，关闭 #241）**：agent 把 SNMPv3 USM 凭据保存在**自己本地**的加密库中（`security.master_key` 之下的 AES-256-GCM；在 agent 机器上使用 CLI `mibee-agent snmp-credential add/list/remove/test`）-- 中心下发的扫描命令只携带凭据**名称**（命令载荷里的 `credential_name`），任何秘密都不再经过命令通道或落入中心数据库；名称缺失/不匹配时该次扫描降级为 v1/v2c community 并告警。中心侧凭据库与脱敏保证不变。
+- **Wire-truth API 契约，OpenAPI 驱动双语言生成客户端（#402 + #403）**：所有列表端点统一分页包裹（`{items, total, page, page_size}` / `{results, …}`），裸数组一律包裹；`docs/openapi.yaml`（109 路径 / 76 schema，按 handler/domain/sqlc DTO 形状充实）成为唯一事实来源，同时驱动两个客户端，TS 类型 `web/src/lib/api/schema.d.ts`（`npm run gen:api`）与 Go 客户端 `internal/apiclient`（`make gen-api-go`），双双在 CI 做漂移检查，外加 chi.Walk 奇偶校验测试钉住 路由路径 ↔ spec 路径。前端手写 wire 类型全部退役，改为生成 schema 的再导出（正是 #440 那类字段错配的根源）。⚠️ 一次性 wire 变更：统一分页键与包裹数组对手写 API 消费方（curl/jq 脚本）是破坏性的，请对照 spec 重新生成或调整集成。
+- **被动发现的网络归属（#394，关闭 #386）**：发现目击现在在 SinkAdapter 单点按 IP→CIDR 最长前缀归属，由 `networks` 表数据驱动，双宿路由器中心不再把外网段主机盖到本地网络上，WAN 臂伪影要么归属到真实网段要么被丢弃。`/metrics` 新增分来源计数 `mibee_discovery_events_total{source,outcome}`（#393），配套 `discovery_network_mismatch` 告警规则，残余污染可见而不再静默。
+- **Agent 任务运行统计回填（#396，关闭 #390）**：调度器派发的 agent 扫描 run 现在在派发时保持 `running`，待 agent 上报后以**真实**统计关单（时长、存活数，实测每 5 分钟周期 165s / 30+ 存活），不再是派发时写入的 6ms 空壳 run 行。
+- **CI 覆盖率棘轮 + 冲刺 85%（#404、#405–#446）**：跨包覆盖率门禁的 floor 只升不降（锁定 84.9，按 CI 实测）、vitest 前端覆盖率阈值，以及一轮 40 个批次的测试战役把 CI 语句覆盖率从 79.2% 提到 85.0%，途中揪出并修复了三个真实缺陷（见下：#412、#428、#431、#437），并沉淀了可复用的测试缝（SNMP 假应答器、脚本化多播连接、writable_schema 复刻遗留表形状、配置变体的路由装配）。
+- **多视角拨测的 UI 落地（#277，补齐中心侧剩余部分）**：agent 侧执行通道此前已合入（#344，拨测计划经命令通道下发到 agent，结果经 `/agents/probe-report` 回流，按视角分轨存储并带 `mibee_probe_*{vantage=…}` 标签），但 SPA 对此一无所知。拨测页现在端到端支持视角：目标表单新增**视角选择器**（中心 / 中心+全部 agent / 指定已注册 agent，选项由 `networks.agent_id` 构建；未注册的 `agent:{id}` 值仍会带标记回显，编辑不会静默改写计划；选 `all` 且无已注册 agent 时给出提示）；目标列表把计划显示为徽标（`all` / `agent:{id}` 原样显示；中心默认保持安静的纯文本）；仅 agent 的目标禁用手动**立即拨测**按钮（引擎对 `ErrProbeVantageNotLocal` 返回 409，按钮状态如今与实际一致）；历史弹窗新增**各视角最新结果面板**，并排展示每个执行者的最新结果与延迟、采样数，各轨判定不一致时整个面板高亮（这正是多视角存在的意义："从 A 可达、从 B 不可达"）。结果表新增视角列。套件中首批开弹窗的测试还顺手修了一个潜伏的 jsdom 缺口（共享 setup 里的 `Element.animate` 桩，svelte/transition 委托给 WAAPI）。
+- **Agent mini-schema 漂移防护（#171 安全网批次）**：agent 的本地 SQLite schema 是**手工**镜像 `db/schema.sql` 的（`CREATE TABLE IF NOT EXISTS` 从不更新已有表），而 agent 复用按中心 schema 生成的 sqlc 查询，单侧加列过去只会在远程 agent 运行时以 "no such column" 暴露（#337 正是这样发生的）。现在一个一致性测试逐一比对共享表（`networks`/`vlans`/`scan_tasks`/`scan_task_runs`/`scan_results`/`heartbeat_configs`/`devices`）在 `agentSchema` 与内嵌中心 schema 之间的列集，另有一个冒烟测试对新初始化的 mini-DB 实跑调度器/runner 的真实查询链（`ListEnabledScanTasks` → `CreateScanTaskRun` → `UpdateScanTaskRun` → `BatchInsertScanResults` → `ListScanResults`）。cmd/agent 覆盖率 5.2% → 11.7%（其余是 `main()` 接线）。前端：scan-results 页的首批渲染测试，种子行渲染、行展开显示解析出的 SNMP 明细、运行历史页签切换（断言全部数据驱动，不断言本地化字符串）。
+- **被动发现观察现在会喂给指纹分类器（#377）**：发现服务为每个 IP 维护一份"旁听到的事实"缓存，DHCP 租约主机名（每轮清扫刷新）、以及用与主动探测**相同**的解析器（新导出的 `probe.ParseMDNSResponse`/`ParseSSDPResponse`）解析的 mDNS/SSDP 公告，每次扫描经编排器新的种子钩子把它们前插到主机的采集输出。真实网络上被动通道往往是这些信号的唯一来源（R68S 实地会话测得主动 mDNS 查询 100% 无应答，而监听器旁听到丰富的公告），因此 iot-identity 与 mdns-ssdp 规则语料如今能在实地数据上命中：一条 `viomi-waterheater-…` 租约主机名产出米家品牌/家电身份，一段旁听到的 `_smb`+`_adisk` 公告把主机判型为 nas，一个探测包都没发。
+- **mDNS/SSDP 自公告现在可被指纹识别（#365）**：主动 mDNS 与 SSDP 探测早已产出丰富的证据（服务列表、TXT 记录、SSDP SERVER/USN/LOCATION 头），却没有任何分类器消费，线接好了，最后一公里缺失。新的 `mdns-ssdp.yaml` 语料规则匹配这些字段并产出携带 type/brand/description/model 元数据的 `mdns`/`ssdp` 身份，由新的 Mdns/Ssdp handler 折入设备记录（按设备桥接契约属协议级，不带 `?` 徽标，但绝不覆盖更强的协议内证据）。来自 R68S PoC 的实地验证规则样本：NAS 的 avahi 服务集（`_smb`+`_adisk` → nas）、路由器的 SSDP SERVER 自报家门（`lunzn,fastrhino-r68s` → router + FastRhino）、MiniDLNA（`→ nas`），以及数据驱动的映射表：`_onvif`→camera、`_ipp`→printer、`_googlecast`/`_airplay`/`_hap`/`_esphomelib`（TXT model 透传）/`_miio`→iot，外加 Hikvision/Dahua/Synology 厂商签名。（范围说明：米家设备这些一概不公告，它们的天花板仍是 #361 的主机名规则。）
+- **路由器上一键开启 Tier-1 被动发现（#360）**：`install.sh` 首装生成的配置现在默认启用三个零成本的路由器常驻源（`dhcp_leases`，权威的主机名/MAC/IP 映射、`conntrack`，"谁正在说话"视图、`hostapd`，WiFi STA 列表），生成配置的健全性检查断言这些翻转；LuCI 设置页新增"被动发现"区块，四个源全部做成复选框（保存 = 重写配置 + 重启 + 健康检查，经新的 `luci-helper.sh set-passive` 完成）。`dns_log` 保持关闭，它需要 dnsmasq 查询日志，页面与安装器都改为打印那一行 UCI 配置而不是静默改动 DHCP 日志。升级保留既有设置并打印提示。
+- **发布产物现包含 OpenWrt 路由器包（#359）**：`release.yml` 新增 `openwrt` 作业，在 `v*` 标签上构建全部三种安装形态，tarball（scp + `./install.sh`）、`.ipk`（opkg）与 `.apk`（OpenWrt 24.10+ apk-tools），arm64，走与 CI 冒烟（#358）完全相同的流水线，并附 `SHA256SUMS.openwrt`；只有二进制、容器镜像与路由器包全部成功才发布 Release。32 位 ARM 路由器可经 `make build-linux-arm` 本地构建。
+- **OpenWrt/LuCI 打包源的 CI 闸门（#358）**：新的 `openwrt` CI 作业运行 `make check-openwrt`，对 LuCI 控制器做 `luac -p`（OpenWrt 24.10 的 Lua 运行时是 5.1）、对**已提交**的路由器源做 CR 字节扫描与 `sh -n`（基于 git 索引，CRLF 的 Windows 检出不会误报）-- 外加经 `make package-openwrt-ipk` 的完整打包冒烟（arm64 构建 → openwrt-stage CR 暂存防护 → mkipk.sh 组装）。R68S 实地会话（#355）证明了这类缺陷"本地绿、上路由器就死"：模板里的一个 CR 字节让 LuCI 白屏报 "unfinished string"，而 go test 永远看不到它。
+- **米家生态主机名指纹，为除此之外一问三不知的 IoT 提供品牌与家电识别（#361）**：新的 `iot-identity.yaml` 指纹语料文件匹配小米生态 WiFi 模块公告的 DHCP/rDNS 主机名（`viomi-waterheater-e13_miap5E55`、`yeelink-light-lamp22_mibt63AA`、`chuangmi_camera_039a01`、…），产出携带 `inferred_brand`（Viomi/Yeelight/Chuangmi/Chunmi/Smartmi/Aqara/Roborock/Xiaomi）、`appliance`（热水器 / 油烟机 / 空调 / IP 摄像头 / …）与 `ecosystem` 元数据的 `miot` 服务身份，`exclusive_group` 保证每个主机名恰好一条身份（厂商专属规则优先于通用的 `_miap`/`_mibt` 后缀回退）。新的 `MiotHandler` 把这些元数据折入设备字段（厂商、人类可读描述）但**不**认领设备类型，主机名推断类型上的 `?` 徽标诚实地保留。在一台 iStoreOS R68S 上对 12 台真实米家设备实地验证（该环境下主机名可证明是唯一的身份通道：12/12 的 mDNS/miIO/TCP 均无响应）。`device_types.yaml` 补齐了缺失的生态关键词（yeelink/lumi/aqara/roborock/dreame/smartmi/…）。
+- **扫描任务的周期预设（无需 cron 知识）**：扫描任务表单的裸 cron 输入框改为友好预设下拉（每 30 分钟 / 每小时 / 每 6 小时 / 每 12 小时 / 每天 02:00 与 04:00 / 每周一 / 每月 1 号），旁边显示生成的表达式；自定义保留裸表达式输入（供进阶用户），任意既有表达式无损往返。任务列表显示预设标签并以小字显示原始表达式。后端不变（仍是 5 字段 cron 字符串）。
+- **OpenWrt/iStoreOS 上的 LuCI 集成（路由器原生入口）**：ipk/apk/tarball 现在随包附带经典 Lua 控制器 + 模板（不依赖 luci-compat/CBI，无 LuCI 时为惰性）-- LuCI 的 服务 → MiBee Steward 新增状态页（服务/健康/自启/版本/端口/DB 体积 + 打开 UI 按钮）与设置页（修改 Web 端口并自动重启 + 健康检查，拒绝 80/443；按生效策略设置管理员密码；自启开关；重启）。所有特权操作都汇入单一可审计的 `/usr/lib/mibee/luci-helper.sh`，可独立调用；密码经 0600 tmpfs 文件 + `MIBEE_RESET_PASSWORD` 传递，绝不上命令行。
+- **无临时密码的首启设置（空凭据引导）**：`auth.initial_admin_password` 现在可以为**空**（OpenWrt/iStoreOS 安装器默认）-- 管理员以无密码状态播种，登录页自行检测该状态（公共 `GET /auth/setup-status`）并渲染**创建管理员密码**表单以替代登录表单；`POST /auth/setup`（公共、走严格登录限流、按策略校验、一次性，一旦存在任何密码就永远 409）设置凭据并直接返回完整会话（token + cookie，无需二次登录）。对引导中账户的登录尝试返回明确的 409 `setup_required`，且**不**累计失败次数。安装器不再生成/打印任何临时密码。
+- **首启网页设置密码 + 设置中心（免 SSH 配置，第 1 步）**：管理员引导凭据（`auth.initial_admin_password`，含安装器随机生成的）现在以**临时**密码播种，刻意绕过密码策略，首次登录强制在浏览器内（SPA 弹窗）完成修改，并由服务端闸门兜底：标志置位期间签发的 token 携带 `mcp` claim，`Authenticator` 对除变更白名单（force-password / profile GET / 2FA）外的所有已认证调用返回 403。此前违反策略的 `initial_admin_password` 只以一条 warn 失败播种，全新安装可能根本没有管理员，只能靠 CLI 恢复。`PUT /auth/force-password` 现在返回未受限的新 token + 轮换 cookie。新增设置中心覆盖层（`system_settings` 表、`SettingsService`：DB 覆盖 > YAML > 默认值，内存快照 + 变更订阅者），提供 `GET/PUT /api/v1/settings/auth`（管理员、审计留痕）与 `GET /api/v1/system`（只读实例信息），以及 设置 → 安全 的 SPA 页面（带实时规则预览的密码策略表单、锁定参数调节、系统信息）。密码策略与锁定的修改在下一次校验/登录时生效，无需重启。默认密码策略放宽：不再要求特殊字符（最小 8 位 + 大写 + 小写 + 数字）；可经 UI 或 YAML 重新收紧。
+- **OpenWrt/iStoreOS 免 Docker 安装器**：`make package-openwrt`（tarball + 路由器上 `install.sh`，生成带随机 `jwt_secret` + `cookie_secure: false` 与无密码引导管理员的配置、修 `ping_group_range`、enable + start + 健康检查）、`make package-openwrt-ipk`（现代 gzip-tar feed 格式的手工 opkg 包，旧式 ar 容器会被当代 opkg 拒绝 "Malformed package file"；preinst 架构闸门、postinst 复用同一套配置逻辑、卸载保留 `/etc/mibee`）、`make package-openwrt-apk`（面向 OpenWrt 24.10+ 的 apk-tools v2 格式）。`.gitattributes` 保证 shell/unit 文件在 Windows 检出下为 LF；发布打包同样归一化。
+- **OpenWrt 形态 C 实机验证 + IPv6 绑定修复（#288 / #37）**：路由器中心形态在真实硬件上端到端验证（GL.iNet MT2500 / Brume 2，mt7981，aarch64）：完整引擎注册表 + 内嵌指纹语料、全部 4 个 Tier-1 路由器源产出实时数据（一条 DHCP 租约变为一台携带租约主机名的设备；conntrack + dns_log 事件流入；hostapd 干净空转）、/24 扫描 74 秒且路由器自识别为 GL.iNet、SPA 浏览器验证、RSS 约 113MB。`server.host: "::"`（文档记载的 GL 固件 v4 变通）现在真正可用，旧地址拼接会产出无法解析的 `:::8090` 并导致启动崩溃循环；绑定地址现在统一走 `net.JoinHostPort`。
+- **Agent 网络扫描任务（#336）**：目标地址落在 agent 托管网段内的 `scan_tasks`，现在每个 cron tick 都会向该 agent 下发一条扫描命令，不再需要外部定时器或内嵌密码的脚本。下发结果落入任务的运行历史（被拒绝的下发，例如目标超出网段，会作为一条带原因的失败运行记录）。本地网络任务不受影响。
+- **可配置密码策略（#332）**：`auth.password_policy`（min_length + 四类字符开关）。默认值与此前硬编码规则完全一致；部分块只覆盖其显式写出的键。
+- **可配置登录锁定（#338）**：`auth.lockout`（max_failed_attempts / lock_minutes）。锁定期满后现在会重置失败计数，过期后的一次误试不会再立即重新锁定（此前，持有过期密码的周期客户端可能让账户无限期处于锁定态）。账户锁定响应从 429 改为 **423** 并附带 retry-after 提示，UI 也能区分"账户已锁定"与"尝试过于频繁"。
+- **设备文档 Markdown 上传与预览（#324）**：`.md` 上传（MIME 归一化 + 拒绝二进制内容）、经净化（DOMPurify）的弹窗内 GFM 预览、软删除与可用的撤销（恢复端点）、按设备列出文档的修复、`?inline=1` PDF 预览、类型化上传错误（413/415/400）。
+- **合成负载压测工具（#313）**：`cmd/loadgen` 提供一个 127/8 合成设备面（内核 ICMP + SNMP/HTTP/SSH/RTSP 应答器），通过真实 API 驱动全栈基准测试；`scanner.allow_reserved_targets` 是该设备面的逃生开关。
+- **演示模式（#315 / #285）**：`server.demo_mode`（或 `-demo`）在空数据库上灌入虚构的 TEST-NET 资产清单。
+- **多视角拨测数据模型（#328，#277 第 1 步）**：`probe_targets.vantage` 执行计划 + 按视角分离的结果轨道。
+- **多视角拨测执行通道（#344，#277 第 2 步）**：agent 本地拨测执行端到端落地，AgentDispatcher 每 10 秒对比各 agent 的计划指纹（规范形式的 sha256），仅在变化时下发拨测命令（稳态零命令流量；清空目标会下发一条空计划以停止 agent 侧扫描）；agent 完全本地调度拨测（首次见到的目标立即拨，之后按目标各自周期；10 秒 tick 重读计划使 CRUD 一个 tick 内生效，且中心宕机期间拨测继续）；结果经 `POST /api/v1/agents/probe-report` 回流（agent-token 认证，10 秒/32 行批量；上报者身份覆盖载荷声称的视角，一个 agent 只能写自己的轨；丢弃的批量丢的是样本而非无限缓存，拨测是观测不是账本）；`mibee_probe_*` 指标新增 `vantage` 标签（旧的无标签选择器仍然匹配）。
+- 官网内容：功能总览 / 场景玩法指引 / 同类工具对比三篇文章，中英双语（#320）。
+
+### 安全
+
+- **修改密码即吊销全部既有会话（#357）**：users 表新增 `token_version` 纪元列；每个签发的 JWT 把它记为 `tv` claim，Authenticator 拒绝任何 claim 落后于当前值的 token，自助改密、管理员重置、首登强制改密或 CLI `reset-admin-password` 都会推进纪元，因此可能泄露的 token 在下一次请求即失效，而不是活满 24 小时过期（实地观察到：LuCI 重置密码后，旧浏览器会话仍保有完整 API 权限）。被删除用户的 token 随行消亡；纪元持久化，与内存版 JTI 黑名单不同，重启不再复活已吊销的会话。每请求开销为一次主键查询。
+
+### 修复
+
+- **GUI 黑盒测试第一轮，4 个 UI 缺陷（#447，修复 #427/#429/#430/#440）**：设备详情心跳趋势图读了一个手写声明的、根本不存在的 wire 字段（任意时间窗都显示"暂无数据"，而 API 实际返回了数据，现已改用生成的 `HeartbeatResultList` 类型）；资产信息标签渲染出了数组下标（`0: iot`，现在只显示值，JSON 数组与 CSV 两种 wire 形态都兼容）；登录页空表单提交毫无反馈（原生 `required` 气泡在多种场景下静默，表单现在走 zod 校验并显示页内本地化字段错误）；已登录状态访问 `/login` 出现登录表单与已登录侧边栏同屏混排（现在直接跳转 `/dashboard`，且布局层对 `/login` 关闭侧边栏）。
+- **`(ip_address, network_id)` 唯一索引在全新安装上从未生效（#431）**：`schema.sql` 声明的是普通 INDEX，遮蔽了迁移里的 `CREATE UNIQUE INDEX`，#312 之后的全新安装静默接受重复 (ip, network) 行，破坏漫游/upsert 身份语义（覆盖率测试播种该约束时发现约束根本不在）。现在两层都是 UNIQUE；迁移指纹自愈会在已盖章的 DB 上重放迁移链（去重清扫 + 索引重建），照例先做 `VACUUM INTO` 迁移前备份。
+- **遗留升级的设备表重建丢失 `device_uuid`/`offline_since`（#437）**：两处迁移重建（类型 CHECK 加宽、重复 MAC 合并）的 `devices_new` CREATE TABLE DDL 与实际 schema 漂移，遗留数据库升级会静默丢掉 uuid/offline 列，破坏附属表键（心跳目标、配置、文档）。两处重建 DDL 现在与 `schema.sql` 完全一致；writable_schema 复刻遗留 CHECK 形状的回归测试钉住全部五次表重建。
+- **心跳终冲数据丢失 + goroutine 泄漏 + 2 处竞态（#428）**：停机时的最终 drain 用了已取消的 context，每次停止都会丢掉最后一批缓冲判定；flush/sync 循环在"从未启动/立即停止"两种时序下泄漏 goroutine；判定映射存在解锁路径竞态。以 started/stopped 生命周期状态机 + 先复制后加锁的纪律修复（顺带简化掉两处锁作用域，全面锁审计未发现其他嵌套/死锁问题）。
+- **SNMP `gosnmpToInt` 对所有索引字符串都返回 0（#412）**，自 SNMP 连接重构以来 STP 探测实际失效、桥接端口名损坏；由覆盖率战役的假应答器测试发现并同批修复。（战役中另两个小发现：`UpstreamError` 改经 `errors.Is` 分类；demo 模式播种不再执行一条死活动查询。）
+- **健康网络的仪表盘骨架屏冻结（#385，#302 时代症状复发）**：Go 把 nil 切片序列化为 JSON `null`，`{#if overview?.abnormal.length}` 读到 `null.length`，TypeError 杀死 Svelte 5 的 effect 调度器，加载骨架与横幅同屏冻结（零离线设备的**健康**网络、或零运行记录的全新安装都会触发）。对照 null JSON 字段全量审计可选链；补红/绿回归测试。（该修复曾滞留在未合并 PR 中，而后续版本从 main 切出，两台实地中心被静默回退；三台服务器已全部重新部署。）
+- **漫游设备租约残留杀死在线设备 / 无限弹跳循环（#400，修复 #399）**：LeaseSweeper 现在把"漫游前的陈旧租约 + 同 uuid 同网络的更新租约"识别为应解除关联的残留，而不是要杀掉的设备；外加每设备每轮过期去重与安静期弹跳衰减（`flap_count` 每 30 分钟稳定窗减半）。实地立即消灭了漫游设备 .145/.172 上一场约 900 次翻转/15 小时的弹跳循环；913/911 计数器数小时内清零而非永不。
+- **Agent 网络孤儿设备永远卡在在线（#398，修复 #397）**：LeaseSweeper 第三个方向，agent 托管网段上无任何租约快照引用、last_seen 已过 TTL 的 `scanner_v2` 行现在会翻为离线（此前只有租约表认识的设备才可能过期）。首轮清扫自动过期了剩余的两个遗留孤儿；稳态孤儿 = 0。
+- **租约身份解析在 IP 重分配时竞争（#395，修复 #389）**：解析现在以 MAC（upsert 主键）为键、新近度为决胜，不再让被重新分配 IP 的陈旧租约获胜；反熵快路径（状态哈希命中）也不再让 `devices.last_seen` 停滞，跳过逐主机桥接过去会连 touch 一起跳过。
+- **`viomi-dishwasher-*` 主机名被误判为洗衣机**：家电关键词表先命中了 `dishwasher` 里的 `washer` 子串；现在具体条目排在通用条目之前（R68S 上 #377 全网验证时发现，一轮扫描内 19 台米家设备补齐了品牌 + 家电标注）。
+- **零配置部署静默缺失新指纹语料（验证 #377 时实地发现）**：引擎在无 `fingerprint_path` 时的回退加载的是独立指纹库自带的内嵌规则（v0.1.0，没有 `iot-identity.yaml`、没有 `mdns-ssdp.yaml`），于是所有默认部署都在用过期语料分类，米家/mDNS/SSDP 规则从未命中，R68S 上实地观察到：种子的租约主机名产出了类型却没有品牌。回退现在加载 `classify` 包内嵌的语料（`make sync-fingerprints` 的副本，库规则的严格超集），经 `LoadFromDir` 外的临时目录物化完成。引擎级回归测试把种子租约主机名跑过 gather/classify/dispatch 并断言带 Viomi 品牌的 `miot` 身份落到报告上。
+- **ucode 桥上 LuCI 应用操作全部失灵，helper_call 经命令文件包装器重接（R68S 验证 #360 时实地发现）**：在 LuCI 24.10 的 luci-lua-runtime 桥上，经典 Lua 控制器可用的 exec 家族**不**做 POSIX 命令串拆分，luci-helper.sh 把整条命令行当成单个参数收下并落进用法回退，于是设置页的每个操作（restart/port/password/passive）都报 *_fail（桥外的独立 `lua` 对同一字符串拆分正常；模板侧 `luci.sys.exec` 也正常，只有控制器上下文会弄坏）。helper_call 现在把校验过的参数行写入 cmd 文件并调用新的单词命令 `/usr/lib/mibee/luci-apply.sh` 包装器，由它重新拆分并执行 helper；退出码经 rc 文件回传。同时修复了 passive 分支把 helper 路径传两次的问题。在 iStoreOS 24.10.8/R68S 上端到端验证：passive_ok、四个源全部落进配置、服务健康重启。
+- **`go test ./internal/service/scannerv2/probe` 不再拨真实网络（#364）**：超时语义测试拨打一个 TEST-NET 地址期待静默，在 TUN 代理（Clash Verge 等）后面的开发机上，代理会对不可路由目标伪造 SYN 应答，把"超时"变成幻影"开放"并让套件本地失败（CI 不受影响）。端口探测背后的 TCP 拨号改为可注入函数；测试桩定 deadline-exceeded 语义并额外钉死恰好一次重试的契约。
+- **LuCI 设置页不再硬编码默认密码策略（#356）**：管理员经设置中心（DB 覆盖层）放宽策略后，LuCI 页面仍在描述出厂默认（最小 8 位 + 大写 + 小写 + 数字）-- 误导了实际密码已可通过的路由器管理员。表单提示与 `pw_fail` 横幅现在都指向 管理 → 设置 → 安全 这一唯一事实源，不再复述规则。
+- **SPA 从不发送 `Authorization: Bearer`，`cookie_secure: true` + 纯 HTTP 部署整体不可用**：api client 文档记载的"cookie 优先、Bearer 回退"契约此前根本没有实现回退，请求完全依赖 auth cookie。浏览器在纯 HTTP 上会静默**丢弃** Secure cookie，于是在全新路由器安装（生成的配置带 `cookie_secure: true`）上登录"成功"但后续所有已认证调用 401：强制改密弹窗永远完不成（表现为一个泛泛的会话过期错误），仪表盘直接弹回 /login。`request`/`download`/`upload` 现在都会从存储的会话附带 Bearer 头；OpenWrt 安装器额外在生成配置里强制 `cookie_secure: false`（路由器形态 = 局域网纯 HTTP）。
+- **心跳 Start/Stop 生命周期竞态（关机挂死）**：`NewRouter` 以 `go heartbeatSvc.Start(...)` 启动，紧随其后的 `Stop()`（测试或快速关机）可能先于延迟的 Start 执行，`HeartbeatStore.Close()` 随即读到 nil cancel、跳过、并永远阻塞在 `<-done`，而迟到的 Start 又启动了无人能取消的刷新循环（实地表现为 `internal/api/routes` 全套件挂死 15 分钟；刷新 + 同步循环双双 goroutine 泄漏）。store 与 service 现在都实现了 started/stopped 生命周期状态机：未启动即 Close 直接返回不等待，Close 后/Stop 后再 Start 是空操作，双重 Start 不会孵化重复循环。回归测试钉死全部三种顺序。
+- **管理员播种健壮性（首启体验）**：`seedAdminUser` 用 `==` 比较包装过的 `ErrUserExists`，"已存在则跳过"分支从未命中，已初始化实例的每次重启都记一条播种失败；启动播种失败过去只是 warn（现在升为 ERROR 并附 `reset-admin-password` 补救提示）；两步播种（Register + SetMustChangePassword 硬编码 id 1）合并为一条带标志的原子 CreateUser；自助改密现在会盖 `password_changed_at`（此前只有强制/管理员路径会盖）；声明过却从未实现的 `ErrSamePassword` 校验（新密码必须异于当前密码）现在在修改/强制修改路径上真正生效；2FA 验证 cookie 不再硬编码 24 小时，与登录 cookie 一样跟随 `auth.cookie_max_age`/`token_expiry`。
+- **拒绝保留网段扫描目标（#318 / #317）**：环回 / 未指定 / 链路本地 / 多播 / 广播 / 240- 开头目标在每个扫描入口（任务创建/更新、同步扫描、agent 命令下发）一律拒绝；CIDR 展开剔除网络地址与广播地址（nmap 语义，同时关掉 #254 的 .255 幽灵设备一类问题）。目标展开逻辑收敛进 `internal/cidrutil`。
+- **下划线键的 `MIBEE_*` 环境变量覆盖（#334 / #331）**：从 Config 结构体推导出精确的环境变量名 → 配置键映射；此前含下划线的键（`initial_admin_password`、`allow_reserved_targets` 等）在环境变量侧静默不可达。
+- **设备量表周期性刷新（#335 / #333）**：`mibee_devices_total` 不再冻结在进程启动时的快照。
+- **`-demo` 携带损坏配置时不再段错误（#330 / #327）**。
+- **Agent 本地库启动迁移（#339 / #337）**：agent 本地 schema 现在带全量列集（offline_since / device_uuid / ssh_credential_id / scan_tasks.network_id+credential_id）并原地升级旧库，此前每次设备身份漫游/替换都会因 "no such column" 静默劣化。
+- Windows 构建/测试一致性恢复（#325 / #321）；sqlite BUSY 写路径治理 + 重试指标（#311 / #267）；schema 版本门控 + 备份保留（#312 / #268）；scannerv2 store 迁移到 sqlc（#314 / #269）；仪表盘布局冻结修复（#302）；agent 舰队管理（#309 / #278）；指纹覆盖率报告（#308 / #282）；生态通知渠道 + Grafana 仪表盘（#307 / #284）；UI 内 SSE 变更流（#306 / #272）；拨测 UX 批次（#305 / #276）；VLAN 名称采集（#304 / #273）；`doctor` 子命令（#303 / #281）；OpenWrt 运维文档（#329 / #316）；文档治理批（#326）。
+## [0.5.0] - 2026-08-19
+
+**SNMPv3 + 多角色 RBAC + 设备配置备份 + 内置通知器 + 拨测 + 鲜活度时间序列。** v0.5.0 清掉了企业落地的硬门槛：**SNMPv3**（USM authNoPriv/authPriv + 加密凭据保险库）、**角色/能力 RBAC 模型与对象级网络作用域**（admin / operator / viewer + 按用户的网络授权）、**设备配置备份**（Oxidized/RANCID 风格：SSH 定时拉取 `show running-config`、版本化存储、双版本 diff、接入变更检测）、一个**极简内置通知器**（设备事件 → webhook/邮件，无需跑 Alertmanager），以及外部端点的**拨测**。底层方面，设备鲜活度改为**时间序列**（根治变更日志噪声风暴），设备身份以 `device_uuid` 贯穿各卫星表；版本收尾还包含 OUI 最长前缀厂商推断、拓扑可视化打磨、可观测性接线修复，以及一大批前端 UX/无障碍/正确性改进。
+
+### RBAC：多角色能力模型 + 对象级网络作用域（议题 #138）
+
+双角色模型（admin / user 一刀切的 `RequireAdmin`）被替换为**能力图 + 按网络的对象作用域**，解锁团队与 MSP 场景：
+
+- **角色与能力**：`users.role` CHECK 扩为 `admin` / `operator` / `viewer`（`user` 保留为 viewer 的遗留别名）。每条路由都由一个**能力**（`CapDeviceRead`、`CapScanTrigger`、`CapDeviceWrite` 等）经新的 `RequireCapability` 中间件把关；角色映射到能力集，admin 继承一切。所有 `RequireAdmin` 调用点完成重映射，共享只读面统一要求对应的 `CapXxxRead` 能力。
+- **网络授权**：新 `user_network_grants` 表 + 管理端 API（`/api/v1/users/{id}/network-grants` + `/api/v1/networks/{id}/grants`）+ 用户页 UI，用于指定非 admin 用户可见哪些网络。
+- **作用域模式**（`rbac.scope_default`，默认 `open`）：`open` 模式下非 admin 可见全部网络（保留单团队行为）；`closed` 模式下非 admin **只**可见被授权的网络，在整个读面上强制（设备列表/详情、扫描任务/运行/结果、变更、拓扑），未授权详情返回 `404`。admin 始终绕过作用域；未知配置值回落 `open`（防锁死的失效安全）。
+- **扫描器对象作用域**：`scan_tasks.network_id` 为每个任务盖所属网络章；closed 模式下非 admin 只能查看/触发其授权网络内的任务，扫描目标的网络边界检查同样生效。
+- 存量安装零波澜迁移：admin 仍是 admin，`user` 行继续按 viewer 工作，`open` 模式完整保留既有可见性。
+
+### SNMPv3（authNoPriv / authPriv）- 议题 #135
+
+最后一个企业硬门槛：加固环境日益禁用 v2c 社区串，而所有像样的竞品都支持 v3。
+
+- **凭据保险库**：新 `snmp_credentials` 表存储 USM 凭据（用户名、auth 口令 + 协议、priv 口令 + 协议、安全级别），**落盘 AES-256-GCM 加密**，密钥来自 `security.master_key`（恰好 32 字节，可用 `MIBEE_SECURITY_MASTER_KEY` 覆盖）。在第一个 v3 凭据出现之前密钥是可选的，既有 v1/v2c 部署完全不受影响。
+- **探测支持**：SNMP 探测器的版本循环加入 `Version3`；authNoPriv（MD5/SHA/SHA-2）与 authPriv（+ AES/DES）凭据按目标尝试，所有 OID 路径在 v3 下可用，8-OID 身份采集以及 LLDP-MIB / CDP-MIB / Bridge-MIB / Q-BRIDGE-MIB / STP-MIB / IF-MIB 拓扑遍历。
+- **API + UI**：凭据 CRUD，写入加密、读取脱敏（口令永不回显）；扫描表单与设备页带 v3 选项和安全级别下拉。
+- agent 侧 v3 有意延后（议题 #241，需要分布式凭据设计）；agent 维持 v1/v2c。
+
+### 设备配置备份，Oxidized/RANCID 风格（议题 #137）
+
+网络运维的标配：周期性拉取每台路由器/交换机/防火墙的 running-config，版本化、做 diff、并把配置变更接入变更检测。端到端交付（浏览器实测）；经 `scanner.config_backup.enabled` **选择开启**（默认关，需要 `security.master_key` + 绑定到设备的 SSH 凭据）。
+
+- **存储**：`device_configs`（按 `device_uuid` 版本化：fetched_at、config_hash、config_text、protocol、与前版 diff）和 `ssh_credentials`（与 SNMPv3 同一套 AES-256-GCM 主密钥加密；CRUD API 写加密读脱敏）。
+- **SSH 探测引擎**（`scannerv2/configbackup`）：`golang.org/x/crypto/ssh` + 厂商命令矩阵（Juniper JunOS `show configuration | display set`；HP / Aruba / H3C / Comware `display current-configuration`；Cisco IOS/NX-OS、Arista、华为 VRP、Mikrotik 及未知设备回落 `show running-config`）与主机密钥 **TOFU**（首次使用即信任）记录。
+- **服务**：定时清扫选取绑定了凭据的路由器/交换机/防火墙设备，抓取、比对，仅在变更时记录新版本，变更会向 `change_log` + 进程内 Watcher 发出 **`device_config_changed`** 事件（进而喂给变更页、SSE watch 与通知规则）。
+- **读取 API + UI**：`GET /devices/{id}/configs`（列表）、`/{configId}`（详情）、`/diff?a=&b=`（双版本对比）；设备详情新增 **Config History** 标签页（英文界面；中文界面为"配置历史"），带版本列表、详情弹窗与手工着色的 unified-diff 渲染。
+- 真机端到端冒烟（GL-MT3000）延后到下一版，代码路径完整，且已针对 API 完成浏览器验证。
+
+### 内置通知器：设备事件 → webhook/邮件（议题 #139）
+
+SOHO/分支用户不再需要为了收到"设备失联"邮件而搭一套 Prometheus+Alertmanager。**规则引擎**订阅变更检测 Watcher，把命中事件经既有通知分发器（webhook/邮件通道、3 个 worker、按用户的已读状态）路由出去，一层薄薄的规则→通道跳转，刻意**不做**告警引擎：
+
+- 新 `notification_rules` 表：事件类型（`device_lost` / `device_recovered` / `device_added` / `device_changed`）、作用域（全部 / 网络 / 按 UUID 的设备）、目标通道、按（规则 × 设备）防抖的 `cooldown_minutes`（默认 30）、启用开关。
+- 引擎在变更检测器既有鲜活度冷却之上叠加按（规则, 设备）的冷却，抖动设备不会刷屏通道。
+
+### 设备鲜活度时间序列 + 身份加固（议题 #114 / #115 / #116 / #117 / #120 / #129）
+
+从根上修复变更检测噪声风暴：鲜活度（在线/离线）此前被建模为离散 `device_changed` 事件，每次状态翻转都写一行（测试网络上 7 万+ 行淹没了真实变更）。
+
+- **`device_liveness` 时间序列**（心跳库内）：每设备每 tick 一条在线/离线判定样本，走既有的缓冲写/WAL 设施。查询：`OnlineRatio`（窗口内抖动 vs 翻转信号）、`OfflineDuration`、`LivenessHistory`。可丢弃，`devices.status` 仍是事实源。
+- **分层变更事件**：状态翻转被鲜活度层消化，不再刷 `device_changed`；真实的新增/变更/失联保持清晰。
+- **`device_uuid` 作为卫星表键**：心跳目标与卫星表按键稳定的设备 UUID（而非 IP）关联，地址变化不再分叉历史。修复设备第二次扫描显示陈旧哨兵数据的回归（#129）。
+- **租约清扫器抖动衰减**：agent 网络的抖动计数改为衰减而非硬清零，抖动设备会趋向失联而不是来回横跳。
+- **静默设备保留**：无心跳的扫描发现设备自动清退，带 MAC 的设备 `retention.silent_device_days_mac`（默认 7 天）后、无 MAC 身份 `retention.silent_device_hours_no_mac`（默认 24 小时）后。手动登记的设备永不自动删除；重新上线重置计时。
+- **UI 中的鲜活度**：设备详情暴露最近发现 / 离线始于 / 最近在线。
+
+### 拓扑可视化打磨（议题 #136）
+
+L2 数据（LLDP/CDP/Bridge/Q-BRIDGE/STP 边）本就已是 OSS 同类中最全，这次让渲染跟上：
+
+- **分层力导向布局**：核心/汇聚/接入三层节点异色；图例兼作按层可见性过滤器。
+- **搜索 + 聚焦**：输入即压暗不匹配节点；点击节点高亮其邻居并打开详情卡（IP/MAC/类型/度数）。
+- **端口下钻**：边暴露来自 `topology_edges` 的本地/对端端口、VLAN 标签与 STP 角色。
+- **性能**：选项重建改为增量；大图保持可交互。
+
+### Handler/Service 章程债务清偿：4 个豁免 handler 迁移完毕（议题 #240）
+
+最后四个直写数据库的变更类 handler（自 #166 起记录为章程债务）全部改走 service 层，章程不再有存量债务行：
+
+- **`service.NetworkService`**：网络 CRUD；raw-SQL UPDATE 的权宜方案（sqlc 截断问题）从 handler 移入 service。
+- **`service.AgentTokenService`**：agent 令牌的创建/吊销/删除，含 `networks.agent_id` 的创建时盖章 / 吊销时条件清空接线。令牌**铸造**留在 HTTP 层（一次性凭据展示），以 `TokenMinter` 函数注入，service 层保持不依赖 api 层。
+- **`service.AgentCommandService`**：入队（含扫描目标网络边界检查，现返回携带违规 IP 原文的类型化 `BoundaryError`）、确认、完成。
+- **`service.ScannerResultService`**：`BulkDeleteResults`（前日期校验 + 删除）。
+
+只读透传（List/Poll/ListAll/export）按章程许可的例外继续使用 `*db.Queries`。HTTP 表面行为不变（一处消息差异：吊销一个已吊销令牌现在返回 "agent token not found" 而非 "...or already revoked"）。`internal/api/AGENTS.md` 债务表清空。
+
+### 指标：死采集器接线 + metrics_path 生效（议题 #238 / #239）
+
+**HeartbeatFailures 此前是个死告警**，`mibee_heartbeat_checks_total`（及五个兄弟指标）在 `/metrics` 注册了却从未在生产代码中递增，告警表达式恒为 0。修复方式是把采集器搬到中立包并接上生产方：
+
+- **`internal/metrics`**（新包）：7 个 `mibee_*` 采集器搬出 `internal/api/handler`，service 层得以递增它们而不引发 handler→service→handler 导入环。`handler.MetricsHandler` / `UpdateDeviceMetrics` 行为不变。
+- **心跳**：`probeAndRecord` 现在按记录结果递增 `mibee_heartbeat_checks_total{status}` 并观测 `mibee_heartbeat_latency_seconds{method}`，`HeartbeatFailures` 告警规则终于对着真实数据求值。
+- **扫描器**：运行完成/失败递增 `mibee_scanner_runs_total{status}`、观测 `mibee_scanner_duration_seconds`、向 `mibee_scanner_hosts_discovered` 累加存活主机；`mibee_scanner_tasks_total{status}` 在调度器启动与任务 CRUD 后刷新（`metrics.RefreshScannerTaskGauges`）。
+- **`prometheus.metrics_path`** 现在真正生效于挂载点（此前配置里定义了却硬编码 `/metrics`；空值或非绝对路径回落 `/metrics`）。
+
+### sqlc：生成代码与 schema.sql 重新对齐 + CI 漂移守卫（议题 #237）
+
+仓库里的 `internal/db` 自 #233 起就处于陈旧状态（`scan_tasks.network_id` 进了 schema + 迁移却没跑 `sqlc generate`），任何一次全量再生成都会产出破坏约 10 个调用点的逐查询 Row 结构，PR #235 只能绕着做外科手术式合并。根因修复：
+
+- `db/queries/devices.sql` 的全行列表现在选出 `ssh_credential_id`（6 处），`db/queries/scan_tasks.sql` 选出 `network_id`（7 处）-- 列集与表重新吻合，sqlc 恢复模型复用，且**零**调用点需要改动。`CreateScanTask` 的 INSERT 仍不设置 `network_id`（照旧由 raw SQL 在插入后盖章）。
+- 全量 `sqlc generate` 对当前树幂等（全新生成产出空 diff）。
+- **CI 漂移守卫**：`sqlc-verify` 任务安装 sqlc **v1.31.1**（与仓库内生成器版本一致），`sqlc generate` 在 `internal/db/` 产生 diff 即失败，schema/查询变更必须随附再生成后的代码。
+- 手写内联 `devices` schema 的测试补上了 `ssh_credential_id` 列。
+
+### 拨测（Synthetic Probing，第 1 期）
+
+**对显式配置的外部端点做 blackbox 风格探测（PR #235）**，用户配置拨测目标（典型为互联网资源：公开 HTTPS 站点、托管邮件的 TLS 端口），按固定间隔探测，经数据库/API/UI 管理。扫描器的内网 TLS 证书采集（`CollectCertChain`）被直接复用于外部主机名（SNI 自动推导），把证书链清点能力延伸到局域网之外。
+
+- **三张表**：`probe_targets`（name 唯一，module CHECK http/tls/tcp/icmp，interval 10–86400s、timeout 1–60s，反规范化的 last_* 结果）、`probe_results`（只追加的历史，带每次运行的证书摘要；RFC3339 字符串时间戳）、`probe_tls_certs`（每个目标**当前**的证书链，先删后插；瞬时握手失败保留上一条已知良好链，区别于扫描器的当前态语义）。
+- **引擎**（`internal/service/probetarget/`）：10s tick 重读启用目标，CRUD 免重启生效；下次到期时间从 `last_run_at` 恢复（无启动风暴）；8 并发探测上限；在途守卫使同一目标的定时与手动运行互斥；`POST /{id}/trigger` 同步探测并返回记录的结果。
+- **模块**：http/tcp/icmp 复用共享心跳探测器（`probe.Result` 增加 `StatusCode`）；tls，以及 https 形态的 http，调 `CollectCertChain` 拿完整链（叶 + 签发者 + 信任判定 + TLS 版本/密码套件）。
+- **API** `/api/v1/probe-targets`：CRUD + trigger + `/{id}/results` + `/{id}/certificates`（证书响应复用设备端点的 `tlsPortCerts` 形状，前端 `CertificateModal` 零改动可用）。RBAC：`probe:read`（viewer 起）、`probe:manage`（operator 起）。
+- **Prometheus**：`mibee_probe_up`（对应 `probe_success`）、`mibee_probe_duration_seconds`、`mibee_probe_cert_expiry_timestamp_seconds`（对应 `probe_ssl_earliest_cert_expiry`）、`mibee_probe_checks_total`；`deploy/prometheus/alert_rules.yml` 内含两条示例告警规则（`ProbeTargetDown`、`ProbeCertExpiringSoon`）。
+- **保留**：`retention.probe_results_days`（默认 30 天），由既有清理服务清扫。
+- **前端**：`/probes` 管理页（状态/延迟/证书剩余天数徽章、启用开关、历史弹窗、证书链弹窗），中英 i18n，导航入口。
+- **sqlc 注记**：查询文件注释不得含撇号，sqlc 的 SQLite 词法器会吞掉它并静默截断生成语句（已记入 `db/AGENTS.md`）。
+
+### MAC 位标志：本地管理 / 多播（自第 1 期起中性化）
+**对 #118 第 1 期的修正（PR #121）**，第 1 期把本地管理（U/L）位当作"随机化 MAC"判定，并把此类设备降级为 `(ip, network_id)` 身份。这是语义越界：按 IEEE 802 / RFC 7042，U/L 位只表示"本地管理"，**无法**区分隐私随机化（iOS/Android，不稳定）与本地固定设置（软路由 / 虚拟化 / 手工，稳定）。在测试网络上，这误标了 7 台稳定的软路由/NAS，并因身份降级把其中一台（R68s）拆到了两个网络。本次变更回退错误行为，同时保留该位作为中性观测标志。
+
+- **身份降级回退**（`device_bridge.go` 的 `resolveDeviceIdentity`）：强制 `(ip, network_id)` 身份的 LAA 位闸门移除；设备身份回归纯 MAC 优先（仅在无 MAC 时走既有的 `(ip, network_id)` 回落）。
+- **中性命名**：U/L 位报告为**"本地管理（locally administered）"**，而非"随机化"。重命名：`scan_attributes.mac_is_randomized` → `mac_is_locally_administered`；辅助函数 `store.IsLocalMAC` → `IsLocallyAdministeredMAC`；UI 徽章文案 "Randomized" → "Locally Admin."，配中性 tooltip 说明该位无法区分随机与固定。`mac_is_multicast` / `IsMulticastMAC` 不变（多播位无歧义）。
+- 该标志仅作观测，**不**改变设备身份。完整论证（RFC 7042、IEEE 数据的许可边界等）见议题 #118 的调研评论。
+
+### OUI 厂商推断：MA-S / MA-M / MA-L 最长前缀匹配
+**确定性的 MAC 富化**，OUI 查询现在通过三注册库的**最长前缀匹配**把 MAC 解析到 IEEE 注册厂商：MA-S（/36，9 位十六进制，前身 IAB）→ MA-M（/28，7 位）→ MA-L（/24，6 位）。这是必须的：MA-S/MA-M 子块是从 IEEE 或其他厂商持有的 /24 OUI 中划出的，没有最长前缀，以 `8C1F64B14..` 开头的 MAC 会被误标为 "IEEE Registration Authority" 而非 "Murata"（MA-S 子受让方）。
+
+- **`vendor/oui.go`**：`Lookup` 改为最长前缀匹配；新 `LookupFull` 返回 `(vendor, prefix)`，调用方可记录命中了哪个块。加载器索引全部三种长度的前缀（`NormalizeMACPrefix` 的 6 位十六进制上限经由新的 `normalizeHexPrefix` 解除）。
+- **新 `scan_attributes` 字段**：`oui_prefix`（命中的 6/7/9 位块）与 `oui_vendor`（IEEE 组织名，NIC 芯片厂商）。与既有 `vendor`（设备经 SNMP/HTTP/TLS 自报的品牌）**分开**；两者在 OEM/贴牌/虚拟化场景下会不一致。
+- **开箱覆盖**：`scanner.oui_path` 为空时，引擎自动从**内嵌**的 CC-BY-SA 精编表（`vendor/oui_curated.txt`，`//go:embed`）播种，全新安装对常见设备即刻可用厂商推断。用户配置的完整 IEEE 文件仍可覆盖。
+- **`scripts/fetch-oui.sh` 重写**：抓取三份 IEEE CSV（MA-L/MA-M/MA-S），用 Python CSV 解析合并为单一 `<prefix>\t<vendor>` 文件（厂商名含逗号/引号）。同时修复下载 URL 的既有笔误（`standardeee.org` → `standards-oui.ieee.org`）-- 旧脚本从非规范镜像下载，本会失败。
+- **许可边界保持**：IEEE 注册库是 "All rights reserved" 的事实数据，**不**并入 CC-BY-SA 指纹语料（见 `docs/fingerprint-spec.md` §8"数据与代码之别"）。内嵌精编表是手工撰写的 CC-BY-SA 子集，不是 IEEE 复制品；完整 IEEE 数据集保持为可选的运行时下载。
+
+### UI：OUI 厂商（NIC 芯片）进入设备视图
+**上条 OUI 厂商推断的跟进**，新的 `oui_vendor` / `oui_prefix` 字段（第 2 期）现已在 UI 可见，并与设备自报 `vendor` 品牌区分展示。
+
+- **设备详情发现面板**：Vendor 之后新增 "OUI Vendor (NIC)" 行，显示 `oui_vendor`，tooltip 展示命中的 IEEE 块（`oui_prefix`）。
+- **展开行设备摘要**：同样位置追加该字段。
+- **Extras 泄漏修复**：store 的 `RecordDevice`/`buildStoreScanAttributes` 路径此前会让 `oui_prefix`/`oui_vendor`（及 `mac`）漏进 `scan_attributes.extras`（在 Extras 面板显示为原始 `OUI_PREFIX`/`OUI_VENDOR` 键）。现在它们映射到类型化字段并排除在 Extras 之外。
+
+### HTTP 面加固（议题 #133 / #164 / #165 / #177）
+- **感知可信代理的 RealIP**：弃用的 `chimw.RealIP`（无条件信任 `X-Forwarded-For`）被替换为只在来源属于配置的 `server.trusted_proxies` 时才采信转发头的中间件，客户端 IP 无法再经该头伪造。
+- **哨兵错误 → 正确的 400**：service 层校验错误类型化为哨兵；handler 用 `errors.Is` 映射，不再对用户失误返回 500。
+- **credential.go 错误泄漏**：内部错误细节不再漏给 API 客户端；裸 `http.Error` 响应改为 JSON；补上哨兵映射。
+
+### 前端 UX / 无障碍 / 正确性批次（议题 #150–#176）
+SPA 的一次整固 pass：
+- **破坏性操作门**：批量设备状态翻转需要确认；五个创建/编辑弹窗增加"有未保存修改时放弃需确认"守卫。
+- **DataTable 无障碍重构**：事件委托行变为真正可交互（键盘可达、可聚焦）-- 不再只有点击。
+- **扫描取消**：长扫描可在扫描页中止（AbortController），同一校验模式应用到扫描任务与 agent 目标；登录密码获得 Zod schema。
+- **2FA 类型安全**：登录 2FA 路径去掉 `as any` 断言；2FA 后强制改密复用同一弹窗。
+- **变更反馈一致性**：用户页 toast、文档页静默成功、扫描页合并错误处理。
+- **本地化格式化**：`toLocaleString` 跟随 paraglide UI 语言（日期/数字与所选语言一致）。
+- **空态诚实**：搜索无结果不再显示误导性的创建 CTA；错误态与空态分离。
+- **修复**：`/changes/watch` SSE 不再永远显示"已断开"（#195）；变更页以结构化摘要显示显示名/IP 而非原始 JSON（#196）；仪表盘离线设备回落路径在名称退化为当前 IP 时正确解析（#197）；设备列表按 IP/网络/厂商/主机名排序带数字 IP 排序为服务端实现（#122）。
+
+### 性能与并发（议题 #162 / #163）
+- **扫描器性能**：UUID 查询缓存、`PRAGMA temp_store=MEMORY`、DetectLost 路径批量 miss-count 递增。
+- **并发卫生**：调度器在锁外做 IO，`LeaseSweeper` 拥有 WaitGroup，限流器与 eBPF 观测器在关机时干净停止。
+
+### 代码健康（议题 #132 / #141 / #157 / #158 / #160 / #161）
+- **`internal/repository/` 解散**，repository 类型移入 `internal/service/` 靠近消费者（少跳一层）。
+- **Handler 存根塌缩**：server/TLS handler 家族数据化注册，删除约 68 个手写存根。
+- **巨型文件拆分**：`main.go` 迁移逻辑 → `migrations.go`；扫描器配置类型 → `scanner_config.go`。
+- 死代码清理：v1 扫描器存根、错放的测试辅助、`var _` 占位。
+
+### 测试覆盖网（议题 #134 / #171）
+对先前无测试核心的一轮特征化 + 回归测试：`runMigrations` 幂等 + 全新库、device-bridge 身份合并、router-ARP 配置解析、保留期清扫、与调度器耦合的扫描任务触发/取消、auth/CSRF/RBAC 中间件、网络 CRUD、2FA-TOTP（含一个绕过守卫）、用户管理安全路径、SNMP 凭据 handler（含口令泄漏守卫）、扫描任务 + 审计 handler，以及首批 `.svelte` 页面渲染测试（登录 / 设备 / 扫描 / 拨测）。
+
+### 文档
+- **官网手册迁入仓库**（`docs/{zh,en}/`，14 个双语文件）：介绍、快速开始、架构、API、配置、部署、开发、发现、分布式、eBPF、OpenWrt、指纹规范、产品范围、更新日志，仓库成为官网同步的唯一事实源（议题 #234）。
+- 拨测/合成探测文档 + 配置样例补齐（议题 #236）；`config.example.yaml` 找回代码在用而样例缺失的 9 个配置块（agent/rdns/mdns/arp_scan/reconcile/retention，议题 #131）。
+
+### 暂缓
+- agent 侧 SNMPv3 凭据（议题 #241，需要分布式凭据/密钥分发设计；agent 维持 v1/v2c）。
+- 配置备份真机端到端冒烟（GL-MT3000）-- 代码完整，验证受硬件门控。
+
+## [0.4.0] - 2026-07-29
+
+**路由器驻留发现 + OpenWrt 部署 + 设备持久化重写。** v0.4.0 的头牌是新的**路由器形态**：当中心或 agent 运行在网关上时，获得四个一阶被动发现源（DHCP 租约、conntrack、hostapd、dnsmasq 查询日志），看得见主动探测看不见的主机，沉睡的 IoT、被防火墙拦的主机、纯 WiFi 客户端。随附一等公民的 **OpenWrt** 部署（两个二进制都有 procd init 脚本）和消除长期双写裂缝的**单写者设备持久化重写**。收尾还包括前端信息架构重组、跨页存活的服务端搜索/排序、按用户的通知已读态、Zod 表单校验与 DataTable XSS 加固批次。
+
+### 路由器驻留发现源（Phase A/B）
+发现引擎（`internal/service/scannerv2/discovery/`）新增四个只有当宿主**就是**局域网网关/AP 时才能工作的一阶源，NAT 咽喉点看得见每一条流。全部选择开启（默认关），且在底层文件/socket 缺失时无操作，宿主型部署优雅降级。
+
+- **`dhcp_leases`**：读取本机 DHCP 服务器的租约表（OpenWrt 上 dnsmasq 的 `/tmp/dhcp.leases`，Debian 上 `/var/lib/misc/dnsmasq.leases`）-- 权威的 主机名↔MAC↔IP 映射，覆盖从不响应 SNMP/ICMP/rDNS 的设备。
+- **`conntrack`**：读取 `/proc/net/nf_conntrack`，对每条 ESTABLISHED/ASSURED 流发出其局域网侧端点，"谁**正在**通信"视图。为不响应主动探测但维持出站流的主机提供鲜活度 + 发现。按 `network.cidr` 过滤。
+- **`hostapd`**：经 hostapd 控制套接字（`/var/run/hostapd/<phy>`）枚举 WiFi STA，回落 `iw station dump`。采集信号 dBm / 接入时间 / SSID，有线宿主拿不到。`interfaces` 列 wlan 名；留空 = 自动探测。
+- **`dns_log`**：tail dnsmasq 查询日志（`--log-queries` 输出），发出每个发起查询的主机 + 域名，强力被动指纹（拦入站探测的设备照样做出站 DNS）。运维需开启查询日志（UCI：`uci set dhcp.@dnsmasq[0].logqueries=1`）。
+- **`arp_scan` 主动源**（`discovery/arp_scan_*`）：主动 ARP 扫掠源（CAP_NET_RAW，不可用时构建标签存根）-- 补齐既有的被动 `arp_cache`/`multicast`/`router_arp` 源。
+- **agent 侧被动源接线**（Phase A）：agent 二进制现在运行发现引擎，路由器形态的 agent 会把其局域网的被动发现连同扫描结果一起报给中心。
+- **多播 / `router_arp` 静默失败修复**：这些源不再静默失败，socket / SNMP 遍历不可用时自行停用并记录原因，而不是"看起来健康却什么都不发"。新增一条告警：当 `router_arp` 与某个已覆盖相同主机的路由器驻留源重复时触发。
+
+### OpenWrt 部署（Form C 路由器中心）
+把中心或 agent 直接跑在 OpenWrt 路由器上的一等支持，上述路由器驻留源的天然归宿。
+
+- **procd init 脚本**：`deploy/openwrt/mibee-steward.init` 与 `mibee-agent.init`，UCI 配置的服务，开机自启、崩溃重启、以非特权用户运行。README 记录安装、配置与 CAP_NET_RAW 事项。
+- **ARMv7 构建目标** + init 脚本去重：发布矩阵与 OpenWrt 打包面向常见低功耗路由目标（ARMv7）打磨，两个 init 脚本完成去重。
+
+### 设备持久化：单写者漏斗 + 设备替换
+**架构修复**，消除 `devices` 行由两条独立路径（`store.RecordDevice` 与 `runner.applyDeviceBridge`）写入、字段语义不一致的双写裂缝。最直观的症状：同步 `POST /scanner/scan` 留下的行 `status='unknown'`（只有 store 写它），而计划扫描翻成 `online`（runner 写的）。一次设备替换案例（换路由器）暴露了更糟的失败：新设备的数据落在了陈旧 IP 上，而活网关行继续显示死掉的旧设备，因为两个写者对身份 + 覆盖哪些字段意见不合。
+
+- **单一设备写者**：`runner.applyDeviceBridge` 成为 `devices` 行生命周期的唯一权威（身份创建、显示名、`status`、心跳播种、变更检测、设备替换检测）。同步扫描 API（`scanner.go` 的 `Scan`）现在经 `runner.ApplyReport` 持久化存活主机，与异步扫描任务**同一条**路径，同步扫描与计划扫描留下的行完全一致。
+- **`store.RecordDevice` 缩减为仅富化**：不再 INSERT 身份、设置 `name`/`status`、检测替换。只作为编排器内的尽力前置写，富化已匹配的行（mac/type/brand/scan_attributes）；与 runner 不再有冲突面。
+- **设备替换检测**（`device_bridge.go` 的 `resolveDeviceIdentity`）：当扫描的 MAC 命中另一个 IP 上的设备、而该 IP 又由另一个 MAC 的设备持有时（路由器/资产换新），IP 持有者胜出，其身份字段被新设备的强制覆盖，先前 MAC 命中的行标记离线。变更检测的前后 diff 把旧→新身份记入 `change_log`。
+
+### 网络对账（漂移检测）
+- **`internal/service/scannerv2/reconcile/`**：后台任务查找 IP 漂移出其盖章 `networks.cidr` 的设备（如漫游笔记本拿到了新网段的 DHCP），浮出给运维纠正。**检测并浮出，不自动改**，自动重挂设备是破坏性的（改身份、断历史关联、在重叠 IP 空间上会抖动），纠正保留为人工决策。发现经结构化 `slog` 告警（限速）、按网络的 `mibee_network_mismatches` Prometheus 量表、以及 `Reconcile()` 返回值（未来的管理端点）暴露。由新 `internal/cidrutil` 包支撑。
+
+### 可配置性
+- **检测阈值 + 心跳节奏可配置**（此前硬编码）：`scanner.lost_threshold`（判"失联"的连续缺席扫描数，默认 2）、`heartbeat.tick_interval_seconds`（探测循环节奏，默认 30）、`heartbeat.offline_threshold`（判离线的探测失败数，默认 5）、`heartbeat.offline_backoff_ticks`（已离线主机每 N tick 探测一次，默认 10 → 30s ticker 下约 5 分钟）。全部带 `MIBEE_*` 环境覆盖；`0` 表示"用默认"。见 `internal/config/defaults.go`。
+- **限流放宽** `rate_limit.global_per_minute` 100 → 600，SPA 静态资源（`/_app/*`）豁免、CSP 放行 `data:` 字体，旧的 100/min 会饿死多标签页 + 后台轮询会话。
+- **共享常量抽取**（`config.SysUpTimeOID`、`config.DefaultScanPortSpec`）：sysUpTime OID（曾在 6 处复制）与精编扫描端口集收敛为单一来源常量，消除诱发漂移的重复。
+
+### 领域：设备类型
+- **新增 `phone` 与 `printer` 设备类型**，进入类型联合（`internal/domain/device.go`）与 `devices.type` CHECK 约束，schema 与 Go 枚举互为事实源，由 schema 同步漂移测试守卫。主机名/品牌/端口 → 类型推断表（`configs/fingerprints/device-types/device_types.yaml`）完全数据驱动（加签名 = 一条 YAML，不是 Go `case`）。
+
+### 管理 UI 重组
+- **信息架构大修**：侧栏重新分组、扫描入口收敛、**拓扑作为视图开关并入设备页**（辐射图 ↔ 表格切换）、仪表盘新增**待办横幅**带主操作，浮出需要运维目光的事项。
+- **设备详情重组**：健康横幅 + 5 标签导航（概览 / 服务 / TLS 证书 / 邻居 / 变更）。
+- **设备编辑/删除**经共享 `DeviceEditModal.svelte`，列表页与详情页皆可达。
+- **共享基元**：抽出 `PageHeader` / `PageShell` / `LoadingButton` 并全站采用，统一加载态与布局。
+
+### 服务端搜索、排序与分页
+一批"客户端过滤在列表超过一页后静默丢结果"的正确性修复，搜索/排序改在服务端跑，覆盖全量数据：
+- **服务端搜索**覆盖 users / audit / changes / documents / scan-tasks / scan-results（`fix(web,api)` #54、#55、#64、#86）。
+- **扫描结果排序**移到服务端，排序跨页保持（#55）。
+- **专用 `PATCH /channels/{id}`** 承接通道启用开关（#53）-- 只写 `enabled`，避免 GET 后再写的竞态。
+- **CSV 导入**读取后端 `{added, errors}` 结果而非预览计数，导入后的账面与现实一致（#58）。
+
+### 通知
+- **按用户未读跟踪**（`notification_read_states` 表）：顶栏铃铛显示按用户的未读数，下拉打开即清。此前铃铛是系统级的（没有接收者概念）。
+- **NotificationBell** 在后台标签页暂停轮询、失败退避，阻止空闲标签页敲打 API（#67）。
+
+### 前端加固
+- **DataTable XSS 修复**（`lib/utils/html.ts`）：标签模板 `html()` 辅助函数对插值转义，全部富文本调用方从字符串拼接迁出（#50、#87）。
+- **Zod schema 校验**加入 7 个表单（登录、注册、设备编辑、网络、通道、扫描、CSV 导入）-- 客户端校验镜像后端规则（#66、#106）。
+- **错误态诚实**：页面不再把服务端错误伪装成空态，拉取失败显示错误 + 重试 UI 而非空白"无数据"面板（#65）；设备详情显示错误 + 骨架屏而非空白（#56）。
+- **API 客户端加固**：瞬时 5xx GET 重试、环境变量基础 URL、统一 401 处理把会话过期导向重新登录（#73、#109）。
+- **i18n 补全**：9+ 页面散落的硬编码英文本地化，含发现漏斗、拓扑 tooltip、ChangeDiff 标签、布局/无障碍标签；API 错误消息 + 表单校验消息走 i18n 边界（#40–#63、#101–#105）。
+- **无障碍 + 组件清理**：ARIA id、焦点管理、点击切换菜单的 Escape 关闭、图表 resize 处理、扫描存活主机表**大网段（/22+）分页**（结果一页装得下时隐藏分页条）（#74、#100、#108、#110、#112）。
+- **杂项 P2/P3 批次**：lib/components、agents/settings/networks/documents、devices 子树做了整固的正确性 / 类型安全 / 无障碍 pass。
+
+### 运维
+- **`change_log` 降噪**：服务证据去重 + 离线退避，砍掉了死主机超时行的持续写入。
+- **`agent` 竞态修复**：`TestCommandPoller_ScanPayload_StringQuoted` 与 `TestReporter_SendsStateHashHeader` 的数据/逻辑竞态修复（CI 跑 `-race`）。
+- 从 `mibee-fingerprints-go` 同步**指纹语料**（http-tls + ports 规则），同步的 http-server-* + smb-version 规则有 golden 测试覆盖。
+
+### 许可证
+- **AGPLv3 + 商业双授权**全仓落地（取代早期的 PolyForm NC）：完整 AGPL-3.0 `LICENSE`、`LICENSE-COMMERCIAL.md`、`NOTICE` 三方署名、`CLA.md` + `.github/DCO.md` + DCO CI 检查，全部 `.go`/`.ts`/`.svelte`/`.c`/`.sql` 源码带 `SPDX-License-Identifier: AGPL-3.0-or-later` 头；指纹 YAML 带 CC-BY-SA 4.0 头。
+
+## [0.3.0] - 2026-07-18
+
+**完整 L2 拓扑 + TLS 证书清点 + 容器镜像**，v0.3.0 补完 v0.2.0 起步的拓扑故事（CDP/Q-BRIDGE/STP 探测、辐射可视化、邻居身份推断），新增从每台设备所有 TLS 包装服务采集完整证书链的 TLS 证书清点，并引入 GHCR 官方多架构容器镜像。
+
+### TLS 证书清点
+- **TLS 证书采集**（`probe/cert_collector.go`）：单一事实源，`CollectCertChain(ctx, ip, port, timeout)` 完成 TLS 握手（清点用途 InsecureSkipVerify）并提取完整对端链。每证书：Subject/Issuer/SAN（DNS/IP/email）/序列号/有效期/签名算法/密钥算法 + 位数（RSA/ECDSA/Ed25519）/is_ca/self_signed/SHA-256 指纹/PEM；每握手：TLS 版本、密码套件、尽力信任判定。失败路径返回错误记录（仍持久化），UI 能显示"这个端口我们试过了"。
+- **TLS 包装服务 handler**（`handler/tls_collect.go`）：8 个 handler（`https`、`ldaps`、`smtps`、`imaps`、`pop3s`、`ftps`、`ircs`、`telnets`）共享一个 `tlsCollectHandler` 核心，每个的 `Collect()` 调 `probe.CollectCertChain` 并返回 `TLSCertCollected` 载荷。handler 数 21 → 29。
+- **MiscClassifier 扩展**：TLS 包装服务端口（465/989/990/992/993/994/995）现被断言为服务身份，证书采集 handler 得以为其运行。
+- **TLSProbe 扩展**：默认端口集从 4 扩到 12（+ 465/636/989/990/992/993/994/995）。重构为发出更丰富的证据字段（`not_before`/`not_after`/`sig_algorithm`/`key_algorithm`/`fingerprint_sha256`/`san_email`）。
+- **`host_tls_certs` 表**：每端口链中每证书一行（cert_index 0 = 叶，1..N = 签发者）；PEM + 类型化列；`(ip, port)` 与 `not_after` 建索引（供到期清扫）。
+- **读取 API** `GET /api/v1/devices/{id}/certificates`：按端口分组带叶 + 链；状态着色元数据（TLS 版本、密码套件、信任判定、错误）。
+- **前端 TLS 子面板**：扫描发现下新增 "TLS Certificates" 面板（中文界面为"TLS 证书"）-- 每端口一行可点击，左侧状态着色边条（绿=有效 / 琥珀=15 天内到期 / 红=已过期）、剩余天数徽章、自签/受信标签。
+- **`CertificateModal.svelte`**：全链查看器，状态头、摘要字段网格（Subject/Issuer/有效期/SAN/算法/指纹）、可折叠链条目、带复制按钮的 PEM 块。
+- **保留** `retention.host_tls_certs_days`（默认 30）。
+- **i18n**：新 `certificates` 节（34 键，EN + ZH）。
+
+### 拓扑探测广度
+- **CDP-MIB 探测器**（`active:cdp_mib`）：在 Cisco/说 CDP 的交换机上遍历 CISCO-CDP-MIB `cdpCacheTable`。以 device id 作为邻居合并键。发出 `protocol:"CDP"` 邻居边。
+- **Q-BRIDGE-MIB 探测器**（`active:q_bridge_mib`）：遍历 IEEE 802.1Q `dot1qTpFdbPort` 拿 VLAN 感知的 MAC→端口转发表项。在打标签/跨 VLAN 拓扑上恢复 L2 邻接。发出带 ifName 解析端口名的 `protocol:"Q-BRIDGE"` 边。
+- **STP-MIB 探测器**（`active:stp_mib`）：遍历 BRIDGE-MIB `dot1dStp` 拿生成树事实（根桥、指定端口、端口角色/状态）。发出 `protocol:"STP"` 证据。
+- **IF-MIB ifName 解析**（`probe.ResolvePortNames`）：共享辅助函数把数字 ifIndex/端口值转成人类可读接口名（如 `GigabitEthernet0/1`）。CDP/Q-BRIDGE 探测器使用。
+
+### 拓扑可视化
+- **网络拓扑页**（`/topology`）：全网辐射树视图（ECharts `tree` 系列，新 tree-shake 进来），设备为节点、`device_neighbors` 为边。节点色按设备类型；边色按协议（LLDP 蓝 / Bridge-MIB 绿）；虚线边指向未识别邻居。网络过滤 + 60s 自动刷新；点节点开其详情页。
+- **设备详情邻居面板**：设备 L2 邻居表，带邻居的名称/IP/类型（经设备 JOIN，v0.2.0 里 `neighbor_device_id` 恒为 NULL，现查询时解析）及详情页链接。
+
+### LLDP 发现（双路径）
+- **SNMP LLDP-MIB 探测器**（`active:lldp_mib`，默认开）：在说 SNMP 且跑 LLDP 的交换机/AP 上遍历 `lldpRemTable`，跨厂商标准。经既有邻居管线发出 `protocol:"LLDP"` 邻居边（零新增接线）。非特权（UDP/161）；无新依赖。
+- **原始帧 LLDPDU 监听器**（`WITH_LLDP` 构建标签，默认关）：经 AF_PACKET 捕获 ethertype 0x88cc 帧（需 CAP_NET_RAW），看见不发 SNMP LLDP-MIB 但广播 LLDP 的端点（IP 话机、AP、NAS）。镜像 eBPF 观测器的构建标签模式，默认构建带无操作存根保持非特权（`make build-with-lldp` 启用）。
+
+### 邻居身份推断
+- 编排器新增可插拔 `NeighborIdentityInfer` 回调接到 RuleClassifier，CDP/LLDP 邻居从其平台串推断厂商/型号/类型。
+- **`EnrichDeviceByMAC`**：按 MAC（邻居合并键）富化设备的厂商/型号/类型/主机名，保留既有非空值。
+
+### 容器镜像与部署形态
+- **GHCR 发布**：每个 `v*` 标签构建多架构镜像（linux/amd64 + linux/arm64）发布到 `ghcr.io/mi-bee-studio/mibeesteward`，打 `:latest` / `:<version>` / `:<major>.<minor>` / `:sha-<short>` 标签。发布工作流的 `publish` 任务等待 `[release, docker]`，只有二进制与镜像都成功才创建 GitHub Release。镜像为非特权变体（LLDP/CDP/eBPF 编译为存根）。
+- **Docker 网络模式形态**：三个 compose profile 让部署形状匹配意图，`bridge`（默认，NAT，MAC/ARP 劣化）、`host`（推荐，≈ 裸机探测保真）、`macvlan`（独立局域网 IP）。测试局域网实测：默认 docker bridge 找到 0/26 设备 MAC，host 网络为 30/31（容器的 `/proc/net/arp` 只看得见网桥网关）。见 `docs/{en,zh}/deployment.md` § "Docker 网络模式"。
+- **Dockerfile**：`BUILD_TAGS` 参数（WITH_LLDP/CDP/EBPF 选择启用）、可选 `SETCAP`（能力不在 bounding set 时 file caps 会破坏 exec()，故默认关）、受限网络构建的 `NPM_REGISTRY`/`GOPROXY` 参数、vite 堆的 `NODE_OPTIONS`、`/data` 预归属非 root 用户。
+- **Makefile**：`docker-build` / `-priv` / `-up` / `-up-bridge` / `-up-macvlan` / `-down` / `-logs` 目标。
+- **`configs/config.docker.yaml`**：容器模板（network.cidr、/data 路径、bridge 模式 router_arp 指引）。
+
+### CI
+- **`docker-build` 冒烟任务**（ci.yml）：每个 PR 构建镜像（仅 amd64，不推送）并以最小配置启动，最长等 30s 探活 `/health`，在打标签前抓住 Dockerfile/compose 回归。
+- **Node.js 20 弃用**：actions 仍目标 Node 20；GitHub 正在强制 Node 24（告警，未失败）。升级待办。
+
+### 保留期加固
+- `device_neighbors` 与 `host_services` 有了保留清扫器（v0.2.0 起无限增长，潜在膨胀 bug）。默认：neighbors 90 天（拓扑历史价值）、host_services 30 天。每表 `retention.*` 配置键 + `days<=0` 安全守卫。
+- 同时修复一个潜伏的 sqlc v1.27.0 bug：查询注释里的非 ASCII 字符会破坏兄弟查询的代码生成（静默产出坏 SQL，运行时查询失败，不是构建错误）。
+
+### 测试覆盖
+- **taskservice**（扫描任务状态机）：此前零测试。现覆盖 CRUD、校验、分页钳制、not-found 映射、nil 调度器行为。
+- **指纹 golden 测试**：质量回归守卫（真实世界证据样本 → 期望的服务/元数据），区别于既有计数测试，破坏识别的规则编辑即使计数不变也会失败。
+
+### 指纹库
+- 扩充 `snmp-data.yaml`：补上相比企业向表格偏少用的消费级/ SMB 网络设备 sysObjectID 前缀（ASUS、D-Link、Zyxel、Tenda、DrayTek、TP-Link/Mikrotik 备选子型）。每条一个 YAML 条目。
+- 新 `lldp-cdp.yaml` 规则用于 CDP/LLDP 设备识别。
+
+### 修复
+- 移除弃用的 `tls.VersionSSL30`（staticcheck SA1019）。
+- gofmt + golangci-lint 清理（QF1008、未用参数、内嵌选择器）。
+
+## [0.2.0] - 2026-07-13
+
+分布式多网络发现、拓扑感知探测、变更检测引擎与数据驱动的指纹规则库。本版发布**两个二进制**：中心（`mibee-steward`，既有内嵌 SPA 的服务器）与新发现的 **agent**（`mibee-agent`），面向远程局域网。
+
+### 分布式发现（中心 + agent）
+- **Agent 二进制**（`cmd/agent`）：在其所在的局域网运行 scannerv2 引擎，经 `POST /api/v1/agents/report` 向中心上报结果。拉模型，agent 主动发起所有连接（上报 + 轮询命令），因此在 NAT 后可用。CGO-free，普通用户即可运行。
+- **中心侧摄取**：agent 报告经 device bridge 转成本地设备画像；agent 托管网络排除在中心自己的跨网段探测之外（agent 的报告**就是**鲜活度信号）。
+- **反熵快速路径**：agent 发送 `X-Network-State-Hash` 头（存活集合的身份+分类字段的 SHA-256）；命中时中心跳过逐主机 device bridge，只刷新租约，稳定网络的稳态路径。
+- **租约模型**：agent 报告刷新按设备租约；agent 网络的失联检测基于 TTL（`LeaseSweeper`，默认 5 分钟 TTL），区别于中心自身网络的连续扫描 `DetectLost`。
+- **命令通道**：中心入队扫描命令；agent 轮询、确认、完成（约 60s 周期）。
+- **Agent 令牌认证**：绑定 `network_id` + `agent_id` 的机对机 bearer 令牌（管理端 CRUD 在 `/api/v1/agents/tokens`）。
+- **Watch SSE + agent 断线回填**：`GET /changes/watch` 奠基；agent 重连时重发其最后的哈希。
+
+### 拓扑与探测
+- **Bridge-MIB 邻居探测器**：遍历 `BRIDGE-MIB` 发现 L2 邻居并持久化 `device_neighbors`（拓扑层 Phase 4）。
+- **SMB2 Negotiate 探测器 + FTP banner 可靠性**：更丰富的服务证据。
+- **TLS 证书 CN 品牌覆盖**：从证书 subject/issuer 字段识别 OpenWrt / GL.iNet / iStoreOS。
+- **Router ARP** 遍历解决跨网段 MAC。
+
+### 变更检测引擎
+- 向 `change_log` + 进程内 `Watcher`（仅中心）记录 `device_added` / `device_changed` / `device_lost`。`device_lost` 有两条路径：连续扫描 `miss_count`（中心自身网络）与基于 TTL 的租约到期（agent 网络）。经 `GET /api/v1/changes` 查询；UI 有历史页。
+
+### 指纹规则库（数据驱动）
+- 识别规则从手写 Go 变为**数据**（YAML）。`RuleClassifier` 启动时从配置路径或二进制内嵌规则加载。加设备签名 = 一条 YAML 条目。
+- **导入语料**（许可干净）：Rapid3 Recog（约 1174 条规则，Apache-2.0）与 SNMP/Recog 数据表（划定范围后共约 2554 条）。nmap 的 NPSL 排除（永不导入）。转换器见 `cmd/fpimport/`。
+- 独立引擎位于 [github.com/Mi-Bee-Studio/mibee-fingerprints-go](https://github.com/Mi-Bee-Studio/mibee-fingerprints-go)。
+- 无法成为单条声明式规则的逻辑（SNMP 位掩码启发、相机跨证据融合）保留为 Go 代码。
+
+### 管理 UI
+- **网络管理页**：逻辑网络的创建 / 编辑 / 删除（POST/PUT/DELETE `/api/v1/networks`）-- agent 绑定的网络注册表。
+- **发现状态页**：被动主机发现运行时计数 + 近期发现（`GET /api/v1/discovery/status`）。
+- **设备页**：用户可切换的可选列（持久化到 localStorage）；设备名链到详情页；类型联合镜像全部设备类别。
+- **变更历史页**带结构化前后 diff。
+- **CSRF 安全导出**：CSV/JSON 下载改走 API 客户端（此前经裸 `fetch` 绕过它，丢 CSRF 头）。
+
+### 运维
+- 服务器绑定重试防止残留 socket 引发的重启风暴。
+- Agent HTTP 传输 keep-alive 死锁修复 + 扫描截止期强制。
+- 反熵 + 租约模型 + 心跳作用域治理。
+
+### 已知限制
+- 中心为单实例（SQLite）。多中心集群不在范围内。
+- 无内置告警，与 Alertmanager / Uptime Kuma 集成。
+- eBPF 被动观测器需要特殊构建（`make build-with-ebpf`）与运行时特权。
+
+## [0.1.0] - 2026-07-07
+
+首次公开发布。MiBee Steward 是一个设备管理与网络层自动发现系统，内嵌 SvelteKit SPA，打包为单一二进制。
+
+### 核心能力
+- **网络发现**：插件化扫描器 v2（ICMP、TCP 端口扫描、SNMP、RTSP、ONVIF、HTTP、ARP、UDP 发现），5 层管线（探测 → 分类 → handler → 持久化）。
+- **身份推断**：从扫描证据推断设备类型/厂商/系统/主机名（相机、服务器、交换机、路由器、NAS 等）。
+- **设备登记**：完整 CRUD、批量操作、CSV 导出、自定义属性、文档关联、设备系统分组。
+- **心跳监控**：资产鲜活度探测（ICMP/TCP/HTTP/SNMP），专用时序存储、内存状态缓存、WAL 隔离安全的同步。
+- **认证**：JWT（cookie + Bearer）、2FA（TOTP）、登录锁定、令牌黑名单、RBAC（admin/user）。
+- **仪表盘**：可配置小组件、Prometheus 支撑的时序图表。
+- **审计日志**：全部管理操作留痕。
+- **Prometheus 集成**：`/metrics` + `/sd`（HTTP 服务发现）。
+- **通知通道**：webhook/邮件通道管理带测试发送。
+- **i18n**：中英双语完整翻译。
+
+### 部署
+- 单一二进制（CGO-free，SQLite 走 modernc.org/sqlite），内嵌 SPA。
+- Docker（多阶段、非 root）、systemd 单元、nginx 反向代理配置。
+- 全部高量表可配置的数据保留清扫器。
+- CLI：`mibee-steward -version`、`mibee-steward reset-admin-password`。
+
+### 已知限制
+- 单实例（SQLite）。分布式/多网络模式是未来工作。
+- 无内置告警引擎，告警有意排除在范围外（与 Alertmanager/Uptime Kuma 集成）。
+- eBPF 被动观测器需要特殊构建（`make build-with-ebpf`）与运行时特权。

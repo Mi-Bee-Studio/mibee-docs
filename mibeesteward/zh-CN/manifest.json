@@ -14,6 +14,16 @@
           "slug": "quick-start",
           "file": "quick-start.md",
           "title": "快速开始"
+        },
+        {
+          "slug": "user-guide",
+          "file": "user-guide.md",
+          "title": "用户手册"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web 界面巡礼"
         }
       ]
     },
@@ -23,22 +33,32 @@
         {
           "slug": "product-scope",
           "file": "product-scope.md",
-          "title": "产品范围与边界"
+          "title": "产品边界"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "功能总览"
         },
         {
           "slug": "comparison",
           "file": "comparison.md",
-          "title": "与同类工具的对比"
+          "title": "与其他方案对比"
         },
         {
           "slug": "discovery",
           "file": "discovery.md",
-          "title": "设备发现与识别"
+          "title": "自动发现"
         },
         {
           "slug": "architecture",
           "file": "architecture.md",
-          "title": "架构总览"
+          "title": "架构"
+        },
+        {
+          "slug": "agent-rs",
+          "file": "agent-rs.md",
+          "title": "分布式 Agent（Rust）"
         }
       ]
     },
@@ -48,17 +68,22 @@
         {
           "slug": "deployment",
           "file": "deployment.md",
-          "title": "单机部署"
-        },
-        {
-          "slug": "openwrt",
-          "file": "openwrt.md",
-          "title": "OpenWrt 路由器部署"
+          "title": "部署"
         },
         {
           "slug": "distributed",
           "file": "distributed.md",
           "title": "分布式部署"
+        },
+        {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt 部署"
+        },
+        {
+          "slug": "build-variants",
+          "file": "build-variants.md",
+          "title": "构建变体与能力矩阵"
         },
         {
           "slug": "configuration",
@@ -78,22 +103,32 @@
         {
           "slug": "integrations",
           "file": "integrations.md",
-          "title": "生态集成"
+          "title": "集成"
+        },
+        {
+          "slug": "benchmark",
+          "file": "benchmark.md",
+          "title": "基准测试"
+        },
+        {
+          "slug": "playbooks",
+          "file": "playbooks.md",
+          "title": "场景玩法指引"
         },
         {
           "slug": "ebpf",
           "file": "ebpf.md",
-          "title": "eBPF 被动观测"
+          "title": "eBPF"
         },
         {
           "slug": "fingerprint-spec",
           "file": "fingerprint-spec.md",
-          "title": "指纹库适配器规范"
+          "title": "指纹规范"
         },
         {
           "slug": "development",
           "file": "development.md",
-          "title": "开发与贡献"
+          "title": "开发"
         },
         {
           "slug": "changelog",

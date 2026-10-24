@@ -29,7 +29,7 @@ Configuration values are loaded in the following order (with later values overri
 1. **YAML Configuration File**: Base configuration loaded from whatever the `-config` flag points at (defaults to `configs/config.example.yaml`; production deployments typically copy it to `config.yaml` and pass that)
 2. **Environment Variables**: `MIBEE_*` prefixed variables override YAML values
 
-Any key set to `0` (or the zero value for its type) is treated as "use default" — it does **not** mean "no limit" or "keep forever".
+Any key set to `0` (or the zero value for its type) is treated as "use default", it does **not** mean "no limit" or "keep forever".
 
 ## Environment Variable Override Pattern
 
@@ -44,11 +44,12 @@ Environment variables override configuration values using the following pattern:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `server.port` | int | 8080 | HTTP port to listen on |
+| `server.demo_mode` | bool | false | Seed a fictional demo inventory (2 networks + ~20 TEST-NET devices + simulated activity) on an **empty** database at boot; a non-empty DB is never touched. Also enabled with the `-demo` flag. Never enable in production, the data is fake by design. |
 | `server.host` | string | "0.0.0.0" | Bind address (0.0.0.0 = all interfaces) |
 | `server.read_timeout` | duration | "15s" | Max time to read the full request (headers + body) |
 | `server.write_timeout` | duration | "5m" | Max response lifetime. **Must exceed the slowest synchronous endpoint** (POST `/scanner/scan`). Auto-raised to `scanner.default_timeout×2+30s` if configured lower, so synchronous scans are never truncated. |
 | `server.idle_timeout` | duration | "120s" | Keep-alive idle timeout |
-| `server.trusted_proxies` | []string | [] | List of trusted proxy CIDRs. `X-Forwarded-For` is only honored when the TCP peer is in this list — otherwise the TCP peer address is used as the client IP. Empty list = trust no proxy (safe for direct exposure). Set to the proxy's source range when deploying behind nginx. |
+| `server.trusted_proxies` | []string | [] | List of trusted proxy CIDRs. `X-Forwarded-For` is only honored when the TCP peer is in this list, otherwise the TCP peer address is used as the client IP. Empty list = trust no proxy (safe for direct exposure). Set to the proxy's source range when deploying behind nginx. |
 
 **Environment Variables:**
 - `MIBEE_SERVER_PORT`
@@ -92,13 +93,36 @@ database:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `auth.jwt_secret` | string | none (required) | JWT signing key. **Required**: startup fails when empty, shorter than 32 characters, or equal to the placeholder `"change-me-in-production"` (25 chars — it fails both checks). |
+| `auth.jwt_secret` | string | none (required) | JWT signing key. **Required**: startup fails when empty, shorter than 32 characters, or equal to the placeholder `"change-me-in-production"` (25 chars, it fails both checks). |
 | `auth.token_expiry` | string | "24h" | JWT token lifetime |
-| `auth.initial_admin_password` | string | *(required)* | Initial admin password. **Required** — the server exits at startup when it is empty (set it via config or `MIBEE_AUTH_INITIAL_ADMIN_PASSWORD`). |
+| `auth.initial_admin_password` | string | `""` | Bootstrap admin credential. **Empty (default) = first-run browser setup**: the admin is seeded with no password and the login page asks you to create one (`GET /auth/setup-status` → `POST /auth/setup`, policy-checked, one-shot). A non-empty value is a temporary credential; first login forces a change. |
 | `auth.cookie_domain` | string | "" | Cookie domain (empty = current domain) |
 | `auth.cookie_secure` | bool | false | Set true for HTTPS-only cookies |
 | `auth.cookie_same_site` | string | "strict" | Cookie same-site policy: "strict" or "lax" |
 | `auth.cookie_max_age` | duration | *(falls back to `auth.token_expiry`, then 86400)* | Auth cookie lifetime. Falls back to `auth.token_expiry` when unset, then 86400 seconds (24h). |
+| `auth.password_policy.min_length` | int | 8 | Minimum password length (register / change / reset paths). |
+| `auth.password_policy.require_uppercase` | bool | false | Require at least one uppercase letter. |
+| `auth.password_policy.require_lowercase` | bool | false | Require at least one lowercase letter. |
+| `auth.password_policy.require_digit` | bool | false | Require at least one digit. |
+| `auth.password_policy.require_special` | bool | false | Require at least one special character. |
+| `auth.lockout.max_failed_attempts` | int | 5 | Consecutive failed logins before the account locks. |
+| `auth.lockout.lock_minutes` | int | 30 | Lockout duration. An expired lock resets the failure counter. |
+
+> **Password policy & lockout are editable from the web UI**: the admin page
+> Settings → Security (`GET/PUT /api/v1/settings/auth`) persists overrides to
+> the `system_settings` table with precedence **DB overlay > this config file
+> > built-in defaults**, effective on the next password check/login, no
+> restart. The defaults in this table only apply when nothing overrides them.
+> The default policy checks length only (min 8); the character classes are
+> opt-in, mandatory classes proved too heavy for home deployments. Turn any
+> class on via the UI toggle or an explicit `require_*: true` here. Also note
+> the first-run behavior: an EMPTY `auth.initial_admin_password` (the installer
+> default) seeds the admin with no password, the login page detects it
+> (public `GET /auth/setup-status`) and shows a create-admin-password form
+> instead of the login form (`POST /auth/setup`, policy-checked, one-shot;
+> login attempts return 409 `setup_required` meanwhile). A non-empty value
+> is a temporary bootstrap credential (policy not applied) and the first
+> login forces a browser change backed by a server-side gate.
 
 **Environment Variables:**
 - `MIBEE_AUTH_JWT_SECRET`
@@ -189,12 +213,12 @@ export MIBEE_HEARTBEAT_TIMEOUT=10
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `prometheus.enabled` | bool | — | **Currently unused**: the `/metrics` endpoint is always mounted regardless of this switch. |
-| `prometheus.metrics_path` | string | — | **Currently unused**: the metrics path is hardcoded to `/metrics`; this key has no effect. |
+| `prometheus.enabled` | bool |, | **Currently unused**: the `/metrics` endpoint is always mounted regardless of this switch. |
+| `prometheus.metrics_path` | string |, | **Currently unused**: the metrics path is hardcoded to `/metrics`; this key has no effect. |
 
 **Environment Variables:**
-- `MIBEE_PROMETHEUS_ENABLED` (no effect — see table above)
-- `MIBEE_PROMETHEUS_METRICS_PATH` (no effect — see table above)
+- `MIBEE_PROMETHEUS_ENABLED` (no effect, see table above)
+- `MIBEE_PROMETHEUS_METRICS_PATH` (no effect, see table above)
 
 **Example:**
 ```yaml
@@ -279,14 +303,15 @@ The network scanner uses a plugin-based 5-layer architecture (probe → classify
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `scanner.enabled` | bool | — | **Currently unused** (exists in the struct, consumed nowhere): scanner routes and the background scheduler start unconditionally. |
-| `scanner.max_concurrent_scans` | int | 3 | Cap on top-level scans running at once (the engine's concurrent-scan semaphore — live and enforced). |
+| `scanner.enabled` | bool |, | **Currently unused** (exists in the struct, consumed nowhere): scanner routes and the background scheduler start unconditionally. |
+| `scanner.max_concurrent_scans` | int | 3 | Cap on top-level scans running at once (the engine's concurrent-scan semaphore, live and enforced). |
 | `scanner.default_timeout` | int (s) | 300 | Per-host pipeline timeout for cron-driven scans. Also drives the `write_timeout` auto-raise. |
 | `scanner.max_concurrent_hosts` | int | 50 | Parallelism cap for per-host scanning |
-| `scanner.retention_days` | int | — | Legacy fallback: only takes effect when `retention.scan_results_days` is unset (then 30). The sweep runs every `retention.sweep_interval_hours` (default 6h), not daily. |
+| `scanner.allow_reserved_targets` | bool | false | Escape hatch for the reserved-range scan-target rejection (#317): when true, loopback/unspecified/link-local/multicast/broadcast/240-4 targets are accepted (syntax still validated). Set ONLY for synthetic planes, `cmd/loadgen` benchmarks on 127/8. Env `MIBEE_SCANNER_ALLOW_RESERVED_TARGETS`. |
+| `scanner.retention_days` | int |, | Legacy fallback: only takes effect when `retention.scan_results_days` is unset (then 30). The sweep runs every `retention.sweep_interval_hours` (default 6h), not daily. |
 | `scanner.default_cron_expr` | string | "0 */6 * * *" | Default cron for newly-created scan tasks |
 | `scanner.engine` | string | "v2" | Engine selection (only "v2" is supported; v1 was removed) |
-| `scanner.persist_raw_evidence` | bool | false | Write every probe observation to `service_evidence` (voluminous — enable for debugging only) |
+| `scanner.persist_raw_evidence` | bool | false | Write every probe observation to `service_evidence` (voluminous, enable for debugging only) |
 | `scanner.lost_threshold` | int | 2 | Consecutive scans absent from the alive set before a device is declared lost. Its heartbeat-side counterpart is `heartbeat.offline_threshold` (probe-failure count). |
 | `scanner.per_probe_timeout` | int (s) | 3 | Timeout for a SINGLE probe attempt (one SNMP Get / TCP dial / HTTP fetch). Distinct from `default_timeout` (the whole per-host pipeline). |
 | `scanner.snmp_community` | string | "public" | Global SNMP community string (used by v1/v2c scans). |
@@ -294,7 +319,7 @@ The network scanner uses a plugin-based 5-layer architecture (probe → classify
 | `scanner.fingerprint_path` | string | "" | Directory of fingerprint YAML rules (see `docs/fingerprint-spec.md`). Empty = rules embedded in the binary. |
 | `scanner.ebpf.enabled` | bool | false | Enable the eBPF passive observer (no-op unless built with `make build-with-ebpf`) |
 | `scanner.ebpf.interfaces` | []string | [] | Interfaces to attach the TC program to (empty = all non-loopback) |
-| `scanner.pipeline_defaults.*` | various | — | Per-stage enable flags + `default_ports` (expanded to include camera + prometheus ports) |
+| `scanner.pipeline_defaults.*` | various |, | Per-stage enable flags + `default_ports` (expanded to include camera + prometheus ports) |
 | `scanner.agent_lease_ttl` | duration | "5m" | Lease expiry for agent-managed devices. After an agent stops reporting, the device is marked lost within this time. |
 | `scanner.lease_sweep_interval` | duration | "60s" | How often the lease sweeper runs. |
 | `scanner.reconcile_interval` | duration | "1h" | Network attribution reconciliation interval. Detects devices whose IP has drifted outside their network's CIDR. |
@@ -375,9 +400,64 @@ scanner:
     unicast_queries: false
 ```
 
+## Probe (Synthetic Probing) Configuration
+
+Per-target interval/timeout live on each `probe_targets` row (managed in the UI/API); this block tunes the engine itself and its two built-in subsystems, the egress-quality matrix (#608) and the discover-then-probe autogen policy (#606).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `probe.max_concurrency` | int | 8 | Max simultaneous probes (semaphore). Replaces the previously hard-coded bound of 8; 0 = default, capped at 64. Env `MIBEE_PROBE_MAX_CONCURRENCY`. |
+| `probe.quality.enabled` | bool | false | Network egress quality assessment: a system-seeded matrix of public probe points executed from EVERY vantage (center + all agents), analyzed per network. A bare config defaults to **disabled**; `configs/config.example.yaml` ships `enabled: true` as the recommended value. Env `MIBEE_PROBE_QUALITY_ENABLED`. |
+| `probe.quality.window_minutes` | int | 15 | Analyzer lookback window (5–1440). Env `MIBEE_PROBE_QUALITY_WINDOW_MINUTES`. |
+| `probe.quality.interval_seconds` | int | 120 | Seeded cadence of every quality target (≥10). |
+| `probe.quality.http_degraded_ms` | int | 800 | p50 latency threshold (http legs) marking a vantage degraded, on top of the ok-rate threshold. |
+| `probe.quality.dns_degraded_ms` | int | 300 | Same for dns legs. |
+| `probe.quality.ok_rate_threshold` | float | 0.9 | Minimum success rate within the window (0..1]. |
+| `probe.quality.groups` | map | see below | The probe-point matrix, `group name → [{name, module, target, options}]`. The reserved group `domestic` drives the primary verdict; `international` (and any other name) is reference-only — cross-border variance is its own signal, not an egress fault. Empty = the shipped defaults: a domestic group (two public resolvers for DNS differential diagnosis, mainstream HTTP sites, a 204 endpoint, a DNS-free direct-IP TCP leg) plus an international reference group. Every value is configurable; nothing is hardcoded. |
+| `probe.autogen.enabled` | bool | false | Discover-then-probe: auto-create device-bound probe targets (`source=auto`) from discovered services. Default OFF — it writes rows on its own, so it must be a deliberate choice. Turning it off parks the auto population (rows + history kept). |
+| `probe.autogen.services` | []string | ["http","https"] | Service identities eligible for auto targets (matched against `host_services.service`). |
+| `probe.autogen.device_types` | []string | [] | Restrict generation to those device types; empty = all. |
+| `probe.autogen.interval_seconds` | int | 300 | Probe interval of auto targets (≥10). |
+| `probe.autogen.max_targets` | int | 100 | Population cap (1–1000) so a 1000-device LAN cannot explode into 3000 targets. |
+| `probe.autogen.sweep_interval_minutes` | int | 15 | Reconcile cadence: create targets for new services, park targets whose service left the scan, revive on reappearance. Manual targets are never touched. |
+
+Quality seeding semantics (applied at startup, idempotent): enabled — missing matrix rows are created (`source=system`, vantage `all`), drifted rows are refreshed from config (module/target/options), and a `source=system` row whose config entry was removed is deleted **with its result history**; disabled — every system target is parked (disabled, kept for history). A row deleted in the UI is reseeded on the next restart; to remove a target permanently, remove it from `groups` (or disable `probe.quality`).
+
+**Example** (matching `configs/config.example.yaml`):
+```yaml
+probe:
+  max_concurrency: 8
+  quality:
+    enabled: true
+    window_minutes: 15
+    interval_seconds: 120
+    http_degraded_ms: 800
+    dns_degraded_ms: 300
+    ok_rate_threshold: 0.9
+    groups:
+      domestic:
+        - {name: quality-dns-ali,    module: dns,  target: www.baidu.com, options: {record: A, resolver: 223.5.5.5}}
+        - {name: quality-dns-dnspod, module: dns,  target: www.baidu.com, options: {record: A, resolver: 119.29.29.29}}
+        - {name: quality-http-baidu, module: http, target: https://www.baidu.com}
+        - {name: quality-http-qq,    module: http, target: https://www.qq.com}
+        - {name: quality-http-204,   module: http, target: http://connect.rom.miui.com/generate_204, options: {expected_status: [204]}}
+        - {name: quality-tcp-ipdirect, module: tcp, target: 223.5.5.5:53}
+      international:
+        - {name: quality-dns-cf,         module: dns,  target: www.cloudflare.com, options: {record: A, resolver: 1.1.1.1}}
+        - {name: quality-http-google204, module: http, target: http://www.google.com/generate_204, options: {expected_status: [204]}}
+  autogen:
+    enabled: false
+    services: [http, https]
+    interval_seconds: 300
+    max_targets: 100
+    sweep_interval_minutes: 15
+```
+
+The verdict semantics the matrix feeds (why two resolvers, why a direct-IP TCP leg, why the international group is reference-only) are explained in [Architecture → Synthetic Probing](architecture.md) and surfaced by `GET /api/v1/probe-quality`.
+
 ## Router-Resident Discovery Sources
 
-The scanner can ingest device data from router-resident sources in addition to active probing. The whole service is gated by the master switch `scanner.discovery.enabled` (disabled by default). Note: `trigger_identify` and the `router_arp`/`arp_cache`/`multicast` sub-source toggles ship **enabled: true** in `configs/config.example.yaml` (the recommended values) — they are off out of the box because of the master switch, not because each source individually defaults off. Each source is a no-op when the backing file or socket is absent on the host.
+The scanner can ingest device data from router-resident sources in addition to active probing. The whole service is gated by the master switch `scanner.discovery.enabled` (disabled by default). Note: `trigger_identify` and the `router_arp`/`arp_cache`/`multicast` sub-source toggles ship **enabled: true** in `configs/config.example.yaml` (the recommended values), they are off out of the box because of the master switch, not because each source individually defaults off. Each source is a no-op when the backing file or socket is absent on the host.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -387,8 +467,8 @@ The scanner can ingest device data from router-resident sources in addition to a
 | `scanner.discovery.router_arp.enabled` | bool | false* | Enable router SNMP ARP walk source (cross-subnet coverage) |
 | `scanner.discovery.arp_cache.enabled` | bool | false* | Enable local ARP cache source (reads `/proc/net/arp`) |
 | `scanner.discovery.multicast.enabled` | bool | false* | Enable mDNS/SSDP passive listener source |
-| `scanner.discovery.dhcp_leases.enabled` | bool | false | Read the local dnsmasq DHCP lease file (`/tmp/dhcp.leases` on OpenWrt, `/var/lib/misc/dnsmasq.leases` on Debian) to discover devices that recently obtained an IP. dnsmasq only — dhcpd.leases is not supported. |
-| `scanner.discovery.conntrack.enabled` | bool | false | Parse the kernel conntrack table (`/proc/net/nf_conntrack` only — no `conntrack -L` CLI) to discover active NAT connections and their internal hosts. |
+| `scanner.discovery.dhcp_leases.enabled` | bool | false | Read the local dnsmasq DHCP lease file (`/tmp/dhcp.leases` on OpenWrt, `/var/lib/misc/dnsmasq.leases` on Debian) to discover devices that recently obtained an IP. dnsmasq only, dhcpd.leases is not supported. |
+| `scanner.discovery.conntrack.enabled` | bool | false | Parse the kernel conntrack table (`/proc/net/nf_conntrack` only, no `conntrack -L` CLI) to discover active NAT connections and their internal hosts. |
 | `scanner.discovery.hostapd.enabled` | bool | false | Read the hostapd control interface to discover Wi-Fi clients associated with the router's access point. |
 | `scanner.discovery.hostapd.interfaces` | []string | [] | Network interface names to monitor for hostapd. |
 | `scanner.discovery.dns_log.enabled` | bool | false | Parse the dnsmasq query log (`--log-queries` output; dnsmasq only, not pihole) to discover hosts by their DNS activity. |
@@ -396,7 +476,7 @@ The scanner can ingest device data from router-resident sources in addition to a
 | `scanner.discovery.arp_scan.enabled` | bool | false | Enable active ARP who-has sweep (requires `WITH_ARPSCAN` build tag + `CAP_NET_RAW`). |
 | `scanner.discovery.lldp_interfaces` | []string | [] | Network interface names for LLDP/CDP passive frame listening (requires `WITH_LLDP`/`WITH_CDP` build tags). |
 
-> \* Sub-source toggles default to the Go zero value (false), but `router_arp`/`arp_cache`/`multicast` ship **enabled: true** in `configs/config.example.yaml` (recommended) — they are off out of the box only because of the master `scanner.discovery.enabled: false`.
+> \* Sub-source toggles default to the Go zero value (false), but `router_arp`/`arp_cache`/`multicast` ship **enabled: true** in `configs/config.example.yaml` (recommended), they are off out of the box only because of the master `scanner.discovery.enabled: false`.
 
 **Environment Variables:**
 - `MIBEE_SCANNER_DISCOVERY_DHCP_LEASES_ENABLED`
@@ -432,7 +512,7 @@ scanner:
     lldp_interfaces: []
 ```
 
-> **Note**: When the backing file or socket does not exist on the host, the source silently becomes a no-op — no error is logged and no discovery data is produced.
+> **Note**: When the backing file or socket does not exist on the host, the source silently becomes a no-op, no error is logged and no discovery data is produced.
 
 ## Network Configuration
 
@@ -450,7 +530,7 @@ The distributed-mode switch: with `center.url` set, this instance runs as an **a
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `center.url` | string | "" | The center's base URL (e.g. "http://192.168.1.101:8080"). Empty = center/standalone mode (no upstream reporting). |
+| `center.url` | string | "" | The center's base URL (e.g. "http://192.168.1.102:8080"). Empty = center/standalone mode (no upstream reporting). |
 | `center.auth_token` | string | "" | The agent's bearer token (minted on the center via `POST /api/v1/agents/tokens`). Required in agent mode. |
 | `center.report_interval` | duration | "30s" | How often buffered scan results are flushed upstream when the buffer isn't full. Errors retry with exponential backoff. |
 
@@ -463,7 +543,7 @@ The distributed-mode switch: with `center.url` set, this instance runs as an **a
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `security.master_key` | string | "" | AES-GCM master key (must be exactly 32 bytes). Used for encrypted storage of SNMPv3 and SSH credentials. Empty = credential encryption disabled (falls back to v1/v2c community strings). |
+| `security.master_key` | string | "" | AES-GCM master key (must be exactly 32 bytes). Used for encrypted storage of SNMPv3 and SSH credentials. Empty = credential encryption disabled (falls back to v1/v2c community strings). In agent mode this key protects the agent's OWN local SNMP credential vault (#241), it is independent of the center's key by design. |
 
 **Example:**
 ```yaml
@@ -476,7 +556,7 @@ Generate a master key (take 32 raw bytes and encode them):
 head -c 32 /dev/urandom | base64
 ```
 
-> Note: `openssl rand -hex 32` produces 64 hex characters (64 bytes) and FAILS the exactly-32-byte requirement — do not use it for the master key.
+> Note: `openssl rand -hex 32` produces 64 hex characters (64 bytes) and FAILS the exactly-32-byte requirement, do not use it for the master key.
 
 ## Heartbeat Thresholds
 
@@ -488,15 +568,15 @@ The heartbeat subsystem uses several configurable thresholds to control when dev
 | **Backoff** | `heartbeat.offline_backoff_ticks` | 10 | For devices already offline, probe once every N ticks instead of every tick. On the default 30s ticker, N=10 ≈ 5 minutes between probes. |
 | **Tick** | `heartbeat.tick_interval_seconds` | 30 | Interval between scheduler ticks (the heartbeat loop's heartbeat). |
 
-**Recovery**: A successful scan always clears the failure count immediately — backoff never delays recovery of a host that comes back online.
+**Recovery**: A successful scan always clears the failure count immediately, backoff never delays recovery of a host that comes back online.
 
 ## Sync Scan Limit
 
 The synchronous scan endpoint (`POST /api/v1/scanner/scan`) imposes a hard target limit:
 
-- **Max targets**: 1024 IPs (individual, CIDR, or range — total count after expansion)
+- **Max targets**: 1024 IPs (individual, CIDR, or range, total count after expansion)
 - **Exceeds limit**: HTTP 413 with `target range too large for synchronous scan (N IPs; max 1024). Use POST /api/v1/scanner/tasks to run asynchronously.`
-- **Workaround**: Use the async task API — `POST /api/v1/scanner/tasks` to create a task, then `POST /api/v1/scanner/tasks/{id}/trigger` to fire it. The async path has no target count limit.
+- **Workaround**: Use the async task API, `POST /api/v1/scanner/tasks` to create a task, then `POST /api/v1/scanner/tasks/{id}/trigger` to fire it. The async path has no target count limit.
 
 ## Rate Limit Configuration
 
@@ -526,15 +606,47 @@ The synchronous scan endpoint (`POST /api/v1/scanner/scan`) imposes a hard targe
 | `retention.service_evidence_days` | int | 14 | Service evidence retention (days) |
 | `retention.change_log_days` | int | 30 | Change log retention (days) |
 | `retention.device_neighbors_days` | int | 90 | Device neighbor records retention (days) |
+| `retention.device_speaks_days` | int | 30 | Idle speaks-with traffic aggregates retention (days) (#500) |
 | `retention.host_services_days` | int | 30 | Host service records retention (days) |
 | `retention.host_tls_certs_days` | int | 30 | TLS certificate records retention (days) |
-| `retention.probe_results_days` | int | 30 | Synthetic-probe (拨测) result history retention (days). `probe_tls_certs` is not swept — it holds only each target's current chain |
+| `retention.probe_results_days` | int | 30 | Synthetic-probe result history retention (days). `probe_tls_certs` is not swept, it holds only each target's current chain |
 | `retention.sweep_interval_hours` | int | 6 | Cleanup sweep interval (hours) |
 | `retention.batch_size` | int | 5000 | Max rows per cleanup batch |
 
+## Flow Telemetry Configuration (#500)
+
+The passive observer's speaks-with channel. Raw per-port flows never persist — the exporter folds each drained batch into device-level aggregates before storage (the #500 privacy red line). Conversations between two managed devices appear as `speaks-with` topology edges + the device Traffic Profile panel; the first observation of a managed pair emits a `speaks_with_new` change event (bind a notification rule for lateral-movement alerts).
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `scanner.ebpf.flows.export_interval` | int | 30 | Seconds between flow-map drains |
+| `scanner.ebpf.flows.map_entries` | int | 16384 | LRU flow-map capacity, clamped to [1024, 131072] (~0.5 MiB kernel memory at the default) |
+
+## Listen Watch Configuration (#500)
+
+Diffs the local LISTEN table (`/proc/net/tcp{,6}`) and emits a `listen_port_added` change event for every newly opened listening socket on THIS host — the asset-anomaly channel that needs no eBPF and no privileges. The first snapshot establishes a baseline without alerting (a restart does not replay the table). Non-Linux hosts degrade to one warn line.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `listen_watch.enabled` | bool | `false` | Enable the diff source |
+| `listen_watch.interval` | int | 15 | Seconds between diffs |
+| `listen_watch.device_ip` | string | `""` | Bind events to that device's change_log entity (rules scoped to the device then match); empty leaves them unbound |
+
+## SNMP Trap Receiver Configuration
+
+The inbound SNMP trap channel (#509) — devices speaking unprompted. `linkDown`/`linkUp` are topology-change signals, `coldStart` is an onboarding report, `authenticationFailure` is a security whisper; every accepted trap lands as a `snmp_trap` passive-evidence row on the source device (throttled to one row per source+trap per 10s — a flapping link does not flood the table), and `coldStart`/`linkUp` additionally feed the discovery funnel. Inform requests are ACKed by the listener; nothing else is ever sent.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `snmp_trap.enabled` | bool | `false` | Strictly opt-in: the receiver opens a listening socket |
+| `snmp_trap.bind` | string | `":162"` | UDP bind address. Ports below 1024 need root or `AmbientCapabilities=CAP_NET_BIND_SERVICE` (systemd drop-in); `":1162"` runs unprivileged — point your devices' trap destinations at it |
+| `snmp_trap.community` | string | `"public"` | The v2c community traps must carry; the receiver drops mismatches before any throttling or persistence (constant-time compare, counted in `mibee_snmp_trap_community_drops`) |
+
+Operational notes: open the UDP port in the firewall for the trap sources only (the listener sees any packet that reaches it); v3 traps (USM, credential-name references against the vault) are the designed follow-up — no v3 keys exist yet, so no one can enable a stub.
+
 ## Docker Configuration Template
 
-The repository ships a ready-to-use Docker Compose config template at [`configs/config.docker.yaml`](../../configs/config.docker.yaml). It pre-configures paths and network settings appropriate for containerized deployment — copy it as your starting `config.yaml` and adjust `auth.jwt_secret` and `auth.initial_admin_password` for production.
+The repository ships a ready-to-use Docker Compose config template at [`configs/config.docker.yaml`](../../configs/config.docker.yaml). It pre-configures paths and network settings appropriate for containerized deployment, copy it as your starting `config.yaml` and adjust `auth.jwt_secret` and `auth.initial_admin_password` for production.
 
 ## Complete Configuration Example
 
@@ -758,7 +870,7 @@ The application validates configuration on startup (`internal/config/config.go`)
 **Center / standalone mode**:
 - `auth.jwt_secret` is required and must be at least 32 characters long
 - `auth.jwt_secret` must not equal the placeholder `"change-me-in-production"`
-- an empty `auth.initial_admin_password` makes the server exit at startup (see `cmd/server/main.go`)
+- an empty `auth.initial_admin_password` now means "first-run browser setup", not a startup exit (see `cmd/server/main.go`)
 
 The following produce **warnings only** and do not block startup:
 - `auth.cookie_secure=false` (cookies will be sent over HTTP)

@@ -6,8 +6,8 @@
 
 **谁需要读它：**
 
-- **规则文件作者** — 编写 YAML 指纹规则，需要理解规则格式、匹配操作、置信度模型和提取操作
-- **适配器实现者** — 用 Go/Zig/Rust 等语言实现指纹库加载器，需要遵循本文档定义的契约以确保跨语言一致的分类结果
+- **规则文件作者**，编写 YAML 指纹规则，需要理解规则格式、匹配操作、置信度模型和提取操作
+- **适配器实现者**，用 Go/Zig/Rust 等语言实现指纹库加载器，需要遵循本文档定义的契约以确保跨语言一致的分类结果
 
 **核心概念速览：**
 
@@ -61,13 +61,15 @@ plain JSON structures (defined in `internal/service/scannerv2/evidence.go`):
 | Field | Type | Meaning |
 |---|---|---|
 | `source` | string | probe that produced this (e.g. `active:snmp`, `passive:ebpf:tc`) |
-| `kind` | string | evidence shape: `port_open`, `banner`, `snmp`, `http`, `tls`, `rtsp_banner`, `onvif_response`, `metric`, `echo` |
+| `kind` | string | evidence shape: `port_open`, `banner`, `snmp`, `http`, `tls`, `rtsp_banner`, `onvif_response`, `metric`, `echo`, `hostname`, `mdns`, `ssdp` |
 | `ip` | string | target host |
 | `port` | int | L4 port (0 when N/A, e.g. ICMP) |
 | `protocol` | string | `tcp` / `udp` / `` (icmp) |
 | `raw_data` | map<string,string> | protocol-specific payload (banner text, SNMP varbinds, headers, …) |
 | `confidence` | float | this evidence's standalone reliability, ∈ [0,1] |
 | `observed_at` | timestamp | when gathered |
+
+三种 kind 来自发现侧而非主动探测：`hostname`（DHCP 租约 / rDNS 主机名--`iot-identity.yaml` 语料以此为核心，为「什么都不应答」的米家生态 IoT 给出品牌识别），以及 `mdns` / `ssdp`（解析后的服务通告--`mdns-ssdp.yaml` 语料将其映射为摄像头 / 打印机 / NAS / IoT 身份与厂商签名）。被动观察如何进入证据集见[设备发现](discovery.md)。
 
 ### ServiceIdentity (output)
 
@@ -106,7 +108,7 @@ A rule file is YAML with `version: 1` and a `rules:` list. Each rule has:
 ### SNMP data tables (separate shape)
 
 `snmp-data.yaml` uses a different top-level shape (lookup tables, not
-match/emit rules) — see §7. It is consumed by the logic-retained
+match/emit rules), see §7. It is consumed by the logic-retained
 `SNMPClassifier`, not the rule evaluator.
 
 ## 4. Match operations (`match:`)
@@ -196,7 +198,7 @@ cross-language results diverge.
 Independent evidence reinforces: a single 0.9 source stays 0.9; two 0.9 sources
 yield ~0.99.
 
-```
+```text
 fused = 1 - (1 - evidence.conf) * (1 - rule.conf)
 ```
 
@@ -204,7 +206,7 @@ Example: evidence confidence 0.9, rule base 0.95 → `1 - 0.1*0.05 = 0.995`.
 
 ### Literal (`literal_confidence: true`)
 
-The rule's `confidence` is used verbatim — no fusion. Used by port-shape-only
+The rule's `confidence` is used verbatim, no fusion. Used by port-shape-only
 fallbacks (e.g. `0.5`) where there's no meaningful evidence confidence to fuse.
 
 ## 6. Extract operations (`extract:`)
@@ -224,8 +226,8 @@ Each `metadata:` key maps to one extractor:
 |---|---|---|
 | `const` | `{ const: "node_exporter" }` | fixed string |
 | `passthrough` | `{ passthrough: server }` | copy `raw_data[server]` |
-| `split` | `{ split: { delim: "-", index: 2 } }` | `SplitN(banner, delim, index+1)[index]` — SSH version |
-| `substring_after` | `{ substring_after: { field: server, delim: "/", until: [" ", "("] } }` | after first `delim`, until first char in `until` — HTTP server version |
+| `split` | `{ split: { delim: "-", index: 2 } }` | `SplitN(banner, delim, index+1)[index]`, SSH version |
+| `substring_after` | `{ substring_after: { field: server, delim: "/", until: [" ", "("] } }` | after first `delim`, until first char in `until`, HTTP server version |
 | `keyword_map` | see below | ordered CI-contains → enum (brand/OS tables) |
 | `when_equals` | `{ when_equals: { field: auth_required, value: "true", set: "true" } }` | set value iff `raw_data[field] == value` |
 
@@ -281,7 +283,7 @@ header, falling back to ONVIF `server` (priority-ordered cross-evidence field
 selection).
 
 **Why not a rule:** aggregates multiple evidence pieces into one identity with
-variable-arity fusion and cross-source field selection — inherently multi-evidence.
+variable-arity fusion and cross-source field selection, inherently multi-evidence.
 
 ## 8. Provenance & license
 
@@ -290,9 +292,9 @@ Every rule carries a `source` field for attribution:
 | source | origin | license | importable? |
 |---|---|---|---|
 | `builtin` | authored for MiBee | CC-BY-SA 4.0 | yes (project's own corpus license) |
-| `recog` | Rapid7 Recog | Apache-2.0 (upstream) | yes — convert via `fpimport recog`; converted rules adopt the corpus CC-BY-SA 4.0, upstream Apache-2.0 attribution retained via `source: recog` |
-| `ieee-oui` | IEEE OUI registry | factual registry | yes — cite IEEE |
-| `iana-pen` | IANA Private Enterprise Numbers | factual registry | yes — cite IANA |
+| `recog` | Rapid7 Recog | Apache-2.0 (upstream) | yes, convert via `fpimport recog`; converted rules adopt the corpus CC-BY-SA 4.0, upstream Apache-2.0 attribution retained via `source: recog` |
+| `ieee-oui` | IEEE OUI registry | factual registry | yes, cite IEEE |
+| `iana-pen` | IANA Private Enterprise Numbers | factual registry | yes, cite IANA |
 
 ### nmap-service-probes: NOT imported
 
@@ -327,3 +329,13 @@ is the reference. A Zig/Rust implementation is considered conforming iff, given
 the same rule files and evidence, it emits byte-identical `ServiceIdentity`
 output (service, port, protocol, confidence within 1e-9, metadata). The parity
 tests in `rule_classifier_test.go` are the conformance suite.
+
+## 10. 覆盖率报表与规则草稿闭环
+
+中心把上述贡献流程做成了一等公民页面（**指纹覆盖**，`/fingerprints`）：
+
+- **覆盖分层**，每台设备按类型识别方式分桶：*协议证据*（SNMP/RTSP/ONVIF/mDNS，可信）、*启发式*（主机名/品牌关键字，可被伪造，UI 显示 `?` 徽章）、*未识别*（回落为通用 `other`）。同样的分层以 `mibee_fingerprint_identified_devices{source}` 导出到 Prometheus。
+- **最需要规则的特征**，未识别设备按共同特征聚类（OUI 网卡厂商、开放端口签名、主机名前缀），一条贡献规则可以一次覆盖 N 台设备。
+- **规则草稿**，对任意未识别设备，「规则草稿」从扫描器已收集的证据（SNMP `sys_descr`、TCP banner、HTTP `title`/`server`、RTSP `server`）预填生成 YAML。草稿在返回前经过真实规则分类器的编译验证，下载即可加载，你只需补全 service 名称判断并微调匹配值。
+
+对应 API：`GET /api/v1/fingerprints/coverage`（分层统计 + 清单 + 聚合）与 `POST /api/v1/devices/{uuid}/fingerprint-draft`（返回 `text/yaml`）。

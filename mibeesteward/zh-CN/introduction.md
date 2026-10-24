@@ -1,6 +1,6 @@
 # MiBee Steward 产品介绍
 
-MiBee Steward v0.5.0（2026-08-19）是一个**设备/网络层的资产发现、识别与登记**工具——面向网络与 IoT 资产的轻量 CMDB（CMDB-lite），以单个零依赖二进制交付。后端采用 Go + Chi 路由 + modernc.org/sqlite（CGO-free 的纯 Go SQLite 实现）+ sqlc 生成的数据访问层，配置管理基于 koanf（YAML 文件 + `MIBEE_*` 环境变量）；前端为 SvelteKit 5 单页应用，通过 `go:embed` 嵌入二进制。许可证为 AGPL-3.0，并提供商业双授权。
+MiBee Steward v0.5.0（2026-08-19）是一个**设备/网络层的资产发现、识别与登记**工具--面向网络与 IoT 资产的轻量 CMDB（CMDB-lite），以单个零依赖二进制交付。后端采用 Go + Chi 路由 + modernc.org/sqlite（CGO-free 的纯 Go SQLite 实现）+ sqlc 生成的数据访问层，配置管理基于 koanf（YAML 文件 + `MIBEE_*` 环境变量）；前端为 SvelteKit 5 单页应用，通过 `go:embed` 嵌入二进制。许可证为 AGPL-3.0，并提供商业双授权。
 
 它回答三个问题：
 
@@ -17,6 +17,10 @@ flowchart LR
     D --> F["Prometheus 生态"]
     E --> F
 ```
+
+![仪表盘](images/dashboard.webp)
+
+![设备列表](images/devices.webp)
 
 ## 核心能力
 
@@ -39,8 +43,8 @@ flowchart LR
 
 ### 拨测（外网资源探测）
 
-- 显式配置的周期探测（blackbox_exporter 模式）：对任意可达端点——通常是外网/互联网资源（公开 HTTPS 站点、托管邮件 TLS 端口、供应商网关）——按固定间隔探测可用性与延迟。
-- 四类模块：`http`（完整 URL，状态码 < 400 为成功，https 目标同时采集证书链）、`tls`（host:port 握手并采集完整证书链）、`tcp`、`icmp`。
+- 显式配置的周期探测（blackbox_exporter 模式）：对任意可达端点--通常是外网/互联网资源（公开 HTTPS 站点、托管邮件 TLS 端口、供应商网关）--按固定间隔探测可用性与延迟。
+- 五类模块：`http`（完整 URL，状态码 < 400 为成功，https 目标同时采集证书链）、`tls`（host:port 握手并采集完整证书链）、`tcp`、`icmp`、`dns`（纯域名解析，可指定解析器与期望 IP 断言）。
 - TLS 证书能力从内网复用到外网：证书链（叶/中间/根）、SAN、序列号、指纹、PEM、协商的 TLS 版本与密码套件、信任判定全部入库；历史结果携带证书到期摘要，可观察证书续期节奏。
 - 证书到期与可用性指标（`mibee_probe_up` / `mibee_probe_cert_expiry_timestamp_seconds`）走 `/metrics`，告警交给 Prometheus（示例规则随仓库提供）。
 
@@ -48,19 +52,19 @@ flowchart LR
 
 - 定时后台 sweep 通过 SSH 拉取每台路由器/交换机/防火墙设备的 running-config（厂商命令矩阵：Juniper JunOS、HP/Aruba/H3C/Comware 专用命令，其余走 Cisco 风格 `show running-config` 默认；host-key TOFU），版本化存入 `device_configs`，仅内容变化时记录新版本。
 - 两版本 unified diff（API `GET /devices/{id}/configs` + `/diff?a=&b=`）与设备详情「配置历史」tab；SSH 凭据落库加密（AES-256-GCM，`security.master_key` 派生），读取时脱敏。
-- 配置变更产生 `device_config_changed` 事件写入变更日志——进入变更页、SSE watch 与通知规则。
+- 配置变更产生 `device_config_changed` 事件写入变更日志--进入变更页、SSE watch 与通知规则。
 - 按需启用（`scanner.config_backup.enabled`，默认关闭）：需要 master key 与绑定到目标设备的 SSH 凭据。
 
 ### 事件通知（内置、规则驱动）
 
 - 为不运行 Prometheus+Alertmanager 栈的团队准备：**通知规则**将变更事件（`device_lost` / `device_recovered` / `device_added` / `device_changed` / `device_config_changed`）投递到 webhook/邮件渠道，带每（规则 × 设备）冷却窗口抑制抖动。
-- 每条规则可限定作用域：全部网络 / 单个网络 / 单台设备（按 UUID）。这是变更检测之上的轻量「规则→渠道」链路——刻意不做告警引擎。
+- 每条规则可限定作用域：全部网络 / 单个网络 / 单台设备（按 UUID）。这是变更检测之上的轻量「规则→渠道」链路--刻意不做告警引擎。
 
 ### 可观测性（Prometheus 生态）
 
-- `/metrics`：Prometheus 文本格式指标——设备状态 gauge、心跳计数器（总尝试/失败）、响应时间直方图。
+- `/metrics`：Prometheus 文本格式指标--设备状态 gauge、心跳计数器（总尝试/失败）、响应时间直方图。
 - `/sd`：HTTP 服务发现端点，自动将资产（含 `metrics_enabled=true` 的系统）注册进 Prometheus。
-- 告警与可视化有意留给 Prometheus Alertmanager 和 Grafana——它们原生消费上述端点。
+- 告警与可视化有意留给 Prometheus Alertmanager 和 Grafana--它们原生消费上述端点。
 
 ### 管理界面
 
@@ -69,9 +73,13 @@ flowchart LR
 - JWT 认证（cookie 优先，Bearer 令牌回退）+ 可选 TOTP 两步验证；基于能力的 RBAC（admin / operator / viewer 三档，`user` 为 viewer 的旧别名），对象级网络作用域授权，审计日志。
 - 完整国际化：中文与英文语言包，自动语言检测。
 
+![网络拓扑](images/topology.webp)
+
+界面全貌见 [Web 界面巡礼](web-ui.md)。
+
 ### 分布式部署
 
-- 中心（`cmd/server`）+ 采集器（`cmd/agent`）模式：每个采集器负责一个局域网段，中心汇聚统一注册表。
+- 中心（`cmd/server`）+ 采集器（Rust `agent-rs/`）模式：每个采集器负责一个局域网段，中心汇聚统一注册表。
 - 拉取模型：采集器主动向中心上报与轮询命令，中心无需入站连接，可部署在 NAT 之后。
 - MAC 优先身份模型：跨子网漫游设备保持单一资产；相同私网 IP 在不同网络（`network_id`）下视为不同设备。
 
@@ -83,7 +91,7 @@ flowchart LR
 
 ### IoT / 摄像头舰队发现
 
-按品牌和型号识别 IP 摄像头、传感器、控制器等 IoT 设备。摄像头（RTSP + ONVIF）是当前的优先场景，因为指纹清晰、需求明确——不代表 Steward 是摄像头专属工具，同一识别管线适用于任何设备类型。
+按品牌和型号识别 IP 摄像头、传感器、控制器等 IoT 设备。摄像头（RTSP + ONVIF）是当前的优先场景，因为指纹清晰、需求明确--不代表 Steward 是摄像头专属工具，同一识别管线适用于任何设备类型。
 
 ### 分支机构 / SOHO 网络画像
 
@@ -105,13 +113,13 @@ flowchart LR
 | 登记 | 设备注册表（CMDB-lite）：CRUD、分组、设备系统管理 |
 | 心跳 | 在线/离线 + 延迟 + 历史的持续资产鲜活度 |
 | 配置备份 | 定时 SSH 拉取 running-config，版本化存储 + diff（按需启用） |
-| 拨测 | blackbox 风格的外部端点周期探测（http/tls/tcp/icmp） |
+| 拨测 | blackbox 风格的外部端点周期探测（http/tls/tcp/icmp/dns）、设备绑定与网络出口质量评估 |
 | 变更通知 | 规则驱动的设备/配置变更事件 → webhook/邮件 |
 | 指标导出 | `/metrics`（Prometheus 格式）+ `/sd`（HTTP 服务发现） |
 
 ### 不是什么
 
-这些是刻意保留的**产品边界，不是缺口**——对应能力由成熟工具完成，Steward 不与它们竞争：
+这些是刻意保留的**产品边界，不是缺口**--对应能力由成熟工具完成，Steward 不与它们竞争：
 
 | 能力 | 请使用 | 说明 |
 |------|--------|------|
@@ -122,9 +130,9 @@ flowchart LR
 | 配置管理 | Ansible 等配置管理工具 | 只登记与跟踪资产，不向设备下发配置 |
 | 中心高可用 | 单实例中心 | 中心是单一进程；跨网络扩展通过中心 + 采集器（见[分布式](distributed.md)），不提供集群/HA |
 
-如果确实需要上述能力，把对应工具与 Steward 一起部署即可——它们原生消费 `/metrics` 与 `/sd` 端点。
+如果确实需要上述能力，把对应工具与 Steward 一起部署即可--它们原生消费 `/metrics` 与 `/sd` 端点。
 
-> 常见误解：Steward 有时被拿来与 Beszel / Uptime Kuma / Netdata 等轻量监控工具比较。这是类别错误——那些工具监控你已经知道的主机/服务，Steward 是去发现"网络上到底有什么"。
+> 常见误解：Steward 有时被拿来与 Beszel / Uptime Kuma / Netdata 等轻量监控工具比较。这是类别错误--那些工具监控你已经知道的主机/服务，Steward 是去发现"网络上到底有什么"。
 
 ## 系统要求
 
@@ -136,4 +144,7 @@ flowchart LR
 
 ## 下一步
 
-继续阅读[快速开始](quick-start.md)，在几分钟内完成首次部署与网络扫描。
+- [功能总览](features.md)，全部能力的分层清单
+- [场景玩法指引](playbooks.md)，六个新手场景，边做边学
+- [与同类工具的对比](comparison.md)，定位、雷达图与选型建议
+- [快速开始](quick-start.md)，几分钟内完成首次部署与网络扫描

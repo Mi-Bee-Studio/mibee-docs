@@ -4,7 +4,7 @@ This guide covers production deployment methods for MiBee Steward on a single ho
 
 ## Deployment Form Selection
 
-MiBee Steward offers several deployment forms — pick the one that fits your scenario:
+MiBee Steward offers several deployment forms, pick the one that fits your scenario:
 
 | Form | Best for | Notes |
 |---|---|---|
@@ -30,7 +30,7 @@ flowchart TD
 
 ### Download
 
-Grab the prebuilt binary for your platform (amd64/arm64) from [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases), or build from source. Standalone deployments use the **center** binary (source entry `cmd/server`, ~24MB, embeds the SvelteKit web UI); the agent (`cmd/agent`, ~18MB, no embedded UI) is for the [OpenWrt](openwrt.md) and [Distributed](distributed.md) scenarios:
+Grab the prebuilt binary for your platform (amd64/arm64) from [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases), or build from source. Standalone deployments use the **center** binary (source entry `cmd/server`, ~24MB, embeds the SvelteKit web UI); the agent (the Rust `agent-rs/` workspace, ~4.8MB, no embedded UI) is for the [OpenWrt](openwrt.md) and [Distributed](distributed.md) scenarios. Each release also ships a **`-full` variant** per arch with the optional LLDP/CDP listeners and ARP sweep compiled in (needs `CAP_NET_RAW`; see the [build variants matrix](build-variants.md)); checksums for all center binaries are in `SHA256SUMS.center`:
 
 ```bash
 git clone https://github.com/Mi-Bee-Studio/MiBeeSteward.git
@@ -39,6 +39,27 @@ make build
 # or cross-compile
 make build-linux-amd64
 ```
+
+### Package Installation (deb / rpm)
+
+Debian/RHEL-family hosts can skip the manual steps below entirely: every release ships native packages - `mibee-steward` (center) and `mibee-agent` (agent), each as `.deb` and `.rpm` for amd64 / arm64 / armhf (= armv7hl on the rpm side; checksums in `SHA256SUMS.deb-rpm`):
+
+```bash
+# Debian / Ubuntu / Armbian (apt resolves a local file; arm64 / armhf likewise)
+sudo apt install ./mibee-steward_<version>_amd64.deb
+# Fedora / RHEL / openSUSE
+sudo dnf install ./mibee-steward-<version>-1.x86_64.rpm
+```
+
+First install does everything the binary deployment below does by hand: it lays down the exact same layout (binary + configs under `/opt/mibee-steward`, the systemd unit in `/usr/lib/systemd/system/`, logrotate, `backup.sh`), **generates `/opt/mibee-steward/configs/config.yaml`** (random `jwt_secret`; empty admin password - the web UI's first-run screen asks you to create it; `cookie_secure: false` as the plain-HTTP LAN default - flip to `true` behind nginx+TLS), opens + persists `net.ipv4.ping_group_range` for unprivileged ICMP, then enables and starts the service. The web UI is at `http://<host>:8080`.
+
+Notes:
+
+- The service runs as **numeric uid/gid 1000** (the unit ships that way deliberately - see its comment); the postinst chowns `/opt/mibee-steward` to match. If uid 1000 is not the intended account on your host, override with a unit drop-in.
+- Upgrade = install the new package: config and data are never touched (config generation is first-install only). `apt purge` / `dnf remove` deletes the generated config but deliberately keeps `data/`.
+- Migrating a manual binary install to packages just works (the existing config stays), but remove a manually copied `/etc/systemd/system/mibee-steward.service` first - an `/etc` unit shadows the package unit forever (the postinst prints this hint too).
+- The agent package `mibee-agent` follows the same lifecycle with `/etc/mibee/agent.yaml` + a dedicated `mibee-agent` system user; it derives `network.name`/`cidr` from the default route and stays stopped until you fill in `center.url` / `center.auth_token` ([distributed.md](distributed.md)).
+- Packages carry the default build only; the `-full` capability variant stays a manual build ([build variants](build-variants.md)).
 
 ### Minimal Setup
 
@@ -100,7 +121,7 @@ The prebuilt image is the **unprivileged variant** (LLDP/eBPF compiled as stubs)
 
 ### docker-compose
 
-The following is a **simplified example** (the host-network equivalent). The repo's own `docker-compose.yml` actually ships three profiles (`bridge` / `host` / `macvlan`) with shared build anchors — prefer using it directly:
+The following is a **simplified example** (the host-network equivalent). The repo's own `docker-compose.yml` actually ships three profiles (`bridge` / `host` / `macvlan`) with shared build anchors, prefer using it directly:
 
 ```yaml
 services:
@@ -133,7 +154,7 @@ flowchart LR
     A -->|"macvlan: own LAN IP"| D["Joins the LAN as an independent device"]
 ```
 
-Field experience backs this up: bridge mode recovers essentially no device MACs while host networking recovers nearly all of them — always use host networking for production scanning.
+Field experience backs this up: bridge mode recovers essentially no device MACs while host networking recovers nearly all of them, always use host networking for production scanning.
 
 > ⚠️ **Why bridge mode can't be used for real inventory**
 > The default Docker bridge places the container behind NAT. Consequences:
@@ -141,7 +162,7 @@ Field experience backs this up: bridge mode recovers essentially no device MACs 
 > 2. **ICMP broken**: ping replies crossing NAT are often dropped, so the heartbeat's 30s active probe falsely marks LAN devices offline.
 > 3. **Passive multicast broken**: the bridge doesn't forward 224/239 multicast, so mDNS/SSDP listeners self-disable.
 >
-> Partial workaround: list your gateway router IPs in `scanner.router_arp.routers` so the scanner can SNMP-walk the router's ARP table for MACs — but this only recovers MACs, not ICMP or multicast.
+> Partial workaround: list your gateway router IPs in `scanner.router_arp.routers` so the scanner can SNMP-walk the router's ARP table for MACs, but this only recovers MACs, not ICMP or multicast.
 
 ### Full Host-Mode Example
 
@@ -161,7 +182,8 @@ To enable raw-frame LLDP listeners or the eBPF passive observer (compiled out by
 
 ```bash
 BUILD_TAGS=WITH_LLDP,WITH_EBPF docker compose --profile host build
-# eBPF additionally needs cap_add: BPF, kernel >=5.8 + BTF
+# eBPF additionally needs cap_add: BPF + NET_ADMIN, kernel >=6.6 (BTF optional);
+# on systemd use deploy/mibee-steward-ebpf-dropin.example.conf instead
 ```
 
 **Building behind a restricted network**:
@@ -268,9 +290,45 @@ Use `scripts/backup.sh` for safe SQLite backups (no database locking):
 
 The backup script automatically verifies integrity and cleans up expired backups.
 
+### Automatic Maintenance
+
+Every retention sweep (default every 6h, `retention.sweep_interval_hours`) also
+runs a storage-health pass: the WAL is checkpointed and truncated
+(`PRAGMA wal_checkpoint(TRUNCATE)`, folds write-ahead log pages back into the
+main file so `-wal` returns to zero), SQLite statistics are refreshed
+(`PRAGMA optimize`), and the on-disk sizes plus high-volume table row counts
+are exported to Prometheus:
+
+| Metric | Labels | Meaning |
+|---|---|---|
+| `mibee_db_size_bytes` | `db` (main/heartbeat), `kind` (db/wal) | On-disk file sizes |
+| `mibee_db_table_rows` | `db`, `table` | Row counts of the high-volume tables |
+
+These are the growth baseline for capacity planning and for the
+db-growth alert in the self-monitoring example (see `deploy/prometheus`).
+
+Ready-to-import Grafana dashboards for all exported metrics live in
+`deploy/grafana/`, see the [Integrations guide](integrations.md).
+
+### Capacity Planning (field-measured baseline)
+
+Measured on a 85-device LAN with default retention windows (30d scan results,
+7d heartbeat results, 14d service evidence):
+
+- Steady state: ~150 MB total for the main database + ~4 MB heartbeat store
+- Growth is dominated by `scan_results` (one row per task × IP per scan;
+  a /24 scanned every 30 min ≈ 12k rows/day) and `heartbeat_results`
+  (one row per probe per tick, ~30 devices × 3 probes × 2880 ticks/day
+  ≈ 260k rows/day, pruned at 7d)
+- Rule of thumb: budget **~2 MB per scanned device per month** at the default
+  retention windows, then watch `mibee_db_size_bytes`, if growth deviates
+  from linear, check `mibee_db_table_rows` for which table is accumulating
+  (a stuck sweeper shows as monotonic growth on one table).
+
+
 ### Restore
 
-Backups are **binary database files** produced by `sqlite3 ".backup"` — not SQL scripts. Restore by copying the file back:
+Backups are **binary database files** produced by `sqlite3 ".backup"`, not SQL scripts. Restore by copying the file back:
 
 ```bash
 sudo systemctl stop mibee-steward
@@ -291,6 +349,10 @@ sudo cp mibee-steward /opt/mibee-steward/
 sudo systemctl start mibee-steward
 ```
 
+### Package Upgrade (deb / rpm)
+
+Installing the new package over the old one is the entire upgrade: prerm stops the service, postinst restarts it, config and data are kept. The data-compatibility rules below apply unchanged.
+
 ### Docker Upgrade
 
 ```bash
@@ -298,7 +360,7 @@ docker compose pull  # pull new image
 docker compose up -d
 ```
 
-Data compatibility: the database schema auto-migrates on startup (with an automatic `VACUUM INTO` backup first) — no manual steps required. ARMv7 devices have no prebuilt release artifact — cross-compile locally with `make build-linux-arm`.
+Data compatibility: since v0.7 the schema is created fresh on first start and is not upgraded in place. A database stamped with an older schema version is rejected at startup with instructions; upgrading across that boundary means backing up the data directory (`scripts/backup.sh`), starting with a new database, and letting the next scan repopulate devices. Within a compatible schema version, replacing the binary is all an upgrade needs. ARMv7 devices have no prebuilt release artifact, cross-compile locally with `make build-linux-arm`.
 
 ### Resetting the admin password
 
