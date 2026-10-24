@@ -54,8 +54,8 @@ func main() {
 
 ## 下一步
 
-- [CLI 工具](onvif-go-cli.md)：写代码前先用 `discover` / `onvif-quick` /
-  `onvif-diagnostics` 摸一遍相机。
+- [CLI 工具](onvif-go-cli.md)：写代码前先用 `discover` / `onvif quick` /
+  `onvif diagnostics` 摸一遍相机。
 - [设备发现](onvif-go-discovery.md)：WS-Discovery 探测网内相机。
 - [媒体与码流](onvif-go-media.md)：profile 选择启发式与流 URI。
 - [架构](onvif-go-architecture.md) / [v2 架构](onvif-go-v2-architecture.md)：分层与迁移。

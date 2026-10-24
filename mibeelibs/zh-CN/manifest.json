@@ -44,6 +44,11 @@
           "slug": "gb28181-go-psmux",
           "file": "gb28181-go-psmux.md",
           "title": "PS 封装与 RTP 打包"
+        },
+        {
+          "slug": "gb28181-go-tools",
+          "file": "gb28181-go-tools.md",
+          "title": "Release 工具包：三个互操作工具"
         }
       ]
     },

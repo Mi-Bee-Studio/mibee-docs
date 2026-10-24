@@ -1,6 +1,6 @@
-# CLI: onvif-server
+# CLI: onvif server
 
-`onvif-server` is the `server/` package as a runnable binary: a virtual
+`onvif server` is the `server/` package as a runnable binary: a virtual
 multi-lens ONVIF camera. Start it and your recorder, NVR, or ONVIF
 client sees 1–10 configurable camera profiles — with PTZ nodes, imaging,
 and opt-in pull-point events — no hardware required. Add it by address:
@@ -11,13 +11,13 @@ loopback tests drive.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## Usage
 
 ```bash
-onvif-server -password 'test-pass' [-port 8080] [-profiles 3] \
+onvif server -password 'test-pass' [-port 8080] [-profiles 3] \
     [-manufacturer onvif-go] [-model 'Virtual Multi-Lens Camera'] \
     [-ptz=true] [-imaging=true] [-events=false] [-info] [-version]
 ```
@@ -53,7 +53,7 @@ returns the identity you set, profiles and stream URIs answer — before
 any camera is on the desk:
 
 ```bash
-onvif-server -password demo -manufacturer TestCam -model VC-1 -serial SIM-0001
+onvif server -password demo -manufacturer TestCam -model VC-1 -serial SIM-0001
 ```
 
 **A multi-camera rack from one process.** `-profiles 10` yields ten

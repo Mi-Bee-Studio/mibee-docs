@@ -1,6 +1,6 @@
-# CLI：onvif-server
+# CLI：onvif server
 
-`onvif-server` 是 `server/` 包的可运行形态：一台虚拟多目 ONVIF
+`onvif server` 是 `server/` 包的可运行形态：一台虚拟多目 ONVIF
 相机。启动它，你的录像机、NVR 或 ONVIF 客户端就看到 1–10 个可配置的
 相机 profile——带 PTZ 节点、成像服务、可选 pull-point 事件——完全
 无需硬件。请按地址添加：该二进制只讲 SOAP over HTTP，不响应
@@ -9,13 +9,13 @@ WS-Discovery 多播探测。库自身的一致性回环测试驱动的就是同�
 ## 安装
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## 用法
 
 ```bash
-onvif-server -password 'test-pass' [-port 8080] [-profiles 3] \
+onvif server -password 'test-pass' [-port 8080] [-profiles 3] \
     [-manufacturer onvif-go] [-model 'Virtual Multi-Lens Camera'] \
     [-ptz=true] [-imaging=true] [-events=false] [-info] [-version]
 ```
@@ -48,7 +48,7 @@ H264 编码器与快照配置；带 PTZ 的模板获得 pan/tilt/zoom 节点与�
 profile 与流地址照常应答——相机上桌之前全链路可跑：
 
 ```bash
-onvif-server -password demo -manufacturer TestCam -model VC-1 -serial SIM-0001
+onvif server -password demo -manufacturer TestCam -model VC-1 -serial SIM-0001
 ```
 
 **单进程模拟一排相机。** `-profiles 10` 得到十台各异的虚拟相机

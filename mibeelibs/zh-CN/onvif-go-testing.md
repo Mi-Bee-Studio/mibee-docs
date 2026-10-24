@@ -51,7 +51,7 @@ go test -v -run RealCamera ./...
 
 文档和 issue 里一律使用占位符凭据——绝不放真实凭据。设备行为异常时，抓下
 它的原始 SOAP 响应，作为 fixture 加进 `testdata/captures/`，让回归在相机
-离场后依然存活。`cmd/onvif-diagnostics`（见 [CLI 工具](onvif-go-cli.md)）就是为产出
+离场后依然存活。`cmd/onvif`（见 [CLI 工具](onvif-go-cli.md)）就是为产出
 这些抓包而生的。
 
 ## 测试驱动开发

@@ -8,7 +8,7 @@ script-friendly starting point before any credentials are known.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 # or grab the prebuilt binary from the release assets (six platforms)
 ```
 
@@ -52,7 +52,7 @@ discover -interface en0 -timeout 5s
 
 **Inventory sweeps.** The fixed-format output makes the tool a one-liner
 front end for inventory scripts (parse the `XAddr:` lines), or pair it
-with `onvif-quick` / `onvif-diagnostics` once credentials exist.
+with `onvif quick` / `onvif diagnostics` once credentials exist.
 
 **Slow networks.** Cameras boot slowly after power cycles; extend the
 window instead of looping the tool — responders keep arriving during the

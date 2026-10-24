@@ -55,7 +55,7 @@ go test -v -run RealCamera ./...
 Use placeholder credentials in any documentation or issues you file — never
 real ones. When a device misbehaves, capture its raw SOAP response and add
 it as a fixture under `testdata/captures/` so the regression lives on after
-the camera is gone. `cmd/onvif-diagnostics` (see [cli.md](onvif-go-cli.md)) exists
+the camera is gone. `cmd/onvif` (see [cli.md](onvif-go-cli.md)) exists
 exactly for producing those captures.
 
 ## Test-driven development

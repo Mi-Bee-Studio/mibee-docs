@@ -1,6 +1,6 @@
-# CLI: onvif-quick
+# CLI: onvif quick
 
-`onvif-quick` is the interactive five-menu companion for first contact
+`onvif quick` is the interactive five-menu companion for first contact
 with a camera: discover it, list NICs, connect and identify it, nudge
 the PTZ, and print every stream/snapshot URL. No flags, no config —
 run it and answer prompts. It exists to answer "does this library talk
@@ -9,13 +9,13 @@ to my camera at all?" in under a minute.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## Usage
 
 ```bash
-onvif-quick
+onvif quick
 ```
 
 The menu loops until you exit:
@@ -61,4 +61,4 @@ the interface name into choice 1's picker (or `discover -interface`).
 
 Everything is one-shot and interactive — for repeatable runs, scripted
 collection, or attaching evidence to an issue, use
-[onvif-diagnostics](onvif-go-cli-diagnostics.md).
+[onvif diagnostics](onvif-go-cli-diagnostics.md).

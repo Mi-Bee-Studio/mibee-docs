@@ -1,6 +1,6 @@
-# CLI：onvif-diagnostics
+# CLI：onvif diagnostics
 
-`onvif-diagnostics` 对一台相机跑本库的全部读取面——十一个编号操作、
+`onvif diagnostics` 对一台相机跑本库的全部读取面——十一个编号操作、
 逐操作的成功/失败与响应耗时——并写出 JSON 报告。加 `-capture-xml`
 还会把每次原始 SOAP 交互录进一个设计为回归夹具的 `tar.gz` 归档。
 **提 issue 前就跑它**：JSON + 归档携带维护者需要的全部现场。
@@ -8,13 +8,13 @@
 ## 安装
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## 用法
 
 ```bash
-onvif-diagnostics -endpoint http://192.168.1.201/onvif/device_service \
+onvif diagnostics -endpoint http://192.168.1.201/onvif/device_service \
     -username service -password '***' [-output ./camera-logs] \
     [-timeout 30] [-verbose] [-capture-xml] [-capture-all]
 ```

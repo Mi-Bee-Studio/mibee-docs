@@ -1,6 +1,6 @@
-# CLI: onvif-diagnostics
+# CLI: onvif diagnostics
 
-`onvif-diagnostics` runs the library's full read surface against one
+`onvif diagnostics` runs the library's full read surface against one
 camera — eleven numbered operations, per-operation success/error and
 response time — and writes a JSON report. With `-capture-xml` it also
 records every raw SOAP exchange into a `tar.gz` archive designed to
@@ -10,13 +10,13 @@ issue**: the JSON plus the archive carry everything a maintainer needs.
 ## Install
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## Usage
 
 ```bash
-onvif-diagnostics -endpoint http://192.168.1.201/onvif/device_service \
+onvif diagnostics -endpoint http://192.168.1.201/onvif/device_service \
     -username service -password '***' [-output ./camera-logs] \
     [-timeout 30] [-verbose] [-capture-xml] [-capture-all]
 ```

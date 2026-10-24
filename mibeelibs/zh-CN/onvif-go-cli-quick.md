@@ -1,6 +1,6 @@
-# CLI：onvif-quick
+# CLI：onvif quick
 
-`onvif-quick` 是与相机初次接触的交互式五菜单伴侣：发现设备、列
+`onvif quick` 是与相机初次接触的交互式五菜单伴侣：发现设备、列
 网卡、连接识别、点动云台、打印全部取流/快照地址。没有旗标、没有
 配置——运行后跟着提示走即可。它为在一分钟内回答"本库到底能不能
 和我的相机通信"而存在。
@@ -8,13 +8,13 @@
 ## 安装
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0
 ```
 
 ## 用法
 
 ```bash
-onvif-quick
+onvif quick
 ```
 
 菜单循环直到退出：
@@ -56,4 +56,4 @@ onvif-quick
 ## 边界
 
 一切都是一次性交互——要可重复运行、脚本化采集、或给 issue 附证据，
-用 [onvif-diagnostics](onvif-go-cli-diagnostics.md)。
+用 [onvif diagnostics](onvif-go-cli-diagnostics.md)。
