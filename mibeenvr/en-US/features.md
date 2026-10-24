@@ -1,6 +1,6 @@
 # Feature Overview
 
-> Applies to MiBeeNvr v0.13.0 (released 2026-09)
+> Applies to MiBeeNvr v0.14.0 (released 2026-10)
 
 Everything MiBee NVR can do, on one page. Each section links to its dedicated guide — treat this as the map, and dive into the spots that interest you.
 
@@ -70,8 +70,8 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 
 - **Browser-side AI detection**: ONNX Runtime Web (WebGPU → WASM SIMD fallback) runs YOLO11 inference in your browser — zero server load, works even on aging NVR hardware
 - **ROI zones**: draw the doorway / hallway / gate; only targets inside the zone raise events. Confidence, frame-skip and class filters all tunable (see the [AI tuning guide](ai-detection.md))
-- **MiBeeVision integration**: optional external AI backend (as of v0.13: multi-instance routing via `vision.instances` + push circuit-breaker with automatic back-off) — the NVR pushes recording segments and re-pushes missed ones after reconnects; AI event snapshot endpoint
-- **Camera-side motion detection**: ONVIF MotionAlarm events serve directly as a recording trigger (`motion_source: camera:onvif`, see the [ONVIF guide](onvif-discovery.md)) — detection work is offloaded to the camera, zero decode cost on the NVR
+- **MiBeeVision integration**: optional external AI backend (as of v0.13: multi-instance routing via `vision.instances` + push circuit-breaker with automatic back-off) — the NVR pushes recording segments and re-pushes missed ones after reconnects; AI event snapshot endpoint. The official **MiBeeVision Lite** binary ships free in the NVR repository (independent version line; Lite is single-camera, CPU inference, Linux x86_64/ARM64) — no self-built AI backend required
+- **Camera-side motion detection**: ONVIF MotionAlarm events serve directly as a recording trigger (`motion_source: camera:onvif`, see the [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md)) — detection work is offloaded to the camera, zero decode cost on the NVR
 - **Health monitoring**: multi-level camera health checks, auto-remediation, blacklisting, IP-drift self-healing (re-discovers cameras by ONVIF serial number)
 - **SSE live events**: camera status, health events and segment completion stream to the UI in real time
 
@@ -88,6 +88,7 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 - Recording: AAC / G.711 (μ-law, A-law) / Opus all land in the MP4 audio track
 - Live monitoring: real-time G.711 and Opus playback; AAC via WebCodecs
 - **Two-way intercom**: push-to-talk to the camera (Xiaomi CS2 models)
+- **[Standalone audio sources](audio-sources.md)**: record audio independently of cameras (RTSP pull / WHIP push, codec probe in the camera form), link a source to a camera for synced playback and a day-timeline audio track
 
 ## Storage & Integrations
 
@@ -98,6 +99,8 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 - **FTP server**: remote upload + camera auto-registration (point the camera at the FTP address and it joins)
 - **MQTT**: event-bus forwarding (`mqtt.status_events`) + triggered / timed forced recording + snapshot triggers for home automation
 - **[Webhook triggers](webhook-integration.md)**: HMAC-SHA256-signed trigger endpoint (Stripe-style signatures + two-way replay protection) for external systems to start recording / snapshots
+- **[SIP doorbell / intercom](doorbell.md)**: standard SIP door stations ring the web UI (popup, two-way G.711 talk, linked-camera snapshot); registrar mode or through a PBX — default off
+- **[DLNA media server](dlna.md)**: TVs and LAN players discover the NVR via SSDP and browse cameras → days → recordings (default off, LAN interfaces only)
 - **[Home Assistant](home-assistant.md)**: the official custom integration ships with the release (mDNS auto-discovery + per-camera entities / switches); a fully native RTSP-output + MQTT assembly works too
 - **Prometheus**: 300+ metric families at `/api/metrics`
 - **REST API**: everything scriptable; API keys (`mbv_` prefix) alongside BasicAuth
@@ -160,6 +163,6 @@ The design baseline is a **low-end ARM board** (1GB RAM, Cortex-A53 class); all 
 
 ## Next Steps
 
-- Get running fast: [Quick Start](quickstart.md)
+- Get running fast: [Getting Started](quickstart.md)
 - See real-world recipes: [Scenario Playbooks](scenarios.md)
 - Comparing options: [How It Compares](comparison.md)

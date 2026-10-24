@@ -1,6 +1,6 @@
 # Web UI Tour
 
-> For MiBeeNvr v0.13.0
+> For MiBeeNvr v0.14.0
 
 The MiBee NVR web interface is organized into five top-level pages plus the single-camera live page. This page is a feature cheat sheet; step-by-step configuration lives in the dedicated guides.
 
@@ -88,7 +88,7 @@ Opened from the grid or a camera card at `#/live/{id}`:
 
 - Large live view with protocol switching
 - **Quality switcher**: switch between main / [sub-stream](sub-stream.md) when the camera has one
-- **PTZ control**: pan/tilt/preset control for capable cameras (e.g. Xiaomi PTZ models)
+- **PTZ control**: pan/tilt/preset control for capable cameras (ONVIF / Xiaomi PTZ models / GB28181 channels); hold a direction to move, release to stop, with a three-step speed selector (slow / medium / fast)
 - **Two-way audio**: push-to-talk back to the camera (see [Audio](audio.md))
 - **Snapshot**: save the current frame
 - **Camera settings**: a collapsible panel at the bottom embeds this camera's edit form — adjust access parameters without navigating away; saving silently refreshes probes without interrupting playback
@@ -101,6 +101,6 @@ Opened from the grid or a camera card at `#/live/{id}`:
 
 ## Next Steps
 
-- [Quick Start](quickstart.md) — add your first camera
+- [Getting Started](quickstart.md) — add your first camera
 - [CLI Reference](cli.md) — command-line administration
 - [Live Relay](relay.md) — push feeds to streaming platforms

@@ -1,6 +1,6 @@
 # Recording & Playback
 
-> Applies to MiBeeNvr v0.13.0
+> Applies to MiBeeNvr v0.14.0
 
 MiBee NVR captures camera video streams as MP4 segments and saves them to disk. A built-in web interface lets you browse, search, and download recordings.
 
@@ -211,6 +211,18 @@ cameras:
         - start: "09:00"
           end: "18:00"
       days_of_week: [1, 2, 3, 4, 5]   # 0=Sunday … 6=Saturday; empty = every day
+```
+
+Different hours per day and overnight windows — each range can carry its own `days_of_week`, and an end at or before the start runs into the next day (the Web UI edits these per range):
+
+```yaml
+cameras:
+  - id: "study-cam"
+    recording_schedule:
+      time_ranges:
+        - { start: "15:00", end: "23:00", days_of_week: [1, 2, 3, 4, 5] }  # weekdays
+        - { start: "07:00", end: "23:00", days_of_week: [0, 6] }           # weekends
+        - { start: "22:00", end: "06:00", days_of_week: [5] }              # Fri night → Sat 06:00
 ```
 
 ### External-Event Triggered Recording

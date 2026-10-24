@@ -113,6 +113,7 @@ PLACEHOLDER_VALUES = {
     "dav_password", "secure_password", "upload_password",  # WebDAV/FTP 教程配置键名（mibeenvr v0.13.0 文档，2026-09-23 登记）
     "secure_password_123", "complex_password", "secure_admin_password",
     "super-secret-key", "secret123", "securepassword123", "videoSrc0", "enc0",
+    "mbv_…", "pbx-password", "a-long-random-password",  # mibeenvr v0.14.0 手册：API Key 前缀示意 mbv_…、SIP 门铃 PBX secret 示例（2026-10-24 登记）
 }
 ALLOWED_PASSWORDS = OFFICIAL_DEFAULT_PASSWORDS | VENDOR_DEFAULTS | PLACEHOLDER_VALUES
 

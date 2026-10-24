@@ -17,6 +17,17 @@ This guide covers upgrade paths and breaking changes between MiBee NVR releases.
 
 ---
 
+## v0.14.0 at a glance
+
+- **GB/T 28181 graduated to production support**: verified end-to-end on commercial hardware (Hikvision 2026 firmware) — device access, cascade uplink, voice intercom, PTZ and GB35114 level-A certificate interop; the cascade catalog now publishes GB sources only by default; INVITEs follow the device's REGISTER transport. See the [GB/T 28181 guide](gb28181.md)
+- **Native Linux packages (deb / rpm)**: official packages for the Debian/Ubuntu and RHEL families, amd64/arm64; package layout is fully interchangeable with binary deployments. See [Native Linux packages](install-linux.md)
+- **Instant live listening**: Web Audio-scheduled live listening across all codecs; groups-only device page; GB28181 stream stall watchdog
+- **Doorbell & DLNA web panels**: SIP doorbell status endpoint — see [SIP Doorbell](doorbell.md) and [DLNA Media Server](dlna.md)
+- ONVIF compatibility: default auth fallback ladder for old firmwares replying with empty 200 bodies; P2P: one-time WARN when a tunnel arrives without an E2EE key
+- Refreshed web UI screenshots and walkthrough card
+
+Full changelog: the v0.14.0 notes on [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases).
+
 ## 0.12.x → 0.13.0
 
 0.13.0 is a major release: **object-storage offload** (async upload to S3-compatible cold backup), **tiered recording + pixel-domain gating** (an end-to-end pipeline for smart-encoder cameras), **Windows / macOS desktop editions**, **bare-metal auto-update** (signature verification + automatic rollback on failure), **I/O budget scheduling**, and the **end of recording write stalls**. The incremental DB migration runs automatically on first boot, but the behavior changes below need your attention:
@@ -62,7 +73,7 @@ The incremental migration runs automatically on first start: camera groups (v36�
 - **RTSP output supports MJPEG/JPEG** (RTP-JPEG); latest-frame snapshots for H.264/H.265 (optional FFmpeg) and MQTT snapshot triggering
 - **HMAC-signed webhook trigger endpoint**: `POST /api/trigger/webhook/{camera_id}`, Stripe-style signatures + two-way replay protection — see [Webhook Trigger Integration](webhook-integration.md)
 - **MQTT event-bus forwarding** (`mqtt.status_events`) and scheduled forced-recording windows (`{"action":"record","duration":"60s"}`)
-- **ONVIF camera-side motion detection trigger** (`motion_source: camera:onvif`) — see [ONVIF Guide](onvif-discovery.md)
+- **ONVIF camera-side motion detection trigger** (`motion_source: camera:onvif`) — see [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md)
 - **Home Assistant custom integration ships with releases** (installable via HACS, mDNS auto-discovery) — see [Home Assistant Integration](home-assistant.md)
 - **Vision multi-instance routing** + push circuit breaker with automatic backoff; an AI event snapshot endpoint
 - **Timelapse MJPEG dual-mode GA** + `timelapse-merge` CLI for batch conversion + merged-history playback — see [Timelapse Recording](timelapse.md)
@@ -99,7 +110,7 @@ Starting with v0.11.0, MiBee NVR is licensed under **AGPL-3.0-only** (previously
 - **Building your own program on the `pkg/` extension interfaces**: covered by a [linking exception](../../LICENSE.pkg-linking-exception) — your program's license stays your choice.
 - **A separate program talking to a running NVR** over its HTTP/WebSocket APIs: never affected by the license.
 
-See [LICENSE](../../LICENSE), [NOTICE](../../NOTICE), and CONTRIBUTING.md for details.
+See [LICENSE](../../LICENSE), [NOTICE](../../NOTICE), and [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md) for details.
 
 ### 🔴 Breaking: `GET /api/cameras/{id}/protocols` field names
 

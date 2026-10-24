@@ -29,7 +29,7 @@ flowchart LR
 curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install.sh | sudo bash
 ```
 
-用 Docker 或在群晖 / 威联通 / 飞牛 fnOS 商店里安装也完全可以——参见[快速开始](quickstart.md)。装好后浏览器打开 `http://设备IP:9090`。
+用 Docker 或在群晖 / 威联通 / 飞牛 fnOS 商店里安装也完全可以——参见[快速入门](quickstart.md)。装好后浏览器打开 `http://设备IP:9090`。
 
 ### 第 2 步：跟着初始化向导走（2 分钟）
 
@@ -208,4 +208,4 @@ NVR 侧把推流当作一路普通摄像头——录制、直播、AI 一切照�
 
 - 想全面了解功能边界：[功能总览](features.md)
 - 正在和其他方案比较：[同类方案对比](comparison.md)
-- 遇到问题：先看[故障排除](upgrade-faq.md)
+- 遇到问题：先看[故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/troubleshooting.md)

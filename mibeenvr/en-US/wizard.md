@@ -1,6 +1,6 @@
 # Setup Wizard
 
-> For MiBeeNvr v0.13.0
+> For MiBeeNvr v0.14.0
 
 When MiBee NVR starts for the first time without an admin password, the web interface automatically opens a **single-page setup wizard** that configures the account, language, and storage location in one step.
 
@@ -54,7 +54,7 @@ Specify where recordings are stored:
 Click "Complete Setup". The wizard saves the admin credentials, logs you in automatically, and drops you into the web UI. There are no cameras yet — you can:
 
 - Click "Scan Devices" on the Cameras page to auto-discover ONVIF / Xiaomi cameras
-- Or click "+ Add Camera" to add one manually (see [Quick Start](quickstart.md))
+- Or click "+ Add Camera" to add one manually (see [Getting Started](quickstart.md))
 
 ## Resetting the Wizard
 
@@ -163,7 +163,7 @@ cameras:
 
 ## Next Steps
 
-- [Quick Start](quickstart.md) — add your first camera
+- [Getting Started](quickstart.md) — add your first camera
 - [Docker Deployment](install-docker.md) — production container deployment
 - [NAS Deployment](install-nas.md) — NAS system installation
 - [ONVIF Auto-Discovery](onvif-discovery.md) — camera auto-discovery
