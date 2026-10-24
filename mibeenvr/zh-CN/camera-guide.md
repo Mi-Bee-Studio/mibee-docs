@@ -2,7 +2,7 @@
 
 MiBee NVR 通过多种协议支持广泛的 IP 摄像头，包括 RTSP（H.264/H.265/MJPEG）、HTTP JPEG 和 ONVIF。本指南提供主流摄像头品牌的全面兼容性信息，包括支持的协议、配置示例和故障排除技巧。
 
-**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](onvif-discovery.md)。
+**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)。
 
 ## 快速入门（Top 3 品牌）
 
@@ -787,8 +787,8 @@ cameras:
 
 ### 文档
 
-- [MiBee NVR 配置指南](config.md)
-- [MiBee NVR API 参考](api.md)
+- [MiBee NVR 配置指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)
+- [MiBee NVR API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md)
 - [MiBee NVR 入门指南](quickstart.md)
 
 ### 社区支持
@@ -881,7 +881,7 @@ sudo nmap -sV -p 554,80,8080 --open 192.168.1.0/24
 
 这是连接 NVR 无法直接拨出的摄像头的推荐方式。
 
-详细架构设计请参见架构文档。
+详细架构设计请参见[架构文档](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/architecture.md)。
 
 ### 前置条件
 
@@ -944,10 +944,10 @@ SRT 使用 UDP，部分家宽运营商会封锁或难以转发。如果 SRT 连�
 
 ### 限制说明
 
-- **SRT/RTMP 当前仅支持 H.264**。SRT 的 MPEG-TS 解复用器和经典 RTMP 都只承载 H.264。
+- **SRT 仅支持 H.264；RTMP 支持 H.264 与 H.265**。SRT 的 MPEG-TS 解复用器只承载 H.264；RTMP 收推同时支持经典 H.264 和 H.265（enhanced-RTMP hvc1 —— 由另一台本 NVR 转推、FFmpeg 6.1+、SRS 等发起时自动启用；OBS 等经典发布端推的仍是 H.264）。
 - **发布者连接前摄像头显示离线** —— 推流摄像头的预期行为。
 - **需要端口转发/公网 IP**。推流接入本身不穿透 NAT。如两端都不可达，用 overlay 网络（Tailscale/WireGuard）或 MediaMTX 做中转。
-- **音频**：RTMP/SRT 推流当前仅录制视频。
+- **音频**：RTMP/SRT 推流当前仅录制视频（流中的音轨会被丢弃，不影响接收）。
 
 ## 推流转发 (Push-Out Relay) — 把摄像头转发到远端
 
@@ -960,7 +960,7 @@ SRT 使用 UDP，部分家宽运营商会封锁或难以转发。如果 SRT 连�
 每个转发目标订阅摄像头已有的 `StreamHub`（录像和直播共用的同一帧总线）。帧被重新封装（不解码、不重编码）并通过专用的 RTMP 或 RTSP 连接写入目标。每个目标在独立 goroutine 中运行，有独立重连和码率统计。
 
 - **零拷贝源**：不重新拉流、不解码 —— 添加一个转发目标只增加一个 goroutine + 一个出站连接（RPi 3B 上约 5-10MB）。
-- **H.265 自动转码**：RTMP 目标要求 H.264 源（RTMP 不承载 H.265）。`transcode_policy` 为 `auto` 时，H.265 源会自动转码为 H.264 再转发（见《转发指南》relay-guide.md）；H.264 源直接转发，零转码开销。
+- **H.265 处理**：RTMP 目标默认要求 H.264 源（经典 RTMP 不承载 H.265）。`transcode_policy` 为 `auto` 时，H.265 源会自动转码为 H.264 再转发（见《转发指南》relay-guide.md）；H.264 源直接转发，零转码开销。**另一台本 NVR 作为接收端时**，可把策略设为 `passthrough`，H.265 以 enhanced-RTMP（hvc1）原样直推 —— 发送端零转码开销，ARM 单板多路并发也不吃 CPU。
 - **每摄像头多目标**：一个摄像头可同时推到多个目标。
 
 ### 配置转发目标

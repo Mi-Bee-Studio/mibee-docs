@@ -1,6 +1,6 @@
 # 音频
 
-> 适用于 MiBeeNvr v0.13.0
+> 适用于 MiBeeNvr v0.14.0
 
 MiBee NVR 支持音频录制、实时试听和双向对讲功能。
 
@@ -167,6 +167,7 @@ audio:
 
 ## 下一步
 
+- [独立音频源](audio-sources.md)——网络拾音器、旧手机、ESP32 节点
 - [延时摄影](timelapse.md) — 延时摄影功能
 - [转码](transcoding.md) — 视频转码
 - [WebDAV / FTP 存储](webdav-ftp.md) — 访问录像文件

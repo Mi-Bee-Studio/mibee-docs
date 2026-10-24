@@ -4,6 +4,10 @@ MiBee NVR serves on the LAN by default. This guide covers how to make the NVR re
 
 > **This page covers only the minimal working configuration.** For advanced features of each tool (subnet routing, ACLs, exit nodes, custom certs), consult the tool's own documentation.
 
+## Built-in Remote Connection (coming soon)
+
+MiBee NVR ships with a built-in encrypted remote-connection mode (NAT traversal with automatic relay fallback), designed to work with a companion mobile app. It is being finalized and will be documented here when it ships — the self-hosted options below are available today.
+
 ---
 
 ## Scenario Comparison
@@ -28,17 +32,15 @@ To watch video over WebRTC from outside the LAN, configure ICE servers in `mibee
 streaming:
   webrtc:
     enabled: true
-    # Self-hosted coturn provides both STUN and TURN
     ice_servers:
-      - urls: ["stun:stun.example.com:3478"]
+      - urls: ["stun:stun.l.google.com:19302"]            # Public STUN (free)
       - urls: ["turn:turn.example.com:3478?transport=udp"] # TURN relay (required for symmetric NAT)
         username: "user"
         credential: "pass"
 ```
 
-- **STUN**: discovers your public mapped address. **Note: public third-party STUN servers (e.g. Google's `stun.l.google.com`) are unreliable or unreachable from mainland China** — copying a public address yields no `srflx` candidates, and WebRTC then silently fails on the WAN with no visible error.
-- **TURN**: relay fallback. **Carrier NAT in China is predominantly symmetric — STUN alone usually cannot punch through**; self-hosting [coturn](https://github.com/coturn/coturn) (serving both STUN + TURN) is effectively required in that region. TURN traffic consumes server bandwidth — size accordingly.
-- **Verify STUN/TURN**: open the [trickle-ice](https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/) test page, enter your ICE servers and gather candidates — `srflx` (or `relay`) candidates mean STUN/TURN work; only `host` / `.local` candidates means **STUN is unreachable** — fix STUN reachability first, not the player.
+- **STUN**: any free public server works for most NAT types (cone NAT).
+- **TURN**: required for symmetric NAT (common with carrier-grade NAT). TURN traffic consumes server bandwidth — consider self-hosting [coturn](https://github.com/coturn/coturn).
 - **TCP-only tunnels (e.g. Cloudflare Tunnel) cannot carry WebRTC UDP**: in that case select HLS manually in the camera player (the protocol switcher defaults to Auto and degrades to HTTP transports when WebRTC is unavailable) — HLS runs over HTTP/TCP and is tunnel-friendly.
 
 ---

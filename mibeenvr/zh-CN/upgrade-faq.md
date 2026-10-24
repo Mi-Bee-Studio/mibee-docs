@@ -17,6 +17,17 @@
 
 ---
 
+## v0.14.0 更新速览
+
+- **GB/T 28181 正式转正为生产支持**：商用真机（海康 2026 版固件）全流程验证——设备接入、级联上联、语音对讲、PTZ 与 GB35114 A 级国密证书互认；级联目录默认只发布 GB 源；INVITE 改走设备注册通道。见 [GB/T 28181 指南](gb28181.md)
+- **Linux 原生软件包（deb / rpm）**：Debian/Ubuntu 与 RHEL 系 amd64/arm64 官方包，包布局与二进制部署完全一致、可互换升级。见 [Linux 原生软件包](install-linux.md)
+- **实时语音监听**：Web Audio 调度的即时监听，全编码器可用；设备页改为分组视图；GB28181 取流停滞看门狗
+- **门铃与 DLNA Web 面板**：SIP 门铃状态端点上线——见 [SIP 门铃](doorbell.md)与 [DLNA 媒体服务器](dlna.md)
+- ONVIF 旧固件兼容：空 200 响应认证回退梯；P2P 隧道未携带 E2EE 密钥时一次性 WARN
+- Web 界面截图与向导卡片图全面刷新
+
+完整变更列表见 [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases) 的 v0.14.0 说明。
+
 ## 0.12.x → 0.13.0
 
 0.13.0 是一次大版本发布：**对象存储冷备**（S3 兼容异步上传）、**分层录制 + 像素域门控**（智能编码器相机全链路方案）、**Windows / macOS 桌面版**、**裸机自动更新**（签名校验 + 失败自动回滚）、**I/O 预算调度**与**录像写卡顿根除**。数据库增量迁移自动完成，但以下行为变更需要知晓：
@@ -62,7 +73,7 @@
 - **RTSP 输出支持 MJPEG/JPEG**（RTP-JPEG）；H.264/H.265 最新帧截图（可选 FFmpeg）与 MQTT 快照触发
 - **HMAC 签名 webhook 触发端点**：`POST /api/trigger/webhook/{camera_id}`，Stripe 风格签名 + 双向防重放——见 [Webhook 集成](webhook-integration.md)
 - **MQTT 事件总线转发**（`mqtt.status_events`）与定时强制录像窗口（`{"action":"record","duration":"60s"}`）
-- **ONVIF 相机侧移动侦测触发**（`motion_source: camera:onvif`）——见 [ONVIF 指南](onvif-discovery.md)
+- **ONVIF 相机侧移动侦测触发**（`motion_source: camera:onvif`）——见 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)
 - **Home Assistant 官方定制集成随包发布**（HACS 可装，mDNS 自动发现）——见[接入 Home Assistant](home-assistant.md)
 - **Vision 多实例路由** + 推送熔断自动退避；AI 事件快照端点
 - **延时摄影 MJPEG 双模可用** + `timelapse-merge` CLI 批量转换 + 合并历史播放——见[延时摄影](timelapse.md)
@@ -99,7 +110,7 @@ v0.11.0 起 MiBee NVR 的许可证从 MIT 变更为 **AGPL-3.0-only**（v0.10.1 
 - **基于 `pkg/` 扩展接口构建自己的程序**：受[链接例外](../../LICENSE.pkg-linking-exception)保护，你的程序许可证由你决定。
 - **独立进程通过 HTTP/WebSocket API 调用运行中的 NVR**：完全不受许可证影响。
 
-详见 [LICENSE](../../LICENSE)、[NOTICE](../../NOTICE) 与 CONTRIBUTING.md。
+详见 [LICENSE](../../LICENSE)、[NOTICE](../../NOTICE) 与 [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md)。
 
 ### 🔴 破坏性：`GET /api/cameras/{id}/protocols` 字段改名
 

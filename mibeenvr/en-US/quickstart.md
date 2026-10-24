@@ -1,12 +1,25 @@
-# Quick Start
+# Getting Started with MiBee NVR
 
-> For MiBeeNvr v0.13.0
+## What is MiBee NVR
 
-Get up and recording your first camera in 5 minutes.
+MiBee NVR is a lightweight Network Video Recorder written in Go. It records video feeds from IP cameras to MP4 segments on disk and provides a web interface for viewing recordings, managing cameras, and accessing recorded footage.
 
-## Option 1: Download a Pre-built Binary
+**Key Features:**
 
-Download the latest release for your architecture from [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases):
+- Records RTSP (H.264, H.265, MJPEG), HTTP JPEG, ONVIF, Xiaomi (CS2/TUTK P2P), GB/T 28181, SRT/RTMP push-in, and Timelapse cameras to MP4 segments
+- Web UI with dark/light theme, multi-protocol live view (HLS, WebRTC, HTTP-FLV, WebSocket), and Chart.js statistics
+- Continuous playback: double-buffered seamless segment chaining + an on-demand fMP4 full-day VOD timeline (scrub across recordings and gaps)
+- LAN discovery: mDNS `_mibee-nvr._tcp` announcement + UDP 49090 broadcast responder; `/api/health` exposes a stable `device_id`
+- WebDAV (configurable read-only/read-write) and FTP access to recordings
+- MQTT integration for event-driven recording
+- Segment merging to reduce file count
+- Single static binary with embedded web interface — no dependencies
+
+## Quick Start (5 Minutes)
+
+### Option 1: Pre-built Binary (Recommended)
+
+Download the latest binary for your architecture from [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases):
 
 ```bash
 # AMD64 (most PCs/servers)
@@ -18,108 +31,132 @@ wget https://github.com/Mi-Bee-Studio/MiBeeNvr/releases/latest/download/mibee-nv
 chmod +x mibee-nvr-arm64
 ```
 
-Initialize the config and start:
+Initialize config and start:
 
 ```bash
-./mibee-nvr-amd64 init --password your-password
+./mibee-nvr-amd64 init --password yourpassword
 ./mibee-nvr-amd64 -config mibee-nvr.yaml
 ```
 
-Open `http://localhost:9090` in your browser.
+Open http://localhost:9090 in your browser.
 
-## Option 2: Docker
+### Option 2: Docker
 
 ```bash
-docker compose --project-directory . \
-  -f deploy/docker/docker-compose.yml up -d
+docker compose --project-directory . -f deploy/docker/docker-compose.yml up -d
 ```
 
-Open `http://localhost:9090` in your browser.
+Open http://localhost:9090 in your browser.
 
-> No config file needed! MiBee NVR auto-initializes when started without one.
+> **Note**: No config preparation needed! MiBee NVR auto-initializes when started without a config file.
 
-### Changing the Recording Storage Location
+> **Running on a NAS (Synology / QNAP / unRAID / fnOS / iStoreOS / 极空间)?** See the per-platform guides in the [Deployment Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/deployment.md#deploying-on-a-nas-os) — they cover host networking (required for ONVIF camera auto-discovery), volume paths, and port conflicts.
 
-By default, recordings are stored in `./data` on the host. To use an external drive:
+
+
+#### Changing the Storage Location
+
+By default, recordings are stored in `./data` on the host (mapped to `/data` inside the container).
+To store recordings on an external drive or a different directory, edit `docker-compose.yml`:
 
 ```yaml
-volumes:
-  - /mnt/external/nvr:/data    # ← replace with your host path
-environment:
-  - NVR_DATA_DIR=/data          # must match the right side of the volume mount
-  # - NVR_UID=1000               # match the host directory owner's UID
-  # - NVR_GID=1000               # match the host directory owner's GID
+    volumes:
+      - /mnt/external/nvr:/data    # ← change to your host path
+    environment:
+      - NVR_DATA_DIR=/data          # must match the right side of the volume mount
+      # - NVR_UID=1000               # match the UID that owns the host directory
+      # - NVR_GID=1000               # match the GID that owns the host directory
 ```
 
-> **Important**: The right side of the volume mount (`:data`) and `NVR_DATA_DIR` must always match. If the container fails to start, verify the host directory exists and that the configured UID/GID has write permission.
+> **Important**: The right side of the volume mount (`:data`) and `NVR_DATA_DIR` must always match.
+> If the container fails to start or keeps restarting, check that the host directory exists and is
+> writable by the configured UID/GID (default: 1000:1000).
 
-## Option 3: One-Line Install Script
+### Option 3: One-click Install Script
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install.sh | sudo bash
 ```
 
-This automatically downloads the binary, creates a system user (`nvr`), generates a config, installs a systemd service, and starts it. Data directory: `/var/lib/mibee-nvr`.
+This downloads the binary, creates a system user (`nvr`), generates config with password, installs a systemd service, and starts it automatically. Data directory: `/var/lib/mibee-nvr`.
 
-Uninstall (preserving recordings):
+To uninstall (preserves recordings):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install.sh | sudo bash -s -- --uninstall
 ```
 
-## Option 4: Build from Source
+### Option 4: Build from Source
 
-Requires Go 1.26+ and Node.js:
+Requires Go 1.26+ and Node.js (for frontend):
 
 ```bash
 git clone https://github.com/Mi-Bee-Studio/MiBeeNvr.git
 cd MiBeeNvr
 make build
-./mibee-nvr init --password your-password
+./mibee-nvr init --password yourpassword
 ./mibee-nvr -config mibee-nvr.yaml
 ```
 
-Cross-compile for ARM64:
+For cross-compiling to ARM64 (e.g. Raspberry Pi):
 
 ```bash
 make cross
 ```
 
-## First-Time Configuration
+## First-Time Setup
 
-### Using the init Subcommand
+### Using `mibee-nvr init`
+
+The `init` subcommand creates a config file with secure defaults:
 
 ```bash
-./mibee-nvr init --password your-password
+./mibee-nvr init --password yourpassword
 ```
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--password` | (interactive prompt) | Web UI admin password |
+Options:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--password` | (prompted) | Admin password for Web UI |
 | `--username` | `admin` | Admin username |
-| `--data-dir` | `/var/lib/mibee-nvr` | Recording and database directory |
+| `--data-dir` | `/var/lib/mibee-nvr` | Data directory for recordings and DB |
 | `--listen` | `:9090` | HTTP listen address |
 | `--config` | `mibee-nvr.yaml` | Config file path |
-| `--force` | false | Overwrite existing config file |
+| `--force` | false | Overwrite existing config |
 
-### Password Setup Methods
+### Password Setup
 
-1. **init command** (recommended): `mibee-nvr init --password <password>`
-2. **Plaintext in config**: set `auth.password` in YAML — automatically hashed on first start
-3. **Manual hash generation**: `mibee-nvr hash-password <password>` → paste into `auth.password_hash`
+There are three ways to set the admin password:
+
+1. **`mibee-nvr init --password <pw>`** — sets the hashed password during setup (recommended)
+2. **Plaintext in config** — set `auth.password` in YAML; auto-hashed to `password_hash` on first start
+3. **Manual hash** — generate with `mibee-nvr hash-password <pw>` and paste into `auth.password_hash`
 
 > For the full command surface (init / hash-password / health / cleanup / repair and the other subcommands) see the [CLI Reference](cli.md).
 
+### Default Paths
+
+| Path | Description |
+|------|-------------|
+| `/var/lib/mibee-nvr/` | Data directory (recordings, database) |
+| `/var/lib/mibee-nvr/mibee-nvr.db` | SQLite database |
+| `mibee-nvr.yaml` | Configuration file |
+
 ## Adding Your First Camera
 
-MiBee NVR uses **separate transport protocol + encoding format** fields:
-
-- **Transport protocol**: `rtsp`, `http`, `onvif`, `xiaomi`, `timelapse`
-- **Encoding format**: `h264`, `h265`, `mjpeg`, `jpeg`
-
-All cameras are managed on the Cameras page: click **Scan Devices** to auto-discover ONVIF / Xiaomi cameras on the LAN, or **+ Add Camera** to add one manually; each card supports start/stop, restart, and a live view.
-
 ![Cameras page](images/cameras.webp)
+
+![Surveillance grid](images/surveillance.webp)
+
+MiBee NVR uses a **separate transport + encoding** format for camera protocols:
+
+- **Transport**: `rtsp`, `http`, `onvif`, `xiaomi`, `timelapse`
+- **Encoding**: `h264`, `h265`, `mjpeg`, `jpeg`
+
+All cameras are managed on the **Cameras** page: click **Scan Devices** to auto-discover ONVIF / Xiaomi cameras on the LAN, or **+ Add Camera** to add one manually; each camera card supports start/stop, restart, and a live view.
+
+> The old combined format (`rtsp_h264`, `rtsp_h265`, `rtsp_mjpeg`, `http_jpeg`) is **rejected in 0.10.0+** — `Validate()` and the camera create handler return an error asking you to split into separate `protocol` and `encoding` fields.
 
 ### RTSP H.264 Camera
 
@@ -145,6 +182,18 @@ cameras:
     enabled: true
 ```
 
+### HTTP JPEG Camera
+
+```yaml
+cameras:
+  - id: "garage"
+    name: "Garage"
+    protocol: "http"
+    encoding: "jpeg"
+    url: "http://192.168.1.102:8080/snapshot"
+    enabled: true
+```
+
 ### ONVIF Camera
 
 ```yaml
@@ -158,93 +207,107 @@ cameras:
     enabled: true
 ```
 
-> ONVIF auto-detects the encoding format, so you can omit the `encoding` field.
+> ONVIF auto-detects the encoding. The `encoding` field can be omitted.
 
-> **0.10.0+ no longer accepts combined formats** (e.g. `rtsp_h264`). Use separate `protocol` + `encoding` fields instead.
+### Timelapse Camera
+
+```yaml
+cameras:
+  - id: "construction"
+    name: "Construction Site"
+    protocol: "timelapse"
+    enabled: true
+```
+
+> Timelapse cameras capture periodic snapshots without a continuous video stream.
+
+### Combined Format Is Deprecated
+
+> ⚠️ **Combined formats (e.g. `rtsp_h264`) are rejected since 0.10.0.** If you are upgrading from an older version and your config still uses a combined format, you must split it into separate `protocol` + `encoding` fields, otherwise NVR startup fails validation.
+
+**Wrong (old):** `protocol: "rtsp_h264"`
+**Correct (new):**
+
+```yaml
+cameras:
+  - id: "cam1"
+    name: "Legacy Cam"
+    protocol: "rtsp"
+    encoding: "h264"
+    url: "rtsp://192.168.1.100:554/stream"
+    enabled: true
+```
+
+After editing the config, restart MiBee NVR or use the Web UI to add cameras at runtime.
 
 ## Accessing MiBee NVR
 
-### Web Management Interface
+### Web UI
 
-Open `http://your-server-address:9090` in your browser and log in with the configured credentials.
+Open http://your-server:9090 and log in with your configured credentials. From the Web UI you can:
 
-![Login page](images/login.webp)
-
-Features:
-- **Surveillance**: live multi-camera grid (WebCodecs / MJPEG tiles; HLS, WebRTC, HTTP-FLV, and WebSocket playback)
-- **Cameras**: scan, add, edit, and start/stop cameras
-- **Recordings**: timeline and list views, playback and download
-- **AI Events**: browse AI detection events
-- **Dashboard**: storage statistics and trends
-- **Settings**: storage, streaming, GB28181, AI detection, and more
-
-![Surveillance grid](images/surveillance.webp)
+- View live camera streams (HLS, WebRTC, HTTP-FLV, WebSocket)
+- Play back and download recordings
+- Add, edit, and remove cameras
+- View storage statistics and trends
+- Configure settings
 
 ### WebDAV
 
-Enabled by default (read-only mode), accessible at `/dav/`:
+WebDAV is available at `/dav/` (enabled by default, read-only by default):
 
 ```bash
-curl -u admin:password http://your-server-address:9090/dav/
+curl -u admin:password http://your-server:9090/dav/
 ```
 
-Mount in a file manager: `davs://your-server-address:9090/dav/`
+Mount in a file manager: `davs://your-server:9090/dav/`
+
+To enable read-write access, set `webdav.read_write: true` in config.
 
 ### FTP
 
-Enabled by default on port 2121:
+FTP is available on port 2121 (enabled by default):
 
 ```bash
-ftp your-server-address 2121
+ftp your-server 2121
 # Username: admin
-# Password: (your configured password)
+# Password: (your password)
 ```
 
-## Troubleshooting
+## Common Issues
 
-### Service Won't Start
+### Service won't start
 
-```bash
-# Check config file
-cat mibee-nvr.yaml
+- Check config file syntax: `cat mibee-nvr.yaml`
+- Verify the data directory exists and is writable: `ls -la /var/lib/mibee-nvr/`
+- Check logs: `journalctl -u mibee-nvr -f`
 
-# Verify data directory is writable
-ls -la /var/lib/mibee-nvr/
+### Permission errors
 
-# View logs
-journalctl -u mibee-nvr -f
-```
+- The `install.sh` script creates a `nvr` system user. Make sure the data directory is owned by it:
+  `sudo chown -R nvr:nvr /var/lib/mibee-nvr/`
 
-### Port Conflict
+### Port conflicts
 
-Default port is 9090. Change it (in order of priority):
-1. Environment variable `NVR_LISTEN_PORT=8080`
-2. `install.sh --port 8080`
-3. Config file `server.listen: ":8080"`
-4. Web UI settings page (Settings → General → Web UI Port; restart required to take effect)
+- Default port is 9090. If it's in use, change `server.listen` in config (e.g. `":8080"`). You can also override the listen port without editing config via the `NVR_LISTEN_PORT` environment variable (e.g. `NVR_LISTEN_PORT=8080`), the `install.sh --port <port>` flag, or the Web UI Settings page.
 
-![General settings page](images/settings-general.webp)
+### Can't connect to camera
 
-### Can't Connect to Camera
+- Verify the camera URL works with VLC or ffplay: `ffplay rtsp://192.168.1.100:554/stream`
+- Check network connectivity: `ping 192.168.1.100`
+- Ensure camera credentials are correct
+- Check if the camera requires a specific sub-stream URL for H.265
 
-```bash
-# Verify camera URL
-ffplay rtsp://192.168.1.100:554/stream
+### High memory usage on Raspberry Pi
 
-# Check network connectivity
-ping 192.168.1.100
-```
-
-### High Memory Usage on Raspberry Pi
-
-- Set `segment_duration` to `30s`
-- RPi 3B uses ~900 MB total; 4 cameras at 30-second segments stabilize at ~300 MB
+- Reduce `segment_duration` to `30s` (default). Longer durations hold more data in RAM.
+- The RPi 3B has ~900MB RAM. With 4 cameras at 30s segments, expect ~300MB stable usage.
 
 ## Next Steps
 
 - [Docker Deployment](install-docker.md) — production container deployment
 - [CLI Reference](cli.md) — command-line administration
 - [Configuration Reference](config.md) — top-level YAML key cheat sheet
-- [NAS Deployment](install-nas.md) — Synology / QNAP / unRAID / FlyBull
+- [NAS Deployment](install-nas.md) — Synology / QNAP / unRAID / fnOS
 - [ONVIF Auto-Discovery](onvif-discovery.md) — zero-config camera onboarding
 - [Recording & Playback](recording-playback.md) — managing recordings

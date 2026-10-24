@@ -1,6 +1,6 @@
 # CLI Reference
 
-> For MiBeeNvr v0.13.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
+> For MiBeeNvr v0.14.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
 
 MiBee NVR follows a "single binary + subcommands" design: **running it without a subcommand starts the server**, while subcommands run an administrative tool and exit.
 
@@ -35,6 +35,7 @@ mibee-nvr -config mibee-nvr.yaml
 | [`download-model`](#download-model-download-the-ai-model) | Download the browser-side AI model |
 | [`merge-cameras`](#merge-cameras-merge-cameras) | Merge two duplicate camera entries |
 | [`timelapse-merge`](#timelapse-merge-convert-recordings-to-timelapse) | Batch-convert recordings of any period/camera into timelapse merges |
+| [`tier-merge`](#tier-merge-sub-stream-segment-merge) | Fold tiered-recording sub-stream segments (row-count hygiene) |
 | [`eval-replay`](#eval-replay-offline-replay-evaluation) | Replay the activity scorer / adaptive gate offline for tuning |
 | [`repair`](#repair-data-repair) | Data repair toolkit (9 subcommands) |
 | [`cleanup`](#cleanup-recording-cleanup) | Delete recordings by date / orphan files |
@@ -164,7 +165,7 @@ Behavior notes:
 - The command may run while the NVR is live (WAL concurrency, same as cleanup/repair); cameras with timelapse enabled are refused though — their windows belong to the server's merge scheduler (use `--force` or stop the server).
 - **Self-downgrades on execute** (nice 19 + lowest best-effort IO class; `--no-throttle` disables): merges at the NVR's default priority starve online recording (2026-09-12 incident: load 8-13 for 4.5h, recordings dropped 17→10; renicing after the fact could not undo the storm).
 - **Directory-form source deletion is rate-limited** (pause every 200 files, `--delete-throttle`): unlinking the millions of small files in MJPEG/timelapse frame directories saturates the ext4 journal (jbd2) for tens of minutes and slows all disk IO.
-- Merge intermediates (frame extract/copy dirs) are written under the **storage root** at `<root>/periodic-merge/tmp/`, never the system `/tmp` (a 1s-sampled natural-day window needs ~3.5-7GB and small root partitions hit ENOSPC); merge output is generated streaming (#747), so memory use is independent of window size. Intermediates left behind by an interrupted run (Ctrl-C/crash) are reclaimed by the NVR server's startup sweep (grace period `storage.periodic_temp_grace_s`, default 24h — see [Configuration](config.md#storageperiodic_temp_grace_s)).
+- Merge intermediates (frame extract/copy dirs) are written under the **storage root** at `<root>/periodic-merge/tmp/`, never the system `/tmp` (a 1s-sampled natural-day window needs ~3.5-7GB and small root partitions hit ENOSPC); merge output is generated streaming (#747), so memory use is independent of window size. Intermediates left behind by an interrupted run (Ctrl-C/crash) are reclaimed by the NVR server's startup sweep (grace period `storage.periodic_temp_grace_s`, default 24h — see [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md#storageperiodic_temp_grace_s)).
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -180,6 +181,37 @@ Behavior notes:
 | `--execute` | dry-run | Actually execute |
 | `--force` | — | Process timelapse-enabled cameras while the NVR is running |
 | `--no-throttle` | — | Skip the automatic self-downgrade (nice 19 + IO best-effort) |
+| `--config <path>` | `mibee-nvr.yaml` | Config file path |
+
+## tier-merge — sub-stream segment merge
+
+Folds a tiered camera's (`recording_tier: tiered`) **layer=1 sub-stream segments** into one file per time window — tier-1 rows are born terminal (never a merge input, #763), so this command is their only consolidation lever:
+
+```bash
+# Preview (dry-run by default): the 1h-window fold plan for all sub segments
+mibee-nvr tier-merge --camera cam-xxxx
+
+# Execute: fold each hourly window, delete sources, keep one layer=1 product row
+mibee-nvr tier-merge --camera cam-xxxx --window 1h --execute
+```
+
+Behavior notes:
+
+- Per window: probe sources (parameter sets) → merge (same `MergeMP4Segments` primitive as the rolling merge; codec-parameter changes split the run) → on success **delete the source rows + files and insert ONE consolidated row** (still layer=1 / out of the default list and timeline, matching its sources).
+- Fresh windows are skipped by default (`--keep-newest`, default 2h) — the live tierrec writer is never touched. Safe to run while the NVR is live (WAL concurrency model).
+- Phantom rows whose files are gone are dropped; windows with probe failures are skipped entirely (never fold a half-known window).
+- Same automatic self-downgrade as timelapse-merge (nice 19 + IO best-effort, disable with `--no-throttle`) — folding a large backlog is IO-heavy.
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--camera <id>` | (required) | Camera ID |
+| `--window <dur>` | `1h` | Fold window bucket (e.g. `30m` / `1h` / `6h`) |
+| `--from <YYYY-MM-DD>` | — | Only windows on/after this date (config tz) |
+| `--to <YYYY-MM-DD>` | all | Only windows before this date (exclusive) |
+| `--keep-newest <dur>` | `2h` | Skip windows whose newest segment is younger; `0` disables |
+| `--min-segments <n>` | `2` | Skip windows with fewer segments |
+| `--execute` | dry-run | Actually apply |
+| `--no-throttle` | — | Skip the automatic self-downgrade |
 | `--config <path>` | `mibee-nvr.yaml` | Config file path |
 
 ## eval-replay — Offline Replay Evaluation
@@ -331,7 +363,7 @@ mibee-nvr update --check
 
 # manual upgrade to the latest stable (requires sudo)
 sudo mibee-nvr update
-sudo mibee-nvr update --version v0.13.0
+sudo mibee-nvr update --version v0.14.0
 
 # root-helper entry (ExecStart of the update service; the request file is
 # written by the app and consumed exactly once — removed on ANY outcome)
@@ -349,7 +381,7 @@ mibee-nvr update --apply-request /var/lib/mibee-nvr/update-request.json
 - **Linux bare-metal only**: permanently disabled for Docker deployments (the container is immutable — use Watchtower / `docker compose pull`); Windows/macOS desktop builds are refused too (a self-update would silently resolve to the linux binary).
 - `update.download_mirror` switches artifact downloads to a mirror (the version check still hits the GitHub API).
 
-For the auto-apply switch (`update.auto_apply`) and the service/polkit setup see [Automatic Updates](upgrade-faq.md).
+For the auto-apply switch (`update.auto_apply`) and the service/polkit setup see [Automatic Updates](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/deployment-autoupdate.md).
 
 ## gen-gb35114-certs — Issue GB35114 Pilot Certificates
 

@@ -25,7 +25,7 @@ The simplest combination is "RTSP for viewing + MQTT trigger + MQTT state" — H
 
 ## Option 0: Bundled Custom Integration (recommended)
 
-The repository ships a Home Assistant custom integration (source and entity list). Once installed it discovers NVRs on the LAN automatically and creates, per camera:
+The repository ships a Home Assistant custom integration ([source and entity list](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/deploy/home-assistant)). Once installed it discovers NVRs on the LAN automatically and creates, per camera:
 
 - **Camera entity** — H.264/H.265 via the NVR's built-in RTSP output (HA `stream`, 1–3 s latency); MJPEG/JPEG cameras via the `stream.mjpeg` passthrough (HA-native MJPEG camera).
 - **Binary sensors ×2** — *Connected* (connectivity) and *Recording* (segment writer active).
@@ -197,5 +197,5 @@ The card runs an embedded go2rtc to convert RTSP→WebRTC (it does not consume t
 ## Next Steps
 
 - [MQTT Integration](mqtt.md) — full reference for triggers and status publishing
-- [Configuration Reference](config.md) — all fields including `server.rtsp`, `mqtt`, `health.alerts`
-- [API Overview](api.md) — REST endpoints and authentication
+- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) — all fields including `server.rtsp`, `mqtt`, `health.alerts`
+- [API Overview](./api.md) — REST endpoints and authentication

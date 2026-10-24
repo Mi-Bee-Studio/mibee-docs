@@ -1,6 +1,6 @@
 # 功能总览
 
-> 适用于 MiBeeNvr v0.13.0（2026-09 发布）
+> 适用于 MiBeeNvr v0.14.0（2026-10 发布）
 
 一页看全 MiBee NVR 的全部能力。每一节都附上对应的专题文档链接——本文是地图，细节请进对应的"景点"。
 
@@ -70,8 +70,8 @@ SIP 摄像头/平台直接 REGISTER 到 NVR，以普通摄像头形式出现在�
 
 - **浏览器端 AI 检测**：ONNX Runtime Web（WebGPU → WASM SIMD 回退），YOLO11 模型在浏览器推理——服务器零负载，老旧 NVR 主机也能跑
 - **ROI 区域**：划出入口/通道等关键区域，只对区域内目标报警；置信度、跳帧率、类别过滤全可调（见 [AI 调参指南](ai-detection.md)）
-- **MiBeeVision 集成**：可接入外部 AI 后端（v0.13 起支持多实例路由 `vision.instances` + 推送熔断自动退避），NVR 主动推送录像段、掉线自动补偿重推；AI 事件快照端点
-- **相机侧移动侦测**：ONVIF MotionAlarm 事件直接作为录像触发源（`motion_source: camera:onvif`，见 [ONVIF 指南](onvif-discovery.md)）——侦测算力下放给相机，NVR 零解码开销
+- **MiBeeVision 集成**：可接入外部 AI 后端（v0.13 起支持多实例路由 `vision.instances` + 推送熔断自动退避），NVR 主动推送录像段、掉线自动补偿重推；AI 事件快照端点。官方 **MiBeeVision Lite** 二进制已在 NVR 仓库免费分发（独立版本线；Lite 为单摄像头、CPU 推理、Linux x86_64/ARM64），无需自建 AI 后端
+- **相机侧移动侦测**：ONVIF MotionAlarm 事件直接作为录像触发源（`motion_source: camera:onvif`，见 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)）——侦测算力下放给相机，NVR 零解码开销
 - **健康监控**：多层级摄像头健康检测、自动补救、掉线黑名单、IP 漂移自愈（按 ONVIF 序列号重新发现）
 - **SSE 实时事件**：摄像头状态、健康事件、录像段完成全部实时推送
 
@@ -88,6 +88,7 @@ SIP 摄像头/平台直接 REGISTER 到 NVR，以普通摄像头形式出现在�
 - 录制：AAC / G.711（μ-law、A-law）/ Opus 全部落入 MP4 音轨
 - 直播试听：G.711 与 Opus 实时解码播放，AAC 走 WebCodecs
 - **双向对讲**：按住说话对摄像头喊话（小米 CS2 机型）
+- **[独立音频源](audio-sources.md)**：脱离摄像头独立录音频（RTSP 拉流 / WHIP 推入，表单内编码探测），可关联摄像头做同步回放与日时间轴音频轨
 
 ## 存储与集成
 
@@ -98,6 +99,8 @@ SIP 摄像头/平台直接 REGISTER 到 NVR，以普通摄像头形式出现在�
 - **FTP 服务器**：远程上传 + 支持摄像头自动注册（摄像头填 FTP 地址即完成接入）
 - **MQTT 集成**：事件总线转发（`mqtt.status_events`）+ 触发式 / 定时强制录像 + 快照触发（家庭自动化联动）
 - **[Webhook 触发](webhook-integration.md)**：HMAC-SHA256 签名触发端点（Stripe 风格签名 + 双向防重放），供外部系统拉起录像 / 快照
+- **[SIP 门铃/对讲](doorbell.md)**：标准 SIP 门禁按铃即弹 Web UI 来电框（双向 G.711 对讲 + 关联相机抓拍）；支持直连注册或经 PBX 中转——默认关闭
+- **[DLNA 媒体服务器](dlna.md)**：电视/局域网播放器经 SSDP 自动发现 NVR,按 摄像头 → 日期 → 录像 浏览(默认关闭,仅内网网卡)
 - **[Home Assistant 集成](home-assistant.md)**：官方定制集成随包发布（mDNS 自动发现 + 按相机生成实体 / 开关）；也可用内置 RTSP 输出 + MQTT 纯原生拼装
 - **Prometheus 指标**：300+ 指标族，`/api/metrics` 抓取
 - **REST API**：全部功能可编程，支持 API Key（`mbv_` 前缀）与 BasicAuth 双认证
@@ -160,6 +163,6 @@ timeline
 
 ## 下一步
 
-- 想快速上手：[快速开始](quickstart.md)
+- 想快速上手：[快速入门](quickstart.md)
 - 想看真实使用场景：[场景玩法指引](scenarios.md)
 - 正在选型对比：[同类方案对比](comparison.md)

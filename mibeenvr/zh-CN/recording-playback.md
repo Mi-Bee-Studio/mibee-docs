@@ -1,6 +1,6 @@
 # 录制与回放
 
-> 适用于 MiBeeNvr v0.13.0
+> 适用于 MiBeeNvr v0.14.0
 
 MiBee NVR 将摄像头视频流录制为 MP4 片段并保存到磁盘，提供 Web 界面用于回放、搜索和下载录像。
 
@@ -210,6 +210,18 @@ cameras:
         - start: "09:00"
           end: "18:00"
       days_of_week: [1, 2, 3, 4, 5]   # 0=周日 … 6=周六；空 = 每天
+```
+
+每天时段不同、跨夜录制：每个时间段可以带自己的 `days_of_week`，结束时间早于或等于开始时间表示跨到次日（Web 界面可逐段编辑）：
+
+```yaml
+cameras:
+  - id: "study-cam"
+    recording_schedule:
+      time_ranges:
+        - { start: "15:00", end: "23:00", days_of_week: [1, 2, 3, 4, 5] }  # 工作日
+        - { start: "07:00", end: "23:00", days_of_week: [0, 6] }           # 周末
+        - { start: "22:00", end: "06:00", days_of_week: [5] }              # 周五夜里录到周六 06:00
 ```
 
 ### 外部事件触发录制

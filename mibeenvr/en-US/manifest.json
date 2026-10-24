@@ -56,6 +56,11 @@
       "title": "Installation",
       "items": [
         {
+          "slug": "install-linux",
+          "file": "install-linux.md",
+          "title": "Linux Native Packages (deb / rpm)"
+        },
+        {
           "slug": "install-docker",
           "file": "install-docker.md",
           "title": "Docker Deployment"
@@ -104,6 +109,11 @@
           "slug": "raspberrypi",
           "file": "raspberrypi.md",
           "title": "Raspberry Pi Camera"
+        },
+        {
+          "slug": "doorbell",
+          "file": "doorbell.md",
+          "title": "SIP Doorbell / Intercom"
         }
       ]
     },
@@ -136,9 +146,19 @@
           "title": "Live Relay"
         },
         {
+          "slug": "dlna",
+          "file": "dlna.md",
+          "title": "DLNA Media Server"
+        },
+        {
           "slug": "audio",
           "file": "audio.md",
           "title": "Audio"
+        },
+        {
+          "slug": "audio-sources",
+          "file": "audio-sources.md",
+          "title": "Standalone Audio Sources"
         },
         {
           "slug": "timelapse",
@@ -214,6 +234,11 @@
           "slug": "performance",
           "file": "performance.md",
           "title": "Performance Tuning"
+        },
+        {
+          "slug": "performance-benchmark",
+          "file": "performance-benchmark.md",
+          "title": "Performance Benchmark Report"
         },
         {
           "slug": "storage-offload",

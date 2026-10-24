@@ -56,6 +56,11 @@
       "title": "安装部署",
       "items": [
         {
+          "slug": "install-linux",
+          "file": "install-linux.md",
+          "title": "Linux 原生软件包（deb / rpm）"
+        },
+        {
           "slug": "install-docker",
           "file": "install-docker.md",
           "title": "Docker 部署"
@@ -104,6 +109,11 @@
           "slug": "raspberrypi",
           "file": "raspberrypi.md",
           "title": "树莓派摄像头接入"
+        },
+        {
+          "slug": "doorbell",
+          "file": "doorbell.md",
+          "title": "SIP 门铃 / 门口机"
         }
       ]
     },
@@ -136,9 +146,19 @@
           "title": "直播转推"
         },
         {
+          "slug": "dlna",
+          "file": "dlna.md",
+          "title": "DLNA 媒体服务器"
+        },
+        {
           "slug": "audio",
           "file": "audio.md",
           "title": "音频"
+        },
+        {
+          "slug": "audio-sources",
+          "file": "audio-sources.md",
+          "title": "独立音频源"
         },
         {
           "slug": "timelapse",
@@ -214,6 +234,11 @@
           "slug": "performance",
           "file": "performance.md",
           "title": "性能调优"
+        },
+        {
+          "slug": "performance-benchmark",
+          "file": "performance-benchmark.md",
+          "title": "性能压测报告"
         },
         {
           "slug": "storage-offload",
