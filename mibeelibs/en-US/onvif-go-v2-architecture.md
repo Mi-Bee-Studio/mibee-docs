@@ -93,7 +93,7 @@ github.com/mickeyzzc/onvif-go/v2
   SOAP operations into provider calls. All state decisions move behind
   interfaces.
 - **Simulator as default**: the existing simulator behavior becomes
-  `server/simulator`, selected when no provider is injected — `cmd/onvif-server`
+  `server/simulator`, selected when no provider is injected — `cmd/onvif`
   and the examples keep working unchanged.
 - **Transport owns the cross-cutting concerns**: request context (#17),
   per-action authentication policy (#16), and byte-level XML control (#18) all

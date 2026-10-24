@@ -186,8 +186,8 @@ fmt.Println(srv.ListenAddr())               // 如 0.0.0.0:8443
 范围：纯 TLS 传输（Profile T 基线）。高级置备——PKI、802.1X、
 UsernameToken 之外的 WS-Security——刻意不做。
 
-可运行的 `onvif-server` 二进制只说纯 HTTP；TLS 是嵌入包的面
-（[onvif-server CLI](onvif-go-cli-server.md)）。
+可运行的 `onvif server` 二进制只说纯 HTTP；TLS 是嵌入包的面
+（[onvif server CLI](onvif-go-cli-server.md)）。
 
 ## 去向
 

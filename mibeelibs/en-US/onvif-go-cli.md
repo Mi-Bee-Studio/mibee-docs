@@ -1,28 +1,28 @@
 # CLI Tools
 
-Four helper binaries ship in `cmd/` — a discovery probe, an interactive
-quick-start tool, a deep diagnostic collector, and the virtual-camera
-simulator in runnable form. They are zero-dependency single binaries
-built for six platforms on every release.
+One CLI, four subcommands — `onvif discover`, `onvif quick`, `onvif
+diagnostics`, and `onvif server` (unified into a single binary at
+v2.6.0; previously four separate tools). Static, zero-dependency, one
+prebuilt file per platform on every release.
 
 ## Which tool for which job?
 
 | You want to… | Run |
 |---|---|
 | See every ONVIF camera on the LAN (script-friendly output) | `discover` |
-| Poke at one camera interactively — connect, PTZ nudge, stream URLs | `onvif-quick` |
-| Collect a full per-operation report of one camera (file an issue, capture fixtures) | `onvif-diagnostics` |
-| Test a recorder/NVR against virtual cameras without hardware | `onvif-server` |
+| Poke at one camera interactively — connect, PTZ nudge, stream URLs | `onvif quick` |
+| Collect a full per-operation report of one camera (file an issue, capture fixtures) | `onvif diagnostics` |
+| Test a recorder/NVR against virtual cameras without hardware | `onvif server` |
 | Turn captured SOAP exchanges into regression tests (developer) | `generate-tests` |
 
 Per-tool manuals: [discover](onvif-go-cli-discover.md) ·
-[onvif-quick](onvif-go-cli-quick.md) ·
-[onvif-diagnostics](onvif-go-cli-diagnostics.md) ·
-[onvif-server](onvif-go-cli-server.md)
+[onvif quick](onvif-go-cli-quick.md) ·
+[onvif diagnostics](onvif-go-cli-diagnostics.md) ·
+[onvif server](onvif-go-cli-server.md)
 
 A typical first contact with an unknown camera runs the first three in
-sequence: `discover` finds it, `onvif-quick` proves the library talks to
-it, `onvif-diagnostics -capture-xml` records everything else you need.
+sequence: `discover` finds it, `onvif quick` proves the library talks to
+it, `onvif diagnostics -capture-xml` records everything else you need.
 
 ## Install
 
@@ -32,16 +32,13 @@ darwin/amd64, darwin/arm64, and windows/amd64, with `SHA256SUMS` —
 download and run, no Go toolchain needed:
 
 ```bash
-gh release download v2.2.0 -R mickeyzzc/onvif-go -p 'onvif-quick_linux_amd64'
+gh release download v2.6.0 -R mickeyzzc/onvif-go -p 'onvif_linux_amd64'
 ```
 
 Or install from source at a pinned version:
 
 ```bash
-go install github.com/mickeyzzc/onvif-go/v2/cmd/discover@v2.2.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-quick@v2.2.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-diagnostics@v2.2.0
-go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif-server@v2.2.0
+go install github.com/mickeyzzc/onvif-go/v2/cmd/onvif@v2.6.0   # discover/quick/diagnostics/server 全在一个二进制
 ```
 
 Or build from a checkout (`make build` compiles everything including
@@ -52,12 +49,12 @@ artifacts).
 
 - Exit code 0 = success; nonzero with a message on stderr = failure.
 - Camera credentials are never read from a config file — flags (or the
-  `ONVIF_SERVER_PASSWORD` env var for `onvif-server`) only, so secrets
+  `ONVIF_SERVER_PASSWORD` env var for `onvif server`) only, so secrets
   stay out of dotfiles.
 - What you see is what the library does: the tools are thin shells over
   the public API, with no tool-side special cases — behavior you observe
   reproduces in your own integration.
 
-For the discovery mechanics behind `discover` and `onvif-quick`, see
+For the discovery mechanics behind `discover` and `onvif quick`, see
 [discovery.md](onvif-go-discovery.md); for embedding the simulator
 instead of running the binary, [server.md](onvif-go-server.md).

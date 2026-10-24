@@ -200,8 +200,8 @@ Scope: plain TLS transport (the Profile T baseline). Advanced
 onboarding — PKI, 802.1X, WS-Security beyond UsernameToken — is
 deliberately out of scope.
 
-The runnable `onvif-server` binary speaks plain HTTP only; TLS is the
-embedded package's surface ([onvif-server CLI](onvif-go-cli-server.md)).
+The runnable `onvif server` binary speaks plain HTTP only; TLS is the
+embedded package's surface ([onvif server CLI](onvif-go-cli-server.md)).
 
 ## Where to go next
 

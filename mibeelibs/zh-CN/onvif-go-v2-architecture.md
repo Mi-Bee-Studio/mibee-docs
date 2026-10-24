@@ -84,7 +84,7 @@ github.com/mickeyzzc/onvif-go/v2
 - **services 无状态**：`server/services/*` 不持有状态，只做 SOAP 操作到
   provider 调用的翻译；一切状态决策退到接口之后
 - **模拟器即默认**：现有模拟器行为变成 `server/simulator`，未注入
-  provider 时自动选用——`cmd/onvif-server` 与示例零改动
+  provider 时自动选用——`cmd/onvif` 与示例零改动
 - **传输层管横切关注**：请求上下文（#17）、按动作鉴权策略（#16）、
   XML 字节级控制（#18）全部落在 `server/soap`，一次实现全服务受益
 - **报文可预期**：写出器按 WSDL 规范大小写输出、可选显式命名空间前缀、

@@ -60,7 +60,7 @@ Notes:
 ## Next steps
 
 - [CLI tools](onvif-go-cli.md): probe a camera with `discover` /
-  `onvif-quick` / `onvif-diagnostics` before writing any code.
+  `onvif quick` / `onvif diagnostics` before writing any code.
 - [Discovery](onvif-go-discovery.md): WS-Discovery probes for cameras on
   the network.
 - [Media](onvif-go-media.md): profile-selection heuristics and stream URIs.
