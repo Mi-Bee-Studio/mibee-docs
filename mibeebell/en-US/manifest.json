@@ -1,0 +1,91 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeBell User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "Introduction"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "Quick Start"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web UI Tour"
+        }
+      ]
+    },
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "Architecture"
+        },
+        {
+          "slug": "pipeline",
+          "file": "pipeline.md",
+          "title": "Alert Pipeline (4 Gates + L0)"
+        },
+        {
+          "slug": "ingest",
+          "file": "ingest.md",
+          "title": "Event Ingest (7 Entry Points)"
+        },
+        {
+          "slug": "channels",
+          "file": "channels.md",
+          "title": "Notification Channels"
+        },
+        {
+          "slug": "mesh",
+          "file": "mesh.md",
+          "title": "High Availability (Mesh)"
+        }
+      ]
+    },
+    {
+      "title": "Deployment & Configuration",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "Deployment"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "Configuration & Security"
+        }
+      ]
+    },
+    {
+      "title": "Reference & Advanced",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API Reference"
+        },
+        {
+          "slug": "integrations-nvr",
+          "file": "integrations-nvr.md",
+          "title": "MiBeeNvr Integration"
+        },
+        {
+          "slug": "ai",
+          "file": "ai.md",
+          "title": "AI Enhancements"
+        }
+      ]
+    }
+  ]
+}
