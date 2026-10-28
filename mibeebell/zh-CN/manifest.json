@@ -1,0 +1,91 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeBell 蜂铃用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "产品介绍"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "快速开始"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web 界面巡礼"
+        }
+      ]
+    },
+    {
+      "title": "概念与架构",
+      "items": [
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "架构"
+        },
+        {
+          "slug": "pipeline",
+          "file": "pipeline.md",
+          "title": "告警管道（四道闸 + L0）"
+        },
+        {
+          "slug": "ingest",
+          "file": "ingest.md",
+          "title": "事件接入（七类入口）"
+        },
+        {
+          "slug": "channels",
+          "file": "channels.md",
+          "title": "通知渠道"
+        },
+        {
+          "slug": "mesh",
+          "file": "mesh.md",
+          "title": "高可用集群（Mesh）"
+        }
+      ]
+    },
+    {
+      "title": "部署与配置",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "部署"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "配置与安全"
+        }
+      ]
+    },
+    {
+      "title": "参考与进阶",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API 参考"
+        },
+        {
+          "slug": "integrations-nvr",
+          "file": "integrations-nvr.md",
+          "title": "MiBeeNvr 集成"
+        },
+        {
+          "slug": "ai",
+          "file": "ai.md",
+          "title": "AI 增强"
+        }
+      ]
+    }
+  ]
+}
