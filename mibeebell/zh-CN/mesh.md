@@ -39,7 +39,7 @@ flowchart TB
 - 节点间心跳：memberlist SWIM（1s probe / 5s suspicion / 二次确认）。
 - peer 确认死亡 → 幸存者发 **`bell.node_down`（critical）** 走自己的渠道；恢复发 `bell.node_up`（info）——"看门狗互相咬"。
 - 误报抑制：node_down 延迟 30s 且需第二 peer 佐证——网络分区两侧各活着时互不冤告。
-- **全灭兜底**：mesh 自己也全挂时，由外部独立探测告警（如 MiBeeHive 定时任务三指标 dead man's switch 同款思路），经独立渠道送达。
+- **全灭兜底**：mesh 自己也全挂时，由外部独立探测兜底（任意一台 mesh 之外的普通主机，用 cron 定时 curl 各节点的 `/healthz`，失联即经独立渠道告警）。
 
 ## 数据一致性分级
 
