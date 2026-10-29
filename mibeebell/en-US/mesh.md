@@ -39,7 +39,7 @@ Every node receives every event and runs the pipeline; **the right to notify is 
 - Heartbeats via memberlist SWIM (1s probe / 5s suspicion / secondary confirmation).
 - A confirmed-dead peer makes survivors emit **`bell.node_down` (critical)** through their own channels; recovery emits `bell.node_up` (info) — watchdogs biting each other.
 - False-positive suppression: node_down waits 30s and requires a second corroborating peer — both sides of a network partition stay alive without accusing each other.
-- **Total-outage backstop**: if the whole mesh dies, an external probe (e.g. a MiBeeHive scheduled dead-man switch) alerts through an independent channel.
+- **Total-outage backstop**: if the whole mesh dies, an external probe on any ordinary host outside the mesh (a cron job curling each node's `/healthz`) alerts through an independent channel.
 
 ## Data-consistency tiers
 
