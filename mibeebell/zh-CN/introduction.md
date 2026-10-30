@@ -50,16 +50,16 @@ Prometheus / Alertmanager ─┼─▶ MiBeeBell ─┼─ Telegram / Slack / Di
                               └─ MiBeeScout（生态 App 通知中心）
 ```
 
-## 路线图
+## 路线图（内部里程碑，非发布版本）
 
-| 版本 | 范围 | 状态 |
+| 里程碑 | 范围 | 状态 |
 |---|---|---|
 | **v0.1** | 七类摄取入口中的四类（webhook/Alertmanager/Bark/MQTT）+ 8 渠道 + 四道闸 + L0 全量 + SQLite + SSE + 嵌入式 UI | ✅ 已落地 |
 | **v0.2** | mesh 高可用（claim 租约/死亡开关/静默同步）、渠道凭证落库加密、Scout 通知中心 API、http_enrich 外部打标 | ✅ 已落地（双实例真机验收） |
 | **v0.3** | 付费 critical 通道（Twilio/PagerDuty/Opsgenie）、企微应用消息、LINE、Scout 海外推送；PagerDuty/简单 JSON/Grafana 摄取入口已提前落地 | 🚧 部分提前 |
 | **v1.0** | 按人路由、多 Bell 联邦、双语文档、GitHub Release + Docker 镜像 + install.sh 全量发布 | 计划 |
 
-> 当前文档对应 **v0.2 开发版**（main 分支）。发布节奏以 GitHub Releases 为准。
+> MiBeeBell **尚未发布任何版本**（未打 tag / 无 Release 制品，发布归项目维护者决定）——本文档跟随开发中的 main 分支更新，首个正式版本将随 GitHub Releases 发布。
 
 ## License
 

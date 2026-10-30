@@ -50,16 +50,16 @@ any script / cron / IoT ─┘     (pipeline+denoise) ├─ generic Webhook
                                  └─ MiBeeScout (ecosystem app notification center)
 ```
 
-## Roadmap
+## Roadmap (internal milestones, not releases)
 
-| Version | Scope | Status |
+| Milestone | Scope | Status |
 |---|---|---|
 | **v0.1** | 4 ingest entries (webhook/Alertmanager/Bark/MQTT) + 8 channels + four gates + full L0 + SQLite + SSE + embedded UI | ✅ shipped |
 | **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ shipped (accepted on a real two-node setup) |
 | **v0.3** | paid critical channels (Twilio/PagerDuty/Opsgenie), WeCom app messages, LINE, Scout international push; PagerDuty/simple-JSON/Grafana ingest landed early | 🚧 partially early |
 | **v1.0** | per-person routing, federation, bilingual docs, full GitHub Release + Docker + install.sh distribution | planned |
 
-> This manual tracks the **v0.2 development build** (main branch). Release cadence follows GitHub Releases.
+> MiBeeBell has **not published any release yet** (no tags / no release artifacts; releasing is decided by the maintainer) — this manual tracks the in-development main branch; the first official version will ship via GitHub Releases.
 
 ## License
 

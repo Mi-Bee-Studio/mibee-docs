@@ -1,6 +1,6 @@
 # High Availability (Mesh)
 
-**The alert hub itself must not die** — the worst failure mode of an alerting system is a silent death: it goes quiet, and nobody hears about anything anywhere. MiBeeBell v0.2 ships an all-active masterless mesh, accepted on a real two-node setup (mutual exclusion ✓ / kill-the-leader takeover ✓ / node_down delivered after the 30s grace ✓ / single-node RSS ≈ 15–21MB).
+**The alert hub itself must not die** — the worst failure mode of an alerting system is a silent death: it goes quiet, and nobody hears about anything anywhere. MiBeeBell's all-active masterless mesh has landed, accepted on a real two-node setup (mutual exclusion ✓ / kill-the-leader takeover ✓ / node_down delivered after the 30s grace ✓ / single-node RSS ≈ 15–21MB).
 
 ## Design stance
 
