@@ -201,6 +201,11 @@
           "title": "Webhook 触发"
         },
         {
+          "slug": "notifications",
+          "file": "notifications.md",
+          "title": "告警通知（Webhook 转发）"
+        },
+        {
           "slug": "webdav-ftp",
           "file": "webdav-ftp.md",
           "title": "WebDAV / FTP 存储"

@@ -2,6 +2,9 @@
   "project": "mibeenvr",
   "versions": [
     {
+      "id": "v0.14.1"
+    },
+    {
       "id": "v0.14.0"
     },
     {

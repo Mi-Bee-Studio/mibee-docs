@@ -201,6 +201,11 @@
           "title": "Webhook Triggers"
         },
         {
+          "slug": "notifications",
+          "file": "notifications.md",
+          "title": "Alert Notifications (Webhook Forwarding)"
+        },
+        {
           "slug": "webdav-ftp",
           "file": "webdav-ftp.md",
           "title": "WebDAV / FTP Storage"
