@@ -21,11 +21,11 @@ ffmpeg -f mjpeg -i http://192.168.1.50:8080/stream \
   -c:v copy -f rtsp rtsp://nvr-host:8554/live/esp32-cam1
 ```
 
-Push-in ingest (RTMP/SRT) and stream address configuration: NVR manual — [SRT / RTMP Streaming](https://www.mlsbs.top/docs/mibeenvr/srt-rtmp).
+Push-in ingest (RTMP/SRT) and stream address configuration: NVR manual — [SRT / RTMP Streaming](https://www.mickeybee.cn/docs/mibeenvr/srt-rtmp).
 
 ## Discovery and Direct Connect
 
-- **ONVIF auto-discovery**: rpi-cam and the N16R8 support WS-Discovery / ONVIF — one-click add from the NVR web UI → [ONVIF Auto-discovery](https://www.mlsbs.top/docs/mibeenvr/onvif-discovery)
+- **ONVIF auto-discovery**: rpi-cam and the N16R8 support WS-Discovery / ONVIF — one-click add from the NVR web UI → [ONVIF Auto-discovery](https://www.mickeybee.cn/docs/mibeenvr/onvif-discovery)
 - **Direct RTSP**: the N16R8 RTSP server needs no credentials since contract v1.9 (2026-09-18) — pick RTSP when adding the camera and leave credentials empty
-- **Raspberry Pi camera guide** → [Raspberry Pi Camera](https://www.mlsbs.top/docs/mibeenvr/raspberrypi)
-- **More brand compatibility** → [Camera Brand Compatibility Guide](https://www.mlsbs.top/docs/mibeenvr/camera-guide)
+- **Raspberry Pi camera guide** → [Raspberry Pi Camera](https://www.mickeybee.cn/docs/mibeenvr/raspberrypi)
+- **More brand compatibility** → [Camera Brand Compatibility Guide](https://www.mickeybee.cn/docs/mibeenvr/camera-guide)

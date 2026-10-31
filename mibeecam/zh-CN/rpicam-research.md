@@ -40,7 +40,7 @@
 
 **选定**：`0x524a/onvif-go` 作为主服务端实现——ONVIF 覆盖全面、纯 Go 架构。
 
-> **实际落地**：该库后被抽离为独立维护的分支 `mickeyzzc/onvif-go/v2`，产品当前实际消费的是它（见 [ONVIF · Go 库文档](https://www.mlsbs.top/docs/mibeelibs/onvif-go-architecture)）。
+> **实际落地**：该库后被抽离为独立维护的分支 `mickeyzzc/onvif-go/v2`，产品当前实际消费的是它（见 [ONVIF · Go 库文档](https://www.mickeybee.cn/docs/mibeelibs/onvif-go-architecture)）。
 
 **参考**：`ohcnetwork/mock-ptz-camera` 用于 PTZ 实现模式与数字 PTZ 参考架构（PTZ 后来作为死代码移除）。
 
