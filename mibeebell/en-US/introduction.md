@@ -27,7 +27,7 @@ The niche is also in turmoil: Opsgenie EOLs in 2027-04, self-hosted Grafana OnCa
 Distilled from post-mortems of dead competitors — five non-negotiables:
 
 1. **Truly self-hosted = zero cloud dependency**: no feature depends on the vendor's cloud; channel credentials live on the user's disk (AES-256-GCM encrypted). Offline, domain-dead, or company-gone — every feature keeps working.
-2. **One codebase, the open source IS the product**: AGPL-3.0 in full, no community/enterprise dual track.
+2. **One codebase, no dual track**: a single product edition — no community/enterprise split.
 3. **Replaceable channel layer**: one channel = one file = one interface. Any platform policy change kills that adapter, not the project.
 4. **AI augments, never gates**: the L0 pure-algorithm layer is always on; AI (L1 triage / L2 summaries) is pluggable, off by default, can only downgrade severity and can never drop an event — with AI dead, notifications still flow.
 5. **Minimum maintenance surface**: no monitoring, no probing, no on-call scheduling, no first-party app client (MiBeeScout owns that niche).
@@ -63,4 +63,4 @@ any script / cron / IoT ─┘     (pipeline+denoise) ├─ generic Webhook
 
 ## License
 
-AGPL-3.0 (same as MiBeeNvr / MiBeeSteward).
+To be announced — the license will be decided before the first release.
