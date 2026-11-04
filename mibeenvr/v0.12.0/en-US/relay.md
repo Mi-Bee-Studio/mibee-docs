@@ -431,6 +431,7 @@ When `use_ffmpeg: true`:
 - The camera's RTSP URL is **auto-resolved** from the recorder (ONVIF cameras get
   their resolved RTSP URL; RTSP cameras use their config URL directly)
 - Optional `source_url` overrides the auto-resolved URL (useful for non-RTSP cameras)
+```
 - FFmpeg subprocess lifecycle is tied to the relay target (killed on stop/disable)
 
 ### Prerequisites

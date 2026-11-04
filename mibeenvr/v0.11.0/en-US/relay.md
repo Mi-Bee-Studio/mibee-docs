@@ -390,7 +390,6 @@ tail -f /var/log/mibee-nvr.log | grep relay
 # Check stream key authentication (if applicable)
 curl -H "Authorization: Bearer YOUR_KEY" -X GET https://api.bilibili.com/x/web-interface/nav
 ```
-```
 
 ## FFmpeg Relay Mode (Compatibility)
 
