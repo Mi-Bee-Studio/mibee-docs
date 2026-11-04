@@ -390,7 +390,6 @@ tail -f /var/log/mibee-nvr.log | grep relay
 # 检查流密钥认证（如果适用）
 curl -H "Authorization: Bearer YOUR_KEY" -X GET https://api.bilibili.com/x/web-interface/nav
 ```
-```
 
 ## FFmpeg 转发模式（兼容性）
 
