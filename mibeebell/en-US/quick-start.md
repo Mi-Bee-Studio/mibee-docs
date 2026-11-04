@@ -4,37 +4,30 @@ Goal: get MiBeeBell running on a Linux box, fire your first alert and receive th
 
 > Commands are copy-paste ready. Example addresses use the documentation range `192.0.2.10` — replace with your instance address.
 
-## 1. Build & install
+## 1. Download & install
 
-Build from source (the web UI ships pre-built and embedded — no node needed):
+Grab the artifact for your platform from the [release hub](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0) and verify it (`checksums.txt` included):
+
+| File | For |
+|---|---|
+| `mibee-bell_linux_amd64.tar.gz` | Linux x86_64 |
+| `mibee-bell_linux_arm64.tar.gz` | Linux ARM64 (Raspberry Pi class) |
+| `mibee-bell_linux_armv6.tar.gz` | Linux ARMv6 |
+| `mibee-bell_windows_amd64.zip` | Windows x86_64 |
+| `mibee-bell-fnos-0.1.0-arm64.fpk` / `-amd64.fpk` | fnOS NAS (install via App Center) |
 
 ```bash
-git clone https://github.com/Mi-Bee-Studio/MiBeeBell.git
-cd MiBeeBell
-make build          # produces ./mibee-bell (CGO_ENABLED=0, cross-compile friendly)
+tar xzf mibee-bell_linux_amd64.tar.gz && chmod +x mibee-bell
 ```
 
-System install (optional, systemd-managed `/opt/mibee-bell` layout):
+## 2. First run: set the admin password
+
+Run it directly (config file is `config.yaml` next to the binary; a minimal one is enough):
 
 ```bash
-sudo deploy/install.sh ./mibee-bell
-```
-
-## 2. Write a minimal config
-
-```bash
-./mibee-bell hash-password --password 'your-admin-password'
-# prints {"password_hash":"$2a$10$..."} — paste it below
-
 cat > config.yaml <<'EOF'
 server:
   listen: ":9080"
-
-auth:
-  password_hash: "$2a$10$..."        # output of the previous step
-
-storage:
-  path: ./mibee-bell.db
 
 ingest:
   webhook_tokens:
@@ -42,9 +35,16 @@ ingest:
       default_source: "myapp"
   alertmanager: true                  # also enable the Prometheus/Grafana entry
 EOF
+
+./mibee-bell
+# log: mibee-bell listening addr=:9080 ...
 ```
 
-> With an empty `auth.password_hash`, the admin API and Web UI stay disabled (logged warning); ingest endpoints are unaffected.
+Open `http://192.0.2.10:9080` in a browser — the first visit is the **set admin password** page. Set it and you land in the notification center, already logged in. (On fnOS, desktop admins get single sign-on — no second login.)
+
+Config-file alternative: `./mibee-bell hash-password --password 'your-admin-password'` and paste the printed `password_hash` into `auth.password_hash`.
+
+> Without an admin password, the admin API and Web UI stay disabled (logged warning); ingest endpoints are unaffected.
 
 ## 3. Start
 

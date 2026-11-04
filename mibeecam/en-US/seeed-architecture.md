@@ -4,17 +4,24 @@
 
 The ESP32-S3 camera monitoring system is based on the FreeRTOS real-time operating system, running 27 loosely coupled C modules on the dual-core ESP32-S3. The system uses a hybrid event-driven and polling architecture, with camera frame data split into two outputs: real-time HTTP MJPEG streaming and recording storage.
 
-```
-  Camera ──→ Frame Broadcaster ──→ MJPEG Streamer (port 81) ──→ Browser/Client
-          └→ Video Recorder ──→ SD Card (AVI segments)
-                             └→ NAS Uploader ──→ WebDAV / HTTP(S) (mutually exclusive)
-  Config Manager ←→ NVS ←→ SD Card Override (wifi.txt / nas.txt)
-  WiFi Manager (AP/STA) → Time Sync (SNTP)
-  Status LED ← LED Controller (GPIO21, active-low)
-  Watchdog (30s TWDT, panic) → Health Monitor (60s)
-  ONVIF Discovery (UDP multicast) → NVR auto-discovery
-  Audio Driver (I2S PDM DSR_16S, 8 kHz) → DC removal → spectral NS → noise gate → G.711 → Audio Broadcaster
-    → RTSP Server (port 554) + Web Server (/api/audio HTTP stream)
+```mermaid
+flowchart TB
+    CAM["Camera"] --> FB["Frame Broadcaster"]
+    FB --> MJ["MJPEG Streamer<br/>port 81"]
+    MJ --> BR["Browser/Client"]
+    FB --> REC["Video Recorder"]
+    REC --> SD["SD Card<br/>AVI segments"]
+    REC --> NAS["NAS Uploader"]
+    NAS --> UP["WebDAV / HTTP（S）<br/>mutually exclusive"]
+    CFG["Config Manager"] <--> NVS["NVS"]
+    NVS <--> OVR["SD Card Override<br/>wifi.txt / nas.txt"]
+    WIFI["WiFi Manager<br/>AP/STA"] --> TSYNC["Time Sync<br/>SNTP"]
+    LEDC["LED Controller<br/>GPIO21, active-low"] --> SLED["Status LED"]
+    WDT["Watchdog<br/>30s TWDT, panic"] --> HM["Health Monitor<br/>60s"]
+    ONVD["ONVIF Discovery<br/>UDP multicast"] --> NA["NVR auto-discovery"]
+    AUD["Audio Driver<br/>I2S PDM DSR_16S, 8 kHz"] --> DCR["DC removal"] --> NS["spectral NS"] --> NG["noise gate"] --> G711["G.711"] --> AB["Audio Broadcaster"]
+    AB --> RTSP["RTSP Server<br/>port 554"]
+    AB --> WEBA["Web Server<br/>/api/audio HTTP stream"]
 ```
 
 ### Core Features
@@ -173,34 +180,19 @@ bool alert_webhook_enabled; // Enable alert webhook
 
 JPEG frames captured by the camera are written to AVI files by the recorder, triggering a callback chain after segment completion:
 
-```c
-camera_capture()
-    │
-    ▼
-    Video Recorder (recording_task, Core 0)
-    │  ← Frame data written to AVI file
-    │  ← Segmented by segment_sec duration (continuous vs timelapse mode)
-    │  ← Writes AVI idx1 index
-    │
-    ▼  Segment complete
-    on_segment_complete(filepath, size)
-    │
-    ├──→ nas_uploader_enqueue(filepath)
-    │       │
-    │       ▼
-    │    Upload Task (Core 1)
-    │       ├── upload_method=1 → WebDAV upload
-    │       ├── upload_method=2 → HTTP(S) upload
-    │       └── upload_method=0 → Skip upload
-    │       Retry 3 times on failure, pause 5 minutes after 10 consecutive failures
-    │
-    └──→ storage_cleanup()
-            │
-            ▼
-         Check free space < cleanup_low_pct? (default 20%)
-            ├── Yes → Delete oldest recording files until ≥ cleanup_high_pct (default 30%)
-            │        Also attempts cleanup+retry on write failure
-            └── No → No operation
+```mermaid
+flowchart TB
+    CAP["camera_capture（）"] --> REC["Video Recorder<br/>recording_task, Core 0<br/>Frame data written to AVI file<br/>Segmented by segment_sec duration （continuous vs timelapse mode）<br/>Writes AVI idx1 index"]
+    REC -->|"Segment complete"| SEG["on_segment_complete（filepath, size）"]
+    SEG --> ENQ["nas_uploader_enqueue（filepath）"]
+    SEG --> CLN["storage_cleanup（）"]
+    ENQ --> UPT["Upload Task<br/>Core 1<br/>Retry 3 times on failure, pause 5 minutes after 10 consecutive failures"]
+    UPT -->|"upload_method=1"| WD["WebDAV upload"]
+    UPT -->|"upload_method=2"| HU["HTTP（S） upload"]
+    UPT -->|"upload_method=0"| SK["Skip upload"]
+    CLN --> CHK{"Check free space ＜ cleanup_low_pct? （default 20%）"}
+    CHK -->|"Yes"| DEL["Delete oldest recording files until ≥ cleanup_high_pct （default 30%）<br/>Also attempts cleanup+retry on write failure"]
+    CHK -->|"No"| NOP["No operation"]
 ```
 
 **Timelapse Mode**: When `timelapse_interval_sec > 0`, frames are captured at the specified interval (1-300s) instead of continuous. Files use `TLM_` prefix and play at 15fps.
@@ -209,28 +201,13 @@ camera_capture()
 
 The MJPEG streamer runs on **port 81** as an independent TCP server, completely separate from the main httpd on port 80. See [Port Separation Design](seeed-port-separation-design.md) for details.
 
-```
-Browser → GET /stream (port 81)
-    │
-    ▼
-mjpeg_listen_task (Core 1, priority 3)
-    └── accept() → spawn mjpeg_client_task per client
-         │
-         ▼
-frame_broadcaster → fbroadcast_receive()
-         │
-         ▼
-video_recorder (frame producer) → fbroadcast_publish()
-         │  ← camera_capture() in recording_task
-         │  ← PSRAM copy → decouple from camera buffer
-         │
-         ▼
-HTTP chunked transfer (multipart/x-mixed-replace)
-    │  Content-Type: image/jpeg
-    │  Boundary: --frame
-    │
-    ▼
-Browser real-time rendering
+```mermaid
+flowchart TB
+    B["Browser → GET /stream<br/>port 81"] --> L["mjpeg_listen_task<br/>Core 1, priority 3<br/>accept（） → spawn mjpeg_client_task per client"]
+    L --> R["frame_broadcaster → fbroadcast_receive（）"]
+    R --> P["video_recorder, frame producer → fbroadcast_publish（）<br/>camera_capture（） in recording_task<br/>PSRAM copy → decouple from camera buffer"]
+    P --> H["HTTP chunked transfer<br/>multipart/x-mixed-replace<br/>Content-Type: image/jpeg<br/>Boundary: --frame"]
+    H --> E["Browser real-time rendering"]
 ```
 
 ---

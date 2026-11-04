@@ -42,52 +42,31 @@ cd seeed-esp32s3-cam
 
 项目结构：
 
-```
-seeed-esp32s3-cam/
-├── main/                 # 固件源码（20 个 C 模块）
-
-│   ├── main.c            # 入口，20 步启动流程
-
-│   ├── camera_driver.c   # 摄像头驱动
-
-│   ├── video_recorder.c  # AVI 录像引擎
-
-│   ├── mjpeg_streamer.c  # MJPEG 实时流
-
-│   ├── web_server.c      # HTTP 服务器 + REST API
-
-│   ├── nas_uploader.c    # NAS 上传调度
-
-│   ├── wifi_manager.c    # WiFi AP/STA 管理
-
-│   ├── config_manager.c  # NVS 配置持久化
-
-│   ├── storage_manager.c # SD 卡 + 循环清理
-
-│   ├── status_led.c      # LED 状态机
-
-│   ├── time_sync.c       # SNTP 时间同步
-
-│   ├── webdav_client.c   # WebDAV 客户端
-
-
-│   ├── http_upload_client.c # HTTP/HTTPS 上传客户端
-
-│   ├── motion_detector.c  # 运动检测模块
-
-│   ├── ota_updater.c     # OTA 固件升级模块
-
-│   ├── webhook.c         # Webhook 通知模块
-
-│   ├── ws_server.c       # WebSocket 服务器模块
-
-│   ├── cJSON.c/h         # JSON 解析库
-
-│   └── web_ui/           # Web 管理界面（6 个 HTML 页面）
-├── docs/                 # 项目文档
-├── partitions.csv        # 分区表
-└── sdkconfig.defaults    # 硬件默认配置
-```
+| 路径 | 说明 |
+|------|------|
+| `main/` | 固件源码（20 个 C 模块） |
+| `main/main.c` | 入口，20 步启动流程 |
+| `main/camera_driver.c` | 摄像头驱动 |
+| `main/video_recorder.c` | AVI 录像引擎 |
+| `main/mjpeg_streamer.c` | MJPEG 实时流 |
+| `main/web_server.c` | HTTP 服务器 + REST API |
+| `main/nas_uploader.c` | NAS 上传调度 |
+| `main/wifi_manager.c` | WiFi AP/STA 管理 |
+| `main/config_manager.c` | NVS 配置持久化 |
+| `main/storage_manager.c` | SD 卡 + 循环清理 |
+| `main/status_led.c` | LED 状态机 |
+| `main/time_sync.c` | SNTP 时间同步 |
+| `main/webdav_client.c` | WebDAV 客户端 |
+| `main/http_upload_client.c` | HTTP/HTTPS 上传客户端 |
+| `main/motion_detector.c` | 运动检测模块 |
+| `main/ota_updater.c` | OTA 固件升级模块 |
+| `main/webhook.c` | Webhook 通知模块 |
+| `main/ws_server.c` | WebSocket 服务器模块 |
+| `main/cJSON.c/h` | JSON 解析库 |
+| `main/web_ui/` | Web 管理界面（6 个 HTML 页面） |
+| `docs/` | 项目文档 |
+| `partitions.csv` | 分区表 |
+| `sdkconfig.defaults` | 硬件默认配置 |
 
 ---
 

@@ -1,0 +1,98 @@
+<svg class="eco" width="940" height="340" viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="MiBeeHive 生态位置图：外部发行源经蜂巢补给内网设备——文件中心采蜜、系统部署装机、WebDAV 共享、运维中心巡检">
+  <style>
+    .eco{font-family:'Cascadia Code','JetBrains Mono',Consolas,Menlo,'Courier New',monospace;
+      --bg:#0b0f16;--panel:#10161f;--edgest:#26313f;--fg:#e6edf3;--dim:#7d8b99;--frame:#1f2733;
+      --cy:#22d3ee;--grn:#3fb950;--amb:#fbbf24}
+    .win{fill:var(--bg);stroke:var(--frame);stroke-width:1}
+    .t-title{font-size:12px;fill:var(--dim)}
+    .t-badge{font-size:10.5px;fill:var(--grn);letter-spacing:.5px}
+    .col-label{font-size:11px;fill:#5b8c6a}
+    .chip .box{fill:var(--panel);stroke:var(--edgest);stroke-width:1}
+    .chip .nm{font-size:12px;fill:var(--fg)}
+    .pill .pbox{fill:#0f1e14;stroke:#238636;stroke-width:1}
+    .pill .pt{font-size:10.5px;fill:var(--grn)}
+    .note{font-size:11.5px;fill:var(--amb)}
+    .sep{stroke:var(--frame);stroke-width:1}
+    .edge{fill:none;stroke:var(--cy);stroke-width:1.5;opacity:.8}
+    .edge.out{stroke:var(--amb)}
+    .hero .box{stroke:var(--amb);stroke-width:1.3}
+    .hero .nm{font-size:14px;font-weight:700}
+    .hero .cap{font-size:10.5px;fill:var(--dim)}
+    @keyframes chipIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .chip,.pill,.hero{animation:chipIn .4s cubic-bezier(.2,.7,.3,1) both;animation-delay:var(--d,0s)}
+    @keyframes draw{to{stroke-dashoffset:0}}
+    .draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .5s ease-out forwards;animation-delay:var(--d,0s)}
+    @keyframes drift{to{transform:translateY(3px)}}
+    .scan{animation:drift 8s linear infinite}
+    @keyframes glowP{from{opacity:.1}to{opacity:.3}}
+    .hero-glow{fill:var(--amb);animation:glowP 2.2s ease-in-out infinite alternate}
+    .pkt{fill:var(--amb)}
+    .pkt.c{fill:var(--cy)}
+    @media (prefers-reduced-motion:reduce){.chip,.pill,.hero,.draw,.scan,.hero-glow{animation:none}.draw{stroke-dashoffset:0}}
+  </style>
+  <defs>
+    <pattern id="gp" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="13" cy="13" r="1" fill="#22d3ee" opacity=".05"/>
+    </pattern>
+    <marker id="mcy" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="#22d3ee"/></marker>
+    <marker id="mam" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="#fbbf24"/></marker>
+    <circle class="pkt c scan" r="3">
+      <animateMotion dur="3.2s" repeatCount="indefinite" path="M262,124 C 322,124 334,186 380,186"/>
+    </circle>
+    <circle class="pkt scan" r="3">
+      <animateMotion dur="3.8s" repeatCount="indefinite" path="M556,208 C 612,208 624,124 664,124"/>
+    </circle>
+  </defs>
+
+  <rect class="win" x="1" y="1" width="938" height="338" rx="12"/>
+  <rect x="1" y="34" width="938" height="304" fill="url(#gp)"/>
+
+  <!-- chrome -->
+  <circle cx="24" cy="18" r="5" fill="#ff5f56"/><circle cx="42" cy="18" r="5" fill="#ffbd2e"/><circle cx="60" cy="18" r="5" fill="#27c93f"/>
+  <text class="t-title" x="470" y="22" text-anchor="middle">bee@hive:~/supply — zsh</text>
+  <rect x="800" y="9" width="122" height="18" rx="9" fill="#0f1e14" stroke="#238636" stroke-width="1"/>
+  <text class="t-badge" x="861" y="21.5" text-anchor="middle">● SUPPLY HUB</text>
+  <line class="sep" x1="1" y1="34" x2="939" y2="34"/>
+
+  <!-- column labels -->
+  <text class="col-label" x="50" y="62">// 外部发行源 · 公共渠道</text>
+  <text class="col-label" x="384" y="62">// 蜂巢 · 补给与运维</text>
+  <text class="col-label" x="668" y="62">// 内网服务对象</text>
+
+  <!-- edges: sources -> hive -->
+  <path class="edge draw" style="--d:1.2s" pathLength="1" d="M262,115 C 322,115 334,182 380,183" marker-end="url(#mcy)"/>
+  <path class="edge draw" style="--d:1.3s" pathLength="1" d="M262,163 C 322,163 334,191 380,191" marker-end="url(#mcy)"/>
+  <path class="edge draw" style="--d:1.4s" pathLength="1" d="M262,211 C 322,211 334,201 380,201" marker-end="url(#mcy)"/>
+  <path class="edge draw" style="--d:1.5s" pathLength="1" d="M262,259 C 322,259 334,210 380,209" marker-end="url(#mcy)"/>
+  <!-- edges: hive -> consumers -->
+  <path class="edge out draw" style="--d:1.6s" pathLength="1" d="M556,183 C 612,183 624,115 664,115" marker-end="url(#mam)"/>
+  <path class="edge out draw" style="--d:1.7s" pathLength="1" d="M556,191 C 612,191 624,163 664,163" marker-end="url(#mam)"/>
+  <path class="edge out draw" style="--d:1.8s" pathLength="1" d="M556,201 C 612,201 624,211 664,211" marker-end="url(#mam)"/>
+  <path class="edge out draw" style="--d:1.9s" pathLength="1" d="M556,209 C 612,209 624,259 664,259" marker-end="url(#mam)"/>
+
+  <!-- sources -->
+  <g transform="translate(50,98)"><g class="chip" style="--d:.2s"><rect class="box" width="212" height="34" rx="7"/><text class="nm" x="14" y="22.5">GitHub Releases</text></g></g>
+  <g transform="translate(50,146)"><g class="chip" style="--d:.3s"><rect class="box" width="212" height="34" rx="7"/><text class="nm" x="14" y="22.5">Go 模块 · NPM · PyPI</text></g></g>
+  <g transform="translate(50,194)"><g class="chip" style="--d:.4s"><rect class="box" width="212" height="34" rx="7"/><text class="nm" x="14" y="22.5">HashiCorp · Grafana</text></g></g>
+  <g transform="translate(50,242)"><g class="chip" style="--d:.5s"><rect class="box" width="212" height="34" rx="7"/><text class="nm" x="14" y="22.5">系统 ISO 镜像站</text></g></g>
+
+  <!-- hive hero -->
+  <g transform="translate(384,170)"><g class="hero" style="--d:.6s">
+    <rect class="hero-glow" x="-3" y="-3" width="178" height="58" rx="10"/>
+    <rect class="box" width="172" height="52" rx="8" fill="#10161f" stroke="#fbbf24"/>
+    <text class="nm" x="86" y="22" text-anchor="middle" fill="#e6edf3">MiBeeHive 蜂巢</text>
+    <text class="cap" x="86" y="40" text-anchor="middle">自托管运维补给站</text>
+  </g></g>
+  <!-- module pills -->
+  <g transform="translate(342,238)"><g class="pill" style="--d:.8s"><rect class="pbox" width="58" height="22" rx="11"/><text class="pt" x="29" y="15" text-anchor="middle">文件中心</text></g></g>
+  <g transform="translate(410,238)"><g class="pill" style="--d:.9s"><rect class="pbox" width="58" height="22" rx="11"/><text class="pt" x="29" y="15" text-anchor="middle">系统部署</text></g></g>
+  <g transform="translate(478,238)"><g class="pill" style="--d:1.0s"><rect class="pbox" width="48" height="22" rx="11"/><text class="pt" x="24" y="15" text-anchor="middle">分享</text></g></g>
+  <g transform="translate(536,238)"><g class="pill" style="--d:1.1s"><rect class="pbox" width="58" height="22" rx="11"/><text class="pt" x="29" y="15" text-anchor="middle">运维中心</text></g></g>
+  <text class="note" style="--d:1.2s" x="470" y="292" text-anchor="middle">装机 · 补料 · 共享 · 巡检 —— 一个 Web 界面全包 · 单二进制零依赖</text>
+
+  <!-- consumers -->
+  <g transform="translate(668,98)"><g class="chip" style="--d:.25s"><rect class="box" width="222" height="34" rx="7"/><text class="nm" x="14" y="22.5">PXE 网络装机 · 裸机/虚拟机</text></g></g>
+  <g transform="translate(668,146)"><g class="chip" style="--d:.35s"><rect class="box" width="222" height="34" rx="7"/><text class="nm" x="14" y="22.5">apt / pip / npm 离线源场景</text></g></g>
+  <g transform="translate(668,194)"><g class="chip" style="--d:.45s"><rect class="box" width="222" height="34" rx="7"/><text class="nm" x="14" y="22.5">WebDAV 客户端 · 文件共享</text></g></g>
+  <g transform="translate(668,242)"><g class="chip" style="--d:.55s"><rect class="box" width="222" height="34" rx="7"/><text class="nm" x="14" y="22.5">Prometheus · 值班巡检</text></g></g>
+</svg>

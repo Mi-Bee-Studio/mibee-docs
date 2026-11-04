@@ -43,11 +43,8 @@ result lands in the report with `success`, `data`, `error`, and
 
 Outputs, named from the device's own identity when available:
 
-```text
-camera-logs/
-├── Hikvision_DS-2CD2143G2-I_5.7.1_diag_20260920-1030.json
-└── Hikvision_DS-2CD2143G2-I_5.7.1_xmlcapture_20260920-1030.tar.gz
-```
+- `camera-logs/<device>_diag_<timestamp>.json` — the probe report
+- `camera-logs/<device>_xmlcapture_<timestamp>.tar.gz` — raw SOAP capture archive
 
 The archive contains one file per SOAP exchange plus a `metadata.json`
 (V2 format) describing the device and capture context.

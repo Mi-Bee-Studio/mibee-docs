@@ -164,44 +164,33 @@ idf.py -p /dev/ttyACM0 flash monitor
 
 ## Project Structure
 
-```
-esp32s3-n16r8-cam/
-├── main/                      # Main component
-│   ├── main.c                 # App entry point
-│   ├── config_manager.c/h     # NVS configuration
-│   ├── camera_driver.c/h      # OV3660 wrapper
-│   ├── frame_broadcaster.c/h  # Frame publisher
-│   ├── mjpeg_streamer.c/h     # HTTP MJPEG stream
-│   ├── ai_pipeline.cpp/h      # AI processing
-│   ├── web_server.c/h         # REST API server
-│   ├── wifi_manager.c/h       # WiFi management
-│   ├── flash_led.c/h          # Flash LED control
-│   ├── at_command.c/h         # Serial AT commands
-│   ├── rtsp_server.cpp/h      # RTSP server
-│   ├── onvif_service.c/h      # ONVIF SOAP service
-│   ├── onvif_discovery.c/h    # ONVIF WS-Discovery
-│   ├── status_led.c/h         # Status LED
-│   ├── web_ui/                # Web UI assets
-│   │   ├── index.html
-│   │   ├── style.css
-│   │   ├── app.js
-│   │   └── i18n.js
-│   ├── CMakeLists.txt         # Component build
-│   └── idf_component.yml      # Component dependencies
-├── docs/                      # Documentation
-│   ├── architecture.md
-│   ├── hardware.md
-│   ├── web-api.md
-│   ├── web-ui.md
-│   └── development.md
-├── .github/workflows/         # CI/CD
-│   └── release.yml            # Tag-triggered release
-├── partitions.csv             # Custom partition table
-├── sdkconfig.defaults         # Hardware configuration
-├── CMakeLists.txt             # Project build
-├── AGENTS.md                  # Agent instructions
-└── README.md                  # Project README
-```
+| Path | Purpose |
+|------|---------|
+| `main/` | Main component |
+| `main/main.c` | App entry point |
+| `main/config_manager.c/h` | NVS configuration |
+| `main/camera_driver.c/h` | OV3660 wrapper |
+| `main/frame_broadcaster.c/h` | Frame publisher |
+| `main/mjpeg_streamer.c/h` | HTTP MJPEG stream |
+| `main/ai_pipeline.cpp/h` | AI processing |
+| `main/web_server.c/h` | REST API server |
+| `main/wifi_manager.c/h` | WiFi management |
+| `main/flash_led.c/h` | Flash LED control |
+| `main/at_command.c/h` | Serial AT commands |
+| `main/rtsp_server.cpp/h` | RTSP server |
+| `main/onvif_service.c/h` | ONVIF SOAP service |
+| `main/onvif_discovery.c/h` | ONVIF WS-Discovery |
+| `main/status_led.c/h` | Status LED |
+| `main/web_ui/` | Web UI assets (`index.html`, `style.css`, `app.js`, `i18n.js`) |
+| `main/CMakeLists.txt` | Component build |
+| `main/idf_component.yml` | Component dependencies |
+| `docs/` | Documentation (`architecture.md`, `hardware.md`, `web-api.md`, `web-ui.md`, `development.md`) |
+| `.github/workflows/` | CI/CD (`release.yml` — tag-triggered release) |
+| `partitions.csv` | Custom partition table |
+| `sdkconfig.defaults` | Hardware configuration |
+| `CMakeLists.txt` | Project build |
+| `AGENTS.md` | Agent instructions |
+| `README.md` | Project README |
 
 ## Configuration
 

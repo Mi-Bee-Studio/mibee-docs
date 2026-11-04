@@ -54,39 +54,25 @@ mibee-bell export        → 反向导出 YAML（备份/迁移）
 
 这条边界让"改规则/换渠道"不需要碰配置文件，也让配置文件可以安全进版本管理（引导配置与凭证分离）。
 
-## 包结构
+## 数据流总览
 
+```mermaid
+flowchart LR
+  IN["摄取：七类入口"] --> BUS["事件总线"]
+  BUS --> P["告警管道：静默/去抖/冷却/升级"]
+  P --> R["模板渲染"]
+  R --> D["分发器"]
+  D --> C["渠道插件：17 类"]
+  M["mesh 集群<br/>投递租约"] -.-> P
+  M -.-> D
+  AI["AI 分诊（可选）"] -. annotate .-> P
 ```
-MiBeeBell/
-├── cmd/mibee-bell/       # 入口：flag、装配、优雅退出
-├── internal/
-│   ├── config/           # YAML 加载/校验 + hash-password / encrypt-config 子命令
-│   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
-│   ├── eventbus/         # 有界总线（满丢最旧）
-│   ├── mesh/             # memberlist 组网 + claim 协议 + 死亡开关
-│   ├── ingest/           # 每源一个子包：mqtt / webhook / alertmanager / bark / …
-│   ├── rule/             # 规则匹配（纯函数）
-│   ├── pipeline/         # Processor 链 + 四道闸与 L0
-│   ├── dispatch/         # 重试退避、令牌桶、投递审计、渠道健康
-│   ├── channel/          # 渠道插件 + registry（自注册）
-│   ├── ai/               # Analyzer（L1 决策 / L2 openai_compat）
-│   ├── store/            # database/sql 仓储（sqlite/postgres 预留）+ 迁移
-│   ├── render/           # i18n 模板（zh-CN/en-US，severity 映射）
-│   ├── api/              # REST + SSE + JWT 中间件
-│   └── ui/               # go:embed web/dist
-├── pkg/bellapi/          # Channel / Processor / Analyzer 三接口——对外稳定契约
-├── migrations/{sqlite,postgres}/
-└── deploy/               # systemd / Docker compose / install.sh / fnOS / Zabbix
-```
-
-依赖方向单向：`ingest → eventbus → pipeline → dispatch → channel`；`model` 被所有人依赖、不依赖任何人。第三方扩展只 import `pkg/bellapi`（internal 禁止外部访问）。
 
 ## 可观测性
 
 - `/metrics`（Prometheus）：`bell_events_ingested_total{source}`、`bell_notifications_total{channel,status}`、`bell_events_dropped_total{stage}`、`bell_channel_health{channel}`、`bell_escalation_pending`、`bell_pipeline_stage_duration_seconds`、`bell_ai_calls_total{analyzer,result}`、`bell_enrich_total`。
-- 结构化日志（slog，JSON 可选）：丢弃 / 升级 / 静默命中 / 渠道降级等关键决策全部带 event_id。
-- Grafana 面板 JSON 随仓库提供（`deploy/grafana-bell.json`）。
+- 结构化日志（JSON 可选）：丢弃 / 升级 / 静默命中 / 渠道降级等关键决策全部带 event_id。
 
 ## 部署形态
 
-单二进制（linux/arm64 · armv7 · amd64，windows/amd64）+ `deploy/` 提供 systemd unit、Docker compose（国内/海外两套拓扑示例）、install.sh、fnOS 应用打包与 Zabbix 媒体脚本。默认端口 `:9080`。
+单二进制零依赖（linux/amd64 · arm64 · armv6，windows/amd64）+ 飞牛 fnOS 原生应用。安装与 systemd 示例见[部署](deployment.md)。默认端口 `:9080`。

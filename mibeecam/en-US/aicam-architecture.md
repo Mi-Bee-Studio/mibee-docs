@@ -23,28 +23,13 @@ The MiBee Cam firmware is a real-time embedded system designed for camera applic
 
 The firmware consists of 14 interconnected modules, each with specific responsibilities:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                          │
-├─────────────────────────────────────────────────────────────┤
-│  Web Server    │ MJPEG Streamer │ Motion Detect            │
-│  (HTTP + API)  │   (Streaming)  │   (Capture)            │
-├─────────────────────────────────────────────────────────────┤
-│                    Hardware Interface Layer                  │
-├─────────────────────────────────────────────────────────────┤
-│  Camera Driver │  Storage Mgr  │   WiFi Mgr   │  Time Sync  │
-│    (OV2640)     │  (SD Card)    │ (AP/STA)     │   (NTP)     │
-├─────────────────────────────────────────────────────────────┤
-│                    System Core Layer                         │
-├─────────────────────────────────────────────────────────────┤
-│  Config Manager │ Health Monitor │ Status LED │  Timelapse  │
-│    (NVS)        │   (Metrics)   │   (GPIO)   │   (Control) │
-├─────────────────────────────────────────────────────────────┤
-│                  ESP-IDF Framework                           │
-├─────────────────────────────────────────────────────────────┤
-│  FreeRTOS      │ LWIP          │ SPIFFS      │ NVS         │
-│  (Tasks/RTOS)  │  (Networking) │ (Storage)   │ (Config)    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    APP["Application Layer<br/>Web Server （HTTP + API） · MJPEG Streamer （Streaming） · Motion Detect （Capture）"]
+    HW["Hardware Interface Layer<br/>Camera Driver （OV2640） · Storage Mgr （SD Card） · WiFi Mgr （AP/STA） · Time Sync （NTP）"]
+    CORE["System Core Layer<br/>Config Manager （NVS） · Health Monitor （Metrics） · Status LED （GPIO） · Timelapse （Control）"]
+    IDF["ESP-IDF Framework<br/>FreeRTOS （Tasks/RTOS） · LWIP （Networking） · SPIFFS （Storage） · NVS （Config）"]
+    APP --> HW --> CORE --> IDF
 ```
 
 ## Detailed Module Descriptions

@@ -77,21 +77,20 @@ MJPEG 走独立端口是刻意设计：httpd 的 socket 表和 worker 池很小�
 
 ## 仓库布局约定
 
-```
-main/
-├── main.c              # 编号启动序列
-├── wifi_manager.c/.h   # STA/AP、重连、双 WiFi 切换（ai-thinker）
-├── camera_driver.c/.h  # 传感器初始化/重配（板级引脚表在这里）
-├── frame_broadcaster.c/.h
-├── mjpeg_streamer.c/.h # :81 独立 TCP 服务器
-├── web_server.c/.h     # :80 REST + 静态兜底
-├── onvif_service.c/.h  # SOAP 端点
-├── onvif_discovery.c/.h# WS-Discovery
-├── config_manager.c/.h # NVS 版本化 blob
-├── device_id.c/.h      # eFuse 身份
-├── health_monitor.c/.h # 自愈探测
-└── web_ui/             # 前端资产，构建期打包进 SPIFFS
-```
+| 路径 | 说明 |
+|------|------|
+| `main/main.c` | 编号启动序列 |
+| `main/wifi_manager.c/.h` | STA/AP、重连、双 WiFi 切换（ai-thinker） |
+| `main/camera_driver.c/.h` | 传感器初始化/重配（板级引脚表在这里） |
+| `main/frame_broadcaster.c/.h` | |
+| `main/mjpeg_streamer.c/.h` | :81 独立 TCP 服务器 |
+| `main/web_server.c/.h` | :80 REST + 静态兜底 |
+| `main/onvif_service.c/.h` | SOAP 端点 |
+| `main/onvif_discovery.c/.h` | WS-Discovery |
+| `main/config_manager.c/.h` | NVS 版本化 blob |
+| `main/device_id.c/.h` | eFuse 身份 |
+| `main/health_monitor.c/.h` | 自愈探测 |
+| `main/web_ui/` | 前端资产，构建期打包进 SPIFFS |
 
 cJSON 供应商化内嵌（不修改）。`managed_components/` 下的上游组件改动必须走 `patches/`（n16r8 模式）或 vendor 进 `components/`（seeed 模式），绝不直接手改。
 

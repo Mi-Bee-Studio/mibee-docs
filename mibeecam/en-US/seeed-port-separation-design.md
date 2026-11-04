@@ -31,14 +31,14 @@ This means:
 
 `mjpeg_streamer.c` creates its own TCP server socket on port 81, completely bypassing httpd:
 
-```
-mjpeg_streamer_init()
-  └── socket() + bind(port 81) + listen()
-  └── xTaskCreatePinnedToCore(mjpeg_listen_task, ..., Core 1, priority 3)
-        └── accept() loop
-             └── for each client: xTaskCreatePinnedToCore(mjpeg_client_task, ..., Core 1, priority 2)
-                  └── fbroadcast_receive() → send() loop (chunked JPEG)
-                  └── cleanup on disconnect
+```mermaid
+flowchart TB
+    INIT["mjpeg_streamer_init（）"] --> SOCK["socket（） + bind（port 81） + listen（）"]
+    INIT --> TASK["xTaskCreatePinnedToCore<br/>mjpeg_listen_task, Core 1, priority 3"]
+    TASK --> ACC["accept（） loop"]
+    ACC --> CT["for each client: xTaskCreatePinnedToCore<br/>mjpeg_client_task, Core 1, priority 2"]
+    CT --> LOOP["fbroadcast_receive（） → send（） loop<br/>chunked JPEG"]
+    CT --> CLN["cleanup on disconnect"]
 ```
 
 ### Key Design Properties
@@ -57,28 +57,12 @@ mjpeg_streamer_init()
 
 Both port 80 and port 81 consume camera frames through `frame_broadcaster.c`, but via different mechanisms:
 
-```
-Camera (OV2640)
-  └── esp_camera_fb_get()  [camera_driver.c]
-        │
-video_recorder (Core 0, priority 5)     ← sole frame producer
-  ├── camera_capture(&frame)
-  ├── jpeg_copy = heap_caps_malloc(PSRAM)  ← decouple from camera buffer
-  ├── memcpy(jpeg_copy, frame.buf, ...)
-  ├── camera_return_fb(&frame)             ← release camera ASAP
-  └── fbroadcast_publish(jpeg_copy, len)
-        │
-frame_broadcaster [frame_broadcaster.c]
-  ├── Update latest frame cache (PSRAM)
-  ├── For each subscriber:
-  │     ├── Allocate per-subscriber PSRAM copy
-  │     ├── Drain old frame from depth-1 queue (drop if slow)
-  │     └── Push new frame to subscriber queue
-  │
-  ├── Subscriber 1: mjpeg_streamer (port 81)
-  │     └── fbroadcast_receive() in dedicated task
-  │
-  └── Subscriber 2: (reserved for future use, e.g. RTSP)
+```mermaid
+flowchart TB
+    CAM["Camera （OV2640）<br/>esp_camera_fb_get（） in camera_driver.c"] --> REC["video_recorder, Core 0, priority 5 — sole frame producer<br/>camera_capture（&frame）<br/>jpeg_copy = heap_caps_malloc（PSRAM） — decouple from camera buffer<br/>memcpy（jpeg_copy, frame.buf, ...）<br/>camera_return_fb（&frame） — release camera ASAP<br/>fbroadcast_publish（jpeg_copy, len）"]
+    REC --> FB["frame_broadcaster in frame_broadcaster.c<br/>Update latest frame cache （PSRAM）<br/>For each subscriber:<br/>Allocate per-subscriber PSRAM copy<br/>Drain old frame from depth-1 queue （drop if slow）<br/>Push new frame to subscriber queue"]
+    FB --> S1["Subscriber 1: mjpeg_streamer （port 81）<br/>fbroadcast_receive（） in dedicated task"]
+    FB --> S2["Subscriber 2: reserved for future use, e.g. RTSP"]
 ```
 
 **Key detail**: The broadcaster gives each subscriber its own PSRAM copy. This means MJPEG client tasks never hold references to camera driver buffers — the camera can capture the next frame immediately without waiting for network I/O.

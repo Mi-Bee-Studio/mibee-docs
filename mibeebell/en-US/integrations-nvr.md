@@ -2,8 +2,11 @@
 
 MiBeeNvr (the open-source NVR) ships a built-in alert-notification sink: camera offline/freeze, storage health, motion detection, AI events, doorbell and GB28181 alarms, all POSTed as `mibee-alert/1` JSON to a webhook receiver. **MiBeeBell is its out-of-the-box receiver — direct, zero conversion.**
 
-```
-NVR ──POST /api/ingest/webhook/{token}──▶ MiBeeBell pipeline ──▶ channels (WeCom/TG/email…) + Scout
+```mermaid
+flowchart LR
+  N["MiBeeNvr"] -- "POST /api/ingest/webhook/{token}" --> B["MiBeeBell pipeline"]
+  B --> C["Channels<br/>WeCom / TG / email…"]
+  B --> S["MiBeeScout"]
 ```
 
 ## 1. Register an ingest token

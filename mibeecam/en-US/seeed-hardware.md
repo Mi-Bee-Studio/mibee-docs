@@ -171,17 +171,13 @@ Different wide-angle lenses (FOV) have varying distortion characteristics. The f
 
 ### Storage Structure
 
-```
-/sdcard/
-├── recordings/              # Recording root directory
-│   └── YYYY-MM/
-│       └── DD/
-│           ├── REC_YYYYMMDD_HHMMSS.avi
-│           └── ...
-└── config/                  # Configuration override directory
-    ├── wifi.txt             # KEY=VALUE format
-    └── nas.txt              # KEY=VALUE format
-```
+| Path | Purpose |
+|------|---------|
+| `/sdcard/recordings/` | Recording root directory |
+| `/sdcard/recordings/YYYY-MM/DD/` | `REC_YYYYMMDD_HHMMSS.avi`, ... |
+| `/sdcard/config/` | Configuration override directory |
+| `/sdcard/config/wifi.txt` | KEY=VALUE format |
+| `/sdcard/config/nas.txt` | KEY=VALUE format |
 
 ### Circular Storage Strategy
 

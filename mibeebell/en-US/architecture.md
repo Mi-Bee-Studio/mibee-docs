@@ -54,39 +54,25 @@ mibee-bell export        → reverse-export YAML (backup/migration)
 
 This boundary means rule/channel changes never touch config files, and config.yaml stays safe for version control (bootstrap and credentials separated).
 
-## Package layout
+## Data flow at a glance
 
+```mermaid
+flowchart LR
+  IN["Ingest: 7 entries"] --> BUS["Event bus"]
+  BUS --> P["Pipeline: silence/dedup/cooldown/escalation"]
+  P --> R["Template rendering"]
+  R --> D["Dispatcher"]
+  D --> C["Channel adapters: 17"]
+  M["mesh cluster<br/>delivery leases"] -.-> P
+  M -.-> D
+  AI["AI triage (optional)"] -. annotate .-> P
 ```
-MiBeeBell/
-├── cmd/mibee-bell/       # entry: flags, wiring, graceful shutdown
-├── internal/
-│   ├── config/           # YAML load/validate + hash-password / encrypt-config subcommands
-│   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
-│   ├── eventbus/         # bounded bus (drop-oldest)
-│   ├── mesh/             # memberlist + claim protocol + dead-man switch
-│   ├── ingest/           # one package per source: mqtt / webhook / alertmanager / bark / …
-│   ├── rule/             # rule matching (pure functions)
-│   ├── pipeline/         # Processor chain + four gates and L0
-│   ├── dispatch/         # retry/backoff, token buckets, delivery audit, channel health
-│   ├── channel/          # channel plugins + registry (self-registering)
-│   ├── ai/               # Analyzers (L1 decision / L2 openai_compat)
-│   ├── store/            # database/sql repositories (sqlite; postgres reserved) + migrations
-│   ├── render/           # i18n templates (zh-CN/en-US, severity mapping)
-│   ├── api/              # REST + SSE + JWT middleware
-│   └── ui/               # go:embed web/dist
-├── pkg/bellapi/          # Channel / Processor / Analyzer interfaces — stable external contract
-├── migrations/{sqlite,postgres}/
-└── deploy/               # systemd / docker compose / install.sh / fnOS / Zabbix
-```
-
-Dependencies flow one way: `ingest → eventbus → pipeline → dispatch → channel`; `model` is depended on by everyone and depends on nothing. Third-party extensions import only `pkg/bellapi` (internal is closed to outsiders).
 
 ## Observability
 
 - `/metrics` (Prometheus): `bell_events_ingested_total{source}`, `bell_notifications_total{channel,status}`, `bell_events_dropped_total{stage}`, `bell_channel_health{channel}`, `bell_escalation_pending`, `bell_pipeline_stage_duration_seconds`, `bell_ai_calls_total{analyzer,result}`, `bell_enrich_total`.
-- Structured logs (slog, JSON optional): drops, escalations, silence hits and channel degradation all carry event_id.
-- A Grafana dashboard JSON ships in-repo (`deploy/grafana-bell.json`).
+- Structured logs (JSON optional): drops, escalations, silence hits and channel degradation all carry event_id.
 
 ## Deployment shape
 
-Single binary (linux/arm64 · armv7 · amd64, windows/amd64) plus `deploy/` goodies: systemd unit, docker compose (CN and overseas topology examples), install.sh, an fnOS app package and a Zabbix media script. Default port `:9080`.
+A zero-dependency single binary (linux/amd64 · arm64 · armv6, windows/amd64) plus a native fnOS app. Install steps and the systemd unit example live in [Deployment](deployment.md). Default port `:9080`.
