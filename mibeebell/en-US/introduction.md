@@ -42,13 +42,7 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 ## Ecosystem position
 
-```
-MiBeeNvr (NVR) ─┐
-MiBeeSteward (asset discovery) ─┤                 ┌─ WeCom / DingTalk / Feishu
-Prometheus / Alertmanager ─┼─▶ MiBeeBell ─────────┼─ Telegram / Slack / Discord / SMTP
-any script / cron / IoT ─┘     (pipeline+denoise) ├─ generic Webhook
-                                 └─ MiBeeScout (ecosystem app notification center)
-```
+![MiBeeBell ecosystem position: event sources flow through the alert pipeline out to notification channels](images/ecosystem.svg)
 
 ## Roadmap (internal milestones, not releases)
 

@@ -42,13 +42,7 @@
 
 ## 生态位置
 
-```
-MiBeeNvr (NVR) ─┐
-MiBeeSteward (资产发现) ─┤                ┌─ 企微 / 钉钉 / 飞书
-Prometheus / Alertmanager ─┼─▶ MiBeeBell ─┼─ Telegram / Slack / Discord / SMTP
-任意脚本 / cron / IoT ─┘    （管道+去噪）  ├─ 通用 Webhook
-                              └─ MiBeeScout（生态 App 通知中心）
-```
+![MiBeeBell 生态位置：事件来源经告警管道送达通知渠道](images/ecosystem.svg)
 
 ## 路线图（内部里程碑，非发布版本）
 
