@@ -6,11 +6,14 @@
 
 | 方式 | 适用 | 说明 |
 |---|---|---|
+| **GitHub Releases 下载** | 所有平台（推荐起步） | 首个正式版 v0.1.0（2026-11-04）起提供 Linux/Windows 单二进制与飞牛 fpk 安装包，免构建 |
 | 源码构建 | 所有平台 | `git clone` + `make build`；web UI 已预构建内嵌，无需 node |
 | systemd | Linux 常驻 | `deploy/mibee-bell.service` + `deploy/install.sh`（/opt/mibee-bell 布局） |
 | Docker | NAS / 容器环境 | `deploy/compose.cn.yml`（国内拓扑）/ `compose.overseas.yml`（海外拓扑） |
-| fnOS 应用 | 飞牛 NAS | `deploy/fnos/` 打包（fnOS 桌面集成，网关免登） |
-| Windows | 桌面/服务器 | 交叉编译 `GOOS=windows GOARCH=amd64`，`mibee-bell.exe -config config.yaml` |
+| fnOS 应用 | 飞牛 NAS | 应用中心手动安装 fpk（fnOS 桌面集成，网关免登） |
+| Windows | 桌面/服务器 | Releases 下载 `mibee-bell` windows/amd64 构建，`mibee-bell.exe -config config.yaml` |
+
+安装后的首件事是打开 Web 首页**设置管理员密码**（见[快速开始](quick-start.md) §2），其余配置全部在 Web 设置页完成、自动写回 yaml。
 
 ## systemd（推荐）
 
@@ -48,11 +51,18 @@ docker compose -f compose.cn.yml up -d
 - armv7 / arm64 交叉编译：`CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./cmd/mibee-bell`。
 - mesh 多节点天然适合"家庭主机 + 树莓派 + VPS"的异地混部（见 [高可用集群](mesh.md)）。
 
+## 升级
+
+- **飞牛**：应用中心直接升级，数据目录保留，升级即换芯；
+- **二进制/systemd**：替换二进制（install.sh 路径升级时旧版自动留 `.bak` 时间戳备份）→ `systemctl restart`；数据库迁移启动时自动执行（schema 只增不改），升级前照常备份即可；
+- **Docker**：`docker compose pull && up -d`，数据卷不动即保留；
+- 详细步骤、回滚与跨机迁移见仓库 `docs/upgrade.md`。
+
 ## 数据与备份
 
-- SQLite 单文件（默认 `./mibee-bell.db`，WAL 模式）。备份：停机冷备或 `sqlite3 mibee-bell.db ".backup ..."`。
-- 保留策略（每日自动清理）：events 30 天 / notifications 90 天 / deliveries 30 天 / feedback 永久（`storage.retention` 可调）。
-- 迁移/灾备：`mibee-bell export` 反向导出规则与渠道 YAML。
+- SQLite 单文件（默认 `./mibee-bell.db`，WAL 模式）。备份：停机冷备或 `sqlite3 mibee-bell.db ".backup ..."`（配置文件 config.yaml 与 db 一起拷）。
+- 保留策略（每日自动清理）：events 30 天 / notifications 90 天 / deliveries 30 天（设置 → 系统与留存可调，"0"=永久）。
+- 配置导出：`GET /api/v1/rules` 与 `GET /api/v1/channels`（凭证脱敏 `***`）取 JSON 快照归档。
 
 ## 反向代理
 

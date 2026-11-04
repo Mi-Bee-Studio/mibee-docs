@@ -1,16 +1,28 @@
-# 告警管道（四道闸 + L0）
+# 告警管道（闸门 + L0 算法层）
 
 管道是 MiBeeBell 的核心差异化：**ntfy / Gotify 类工具"来一条推一条"，MiBeeBell 在通知出口前放了一条可配置的管道**——去抖、聚合、冷却、升级、静默，加上一层永远在线的纯算法降噪（L0）。设计原则：全部纯函数 + 显式状态，每道闸可表驱动测试；参数全部规则级可覆盖。
 
 ## 处理顺序
 
-```
-事件 → [silence 静默] → [persist_filter 持续 N 点] → [dedup 去抖聚合 + 相似聚合]
-     → [cooldown 冷却] → [EWMA 频率打标] → [共因归并] → [依赖抑制]
-     → 规则路由复核 → i18n 渲染 → 分发（escalation 计时挂起）
+```mermaid
+flowchart LR
+    EV[事件] --> EWMA["EWMA 频率打标"]
+    EWMA --> ROUTE{{规则路由<br/>命中一条·优先级小者先}}
+    ROUTE -- 未命中:只入库 --> DB[("events 表")]
+    ROUTE -- resolved 恢复 --> RES["恢复配对<br/>穿透所有闸门"]
+    ROUTE --> SIL["silence 静默"]
+    SIL --> L0["persist_filter 持续 N 点<br/>warning 及以下·默认 N=3"]
+    L0 --> DEDUP["dedup 去抖聚合"]
+    DEDUP --> COOL["cooldown 冷却"]
+    COOL --> AG["simagg 相似聚合"]
+    AG --> CC["共因归并"]
+    CC --> DEP["依赖抑制"]
+    DEP --> ENR["enrich（AI 摘要/打标·失败直通）"]
+    ENR --> DISP["分发<br/>escalation 计时挂起"]
+    DISP --> CH[[渠道]]
 ```
 
-四道闸与 L0 算法统一实现 `pkg/bellapi.Processor` 接口挂在同一条链上——**新增算法 = 接入新 Processor，不改核心**。
+全部闸门与 L0 算法统一实现 `pkg/bellapi.Processor` 接口挂在同一条链上——**新增算法 = 接入新 Processor，不改核心**。AI 管道介入闸（抑制/聚合/分发，ADR-036）默认关闭、关闭时零开销直通，开启前必须在观察模式验证——见 [AI 增强](ai.md)。
 
 ## 第一闸：silence（静默）
 
@@ -33,7 +45,7 @@ per `(rule × source_ref)` 的 anti-flap 窗口：**已发过通知后的复发*
 
 ## 第四闸：escalation（升级）
 
-`error` 级通知发出后，若 `escalate_after`（默认 15 分钟）内未收到配对 `resolved`：
+`error` 级通知发出后，若规则配置了 `escalate_after`（**规则级配置，>0 才调度，无全局默认**）且该时限内未收到配对 `resolved`：
 
 1. severity 升 `critical`，通知追加"已升级"标记；
 2. 追加发送 `escalate_to` 渠道组（付费渠道只允许出现在这里）；
@@ -57,8 +69,8 @@ per `(rule × source_ref)` 的 anti-flap 窗口：**已发过通知后的复发*
 ## 降级与自愈
 
 - 管道任何 stage panic → recover → 事件按"无管道模式"直发默认渠道组 + 审计事件 `pipeline_degraded`。
-- AI（L1/L2）挂在 enrich 挂点上：超时 2s / 预算熔断 / 调用失败 → 直接走 L0 模板，**事件照发**。
-- AI 只降不升 severity（原值记入 `ai_severity_from` 标签），且永远无权拦截事件——见 [AI 增强](ai.md)。
+- AI（L1/L2）挂在 enrich 挂点上：超时 / 预算熔断 / 调用失败 → 直接走 L0 模板，**事件照发**。
+- AI 只降不升 severity，且默认无权拦截事件——唯一例外是默认关闭、需观察模式验证的受控介入框架（ADR-036），见 [AI 增强](ai.md)。
 
 ## 实测样例
 

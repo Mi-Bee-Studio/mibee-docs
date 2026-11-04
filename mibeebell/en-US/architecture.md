@@ -44,12 +44,23 @@ Repositories depend only on `database/sql`; SQL stays ANSI (unix-millisecond int
 
 ## The config / runtime-state boundary
 
-```
-config.yaml              → bootstrap: server / auth / storage / ingest connections
-SQLite rules table       → routing rules (UI-editable)
-SQLite channels table    → channel configs (encrypted credentials, UI-editable)
-config.yaml rules/channels → first-boot seed only (imported once when DB is empty); DB wins afterwards
-mibee-bell export        → reverse-export YAML (backup/migration)
+```mermaid
+flowchart TB
+    subgraph YAML["config.yaml (bootstrap + first-boot seed)"]
+        Y1["server / auth / storage / ingest connections"]
+        Y2["rules / channels sections (seeded once at first boot)"]
+    end
+    subgraph DB["SQLite (the single runtime source of truth)"]
+        D1["rules table (UI-editable)"]
+        D2["channels table (encrypted credentials, UI-editable)"]
+        D3["events / notifications / deliveries / silences"]
+    end
+    Y1 --> BOOT["startup assembly"]
+    Y2 -- "seed once" --> D1
+    Y2 -- "seed once" --> D2
+    UI["Web settings changes"] -- "write back to DB" --> D1
+    UI -- "settings sections written back to yaml" --> Y1
+    API["GET /api/v1/rules|channels"] -- "JSON snapshot export (credentials masked)" --> ARC["archive / review"]
 ```
 
 This boundary means rule/channel changes never touch config files, and config.yaml stays safe for version control (bootstrap and credentials separated).
@@ -64,12 +75,12 @@ MiBeeBell/
 │   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
 │   ├── eventbus/         # bounded bus (drop-oldest)
 │   ├── mesh/             # memberlist + claim protocol + dead-man switch
-│   ├── ingest/           # one package per source: mqtt / webhook / alertmanager / bark / …
+│   ├── ingest/           # one package per source: mqtt / webhook / alertmanager / bark / compat routes (grafana/pagerduty/simple)
 │   ├── rule/             # rule matching (pure functions)
-│   ├── pipeline/         # Processor chain + four gates and L0
+│   ├── pipeline/         # Processor chain + gates and L0 (incl. ADR-036 ai_gate_*, off by default)
 │   ├── dispatch/         # retry/backoff, token buckets, delivery audit, channel health
-│   ├── channel/          # channel plugins + registry (self-registering)
-│   ├── ai/               # Analyzers (L1 decision / L2 openai_compat)
+│   ├── channel/          # channel plugins (17 types) + registry (self-registering)
+│   ├── ai/               # Analyzers (L1 embedded/remote decision + L2 openai_compat + gates)
 │   ├── store/            # database/sql repositories (sqlite; postgres reserved) + migrations
 │   ├── render/           # i18n templates (zh-CN/en-US, severity mapping)
 │   ├── api/              # REST + SSE + JWT middleware

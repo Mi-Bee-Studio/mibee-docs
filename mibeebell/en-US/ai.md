@@ -3,8 +3,8 @@
 The three iron laws (non-negotiable, from competitor post-mortems):
 
 1. **Off by default**: no providers configured = pure L0, not one extra byte runs.
-2. **Never a gate**: AI cannot drop an event and cannot raise severity — it can only "stick things onto" the event (summary/tags/downgrade suggestion). Remove the AI and notifications flow unchanged.
-3. **2-second degradation**: timeout/failure/budget exhaustion → fall straight back to L0 templates; events and notifications are unaffected.
+2. **Not a gate by default**: AI cannot drop an event and cannot raise severity — it can only "stick things onto" the event (summary/tags/triage suggestions). Remove the AI and notifications flow unchanged. The sole exception is the controlled pipeline-intervention framework (ADR-036 below), which is fully disabled by default and requires shadow-mode validation first.
+3. **Degradation on failure**: timeout/failure/budget exhaustion → fall straight back to L0 templates; events and notifications are unaffected.
 
 ## Three tiers
 
@@ -45,13 +45,17 @@ Metrics: `bell_ai_calls_total{analyzer,result=ok|error|cache_hit|budget_skipped}
 
 ## L1: local triage (System One decision model)
 
-**It generates no text**: given a state plus a typed question, a single forward pass returns a **calibrated-confidence** classification (false alarm / normal fluctuation / needs attention) in milliseconds, pure CPU. Inference runs **out of process** (keeping Bell `CGO_ENABLED=0` and Pi-compatible); Bell only speaks HTTP.
+**It generates no text**: given a state plus a typed question, a single forward pass returns a **calibrated-confidence** classification (false alarm / normal fluctuation / needs attention) in milliseconds, pure CPU. Two forms:
+
+- **Embedded student model (recommended)**: a distilled model compiled into the binary (`decision.embedded: true`) — in-process inference, zero external connections, runs on a Pi. One toggle in Settings → AI & budget → Local decision model; default triage question only (custom criteria need the remote form).
+- **Out-of-process laya-serve (custom questions)**: Bell speaks HTTP to a LAN inference service (keeping `CGO_ENABLED=0` and weak-host compatibility):
 
 ```yaml
 ai:
   daily_budget: 100
   decision:
     enabled: true
+    embedded: false
     base_url: "http://<lan-box>:8000"   # the laya-serve endpoint
     model: multilingual                  # required for non-English alerts (multilingual checkpoint)
     timeout_seconds: 5                   # weak hosts: 5 (full payloads measure ~2s, cutting it close)
@@ -81,7 +85,19 @@ enrich:
     timeout_seconds: 5
 ```
 
-Metric: `bell_enrich_total{instance,result}`. Same philosophy as AI: augment, never gate.
+Metric: `bell_enrich_total{instance,result}`. Same philosophy as AI: augment, not gate (by default).
+
+## Controlled pipeline intervention (ADR-036, high risk, off by default)
+
+At the bottom of Settings → AI & budget sits a red-hinted **AI pipeline intervention (high risk)** section — the only capability that lets AI decide a notification's fate, with three independently switched intervention points:
+
+| Intervention | What it does | Worst case |
+|---|---|---|
+| suppress | AI judges a false alarm → suppress the notification | lost notifications |
+| aggregate | AI judges same-cause → merge notifications | merged information |
+| dispatch | AI sets delivery priority (critical fast lane) | non-critical delays |
+
+Five safeguards: ① all off by default; ② **shadow (observe-only) mode first** — AI keeps deciding but only records, the data-flow AI node and metrics show "would have suppressed X / passed Y" comparisons; ③ each intervention point has its own switch with red risk hints; ④ fail-open — AI timeout/failure/breaker automatically bypasses, it can never become a silent black hole; ⑤ full auditing — every decision (including shadow) emits an `ai_gate` SSE event + `bell_ai_gate_total` metrics. Live status: the `gates` section of `GET /api/v1/ai/status`.
 
 ## Ordering
 

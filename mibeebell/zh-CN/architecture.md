@@ -44,12 +44,23 @@ SQLite：WAL 模式、`busy_timeout=5s`、单写连接（写路径串行化）�
 
 ## 配置与运行态的边界
 
-```
-config.yaml             → 引导配置：server / auth / storage / ingest 连接
-SQLite rules 表          → 路由规则（UI 可编辑）
-SQLite channels 表       → 渠道配置（凭证加密落库，UI 可编辑）
-config.yaml 的 rules/channels → 仅首次启动 seed（DB 为空时导入一次），此后 DB 为准
-mibee-bell export        → 反向导出 YAML（备份/迁移）
+```mermaid
+flowchart TB
+    subgraph YAML["config.yaml（引导 + 首启种子）"]
+        Y1["server / auth / storage / ingest 连接"]
+        Y2["rules / channels 段（仅首启 seed 一次）"]
+    end
+    subgraph DB["SQLite（唯一运行态来源）"]
+        D1["rules 表（UI 可编辑）"]
+        D2["channels 表（凭证加密落库，UI 可编辑）"]
+        D3["events / notifications / deliveries / silences"]
+    end
+    Y1 --> BOOT[启动装配]
+    Y2 -- "seed 一次" --> D1
+    Y2 -- "seed 一次" --> D2
+    UI["Web 设置页修改"] -- "写回 DB" --> D1
+    UI -- "settings 段写回 yaml" --> Y1
+    API["GET /api/v1/rules|channels"] -- "JSON 快照导出（凭证脱敏）" --> ARC[归档/审阅]
 ```
 
 这条边界让"改规则/换渠道"不需要碰配置文件，也让配置文件可以安全进版本管理（引导配置与凭证分离）。
@@ -64,12 +75,12 @@ MiBeeBell/
 │   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
 │   ├── eventbus/         # 有界总线（满丢最旧）
 │   ├── mesh/             # memberlist 组网 + claim 协议 + 死亡开关
-│   ├── ingest/           # 每源一个子包：mqtt / webhook / alertmanager / bark / …
+│   ├── ingest/           # 每源一个子包：mqtt / webhook / alertmanager / bark / 兼容路由（grafana/pagerduty/simple）
 │   ├── rule/             # 规则匹配（纯函数）
-│   ├── pipeline/         # Processor 链 + 四道闸与 L0
+│   ├── pipeline/         # Processor 链 + 闸门与 L0（含 ADR-036 ai_gate_*，默认关）
 │   ├── dispatch/         # 重试退避、令牌桶、投递审计、渠道健康
-│   ├── channel/          # 渠道插件 + registry（自注册）
-│   ├── ai/               # Analyzer（L1 决策 / L2 openai_compat）
+│   ├── channel/          # 渠道插件（17 类）+ registry（自注册）
+│   ├── ai/               # Analyzer（L1 内嵌/远端决策 + L2 openai_compat + gates）
 │   ├── store/            # database/sql 仓储（sqlite/postgres 预留）+ 迁移
 │   ├── render/           # i18n 模板（zh-CN/en-US，severity 映射）
 │   ├── api/              # REST + SSE + JWT 中间件

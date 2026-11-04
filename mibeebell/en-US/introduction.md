@@ -29,7 +29,7 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 1. **Truly self-hosted = zero cloud dependency**: no feature depends on the vendor's cloud; channel credentials live on the user's disk (AES-256-GCM encrypted). Offline, domain-dead, or company-gone — every feature keeps working.
 2. **One codebase, no dual track**: a single product edition — no community/enterprise split.
 3. **Replaceable channel layer**: one channel = one file = one interface. Any platform policy change kills that adapter, not the project.
-4. **AI augments, never gates**: the L0 pure-algorithm layer is always on; AI (L1 triage / L2 summaries) is pluggable, off by default, can only downgrade severity and can never drop an event — with AI dead, notifications still flow.
+4. **AI augments, gated only behind an off-by-default switch**: the L0 pure-algorithm layer is always on; AI (L1 triage / L2 summaries) is pluggable, off by default, can only downgrade severity — with AI dead, notifications still flow. The one capability that lets AI "drop" alerts — the controlled pipeline-intervention framework (ADR-036) — is fully disabled by default and requires validation in shadow (observe-only) mode before it can be enabled.
 5. **Minimum maintenance surface**: no monitoring, no probing, no on-call scheduling, no first-party app client (MiBeeScout owns that niche).
 
 ## Technical shape
@@ -48,13 +48,13 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **v0.1** | 4 ingest entries (webhook/Alertmanager/Bark/MQTT) + 8 channels + four gates + full L0 + SQLite + SSE + embedded UI | ✅ shipped |
-| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ shipped (accepted on a real two-node setup) |
-| **v0.3** | paid critical channels (Twilio/PagerDuty/Opsgenie), WeCom app messages, LINE, Scout international push; PagerDuty/simple-JSON/Grafana ingest landed early | 🚧 partially early |
-| **v1.0** | per-person routing, federation, bilingual docs, full GitHub Release + Docker + install.sh distribution | planned |
+| **v0.1** | ingest entries (webhook/Alertmanager/Bark/MQTT) + gate pipeline + full L0 + SQLite + SSE + embedded UI | ✅ released |
+| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ released |
+| **v0.3** | full 17-channel set (Twilio/PagerDuty/Opsgenie/WeCom app/LINE…), PagerDuty/simple-JSON/Grafana ingest, AI triage (L1 embedded model + L2 cloud) with the controlled pipeline-intervention framework, first-run setup wizard | ✅ released (delivered with the v0.1.x series) |
+| **v1.0** | per-person routing, federation | planned |
 
-> MiBeeBell has **not published any release yet** (no tags / no release artifacts; releasing is decided by the maintainer) — this manual tracks the in-development main branch; the first official version will ship via GitHub Releases.
+> The first official release, **v0.1.0, shipped on 2026-11-04** (GitHub Releases provide Linux/Windows single binaries and the fnOS fpk package) — see the Releases page for later versions. This manual tracks the latest released version.
 
 ## License
 
-To be announced — the license will be decided before the first release.
+[AGPL-3.0](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/LICENSE) — same as MiBeeNvr / MiBeeSteward.

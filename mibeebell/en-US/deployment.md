@@ -6,11 +6,14 @@ One binary (`CGO_ENABLED=0`) for **linux/arm64 · armv7 · amd64** and **windows
 
 | Option | Good for | Notes |
 |---|---|---|
+| **GitHub Releases download** | any platform (recommended to start) | since the first release v0.1.0 (2026-11-04): Linux/Windows single binaries and the fnOS fpk package, no build step |
 | Source build | any platform | `git clone` + `make build`; the web UI ships pre-built and embedded, no node needed |
 | systemd | Linux daemons | `deploy/mibee-bell.service` + `deploy/install.sh` (/opt/mibee-bell layout) |
 | Docker | NAS / containers | `deploy/compose.cn.yml` (CN topology) / `compose.overseas.yml` (overseas) |
-| fnOS app | fnOS NAS | `deploy/fnos/` packaging (fnOS desktop integration, gateway SSO) |
-| Windows | desktop/server | cross-compile `GOOS=windows GOARCH=amd64`, run `mibee-bell.exe -config config.yaml` |
+| fnOS app | fnOS NAS | manual fpk install via App Center (fnOS desktop integration, gateway SSO) |
+| Windows | desktop/server | `mibee-bell` windows/amd64 build from Releases, run `mibee-bell.exe -config config.yaml` |
+
+After installing, the first thing to do is open the Web home and **set the admin password** (see [Quick Start](quick-start.md) §2); everything else is configured in the Web settings and written back to yaml automatically.
 
 ## systemd (recommended)
 
@@ -48,11 +51,18 @@ The CN example bakes in the local pattern: Telegram via a per-channel egress pro
 - Cross-compile: `CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./cmd/mibee-bell`.
 - The mesh naturally fits a "home server + Pi + VPS" spread (see [High Availability](mesh.md)).
 
+## Upgrades
+
+- **fnOS**: upgrade directly in App Center — the data directory is preserved.
+- **Binary/systemd**: swap the binary (the install.sh path keeps the old one as a timestamped `.bak`) → `systemctl restart`; database migrations run automatically at startup (schema is add-only). Back up as usual before upgrading.
+- **Docker**: `docker compose pull && up -d`; data volumes untouched = data preserved.
+- Full steps, rollback and cross-machine migration: `docs/upgrade.md` in the repository.
+
 ## Data & backups
 
-- SQLite single file (default `./mibee-bell.db`, WAL). Backup: cold copy on stop, or `sqlite3 mibee-bell.db ".backup ..."`.
-- Retention (daily cleanup): events 30d / notifications 90d / deliveries 30d / feedback forever (tunable via `storage.retention`).
-- Migration/disaster recovery: `mibee-bell export` reverse-exports rules and channels as YAML.
+- SQLite single file (default `./mibee-bell.db`, WAL). Backup: cold copy on stop, or `sqlite3 mibee-bell.db ".backup ..."` (copy config.yaml together with the db).
+- Retention (daily cleanup): events 30d / notifications 90d / deliveries 30d (Settings → System & retention, "0" = forever).
+- Config export: `GET /api/v1/rules` and `GET /api/v1/channels` (credentials masked `***`) for JSON snapshots.
 
 ## Reverse proxy
 
