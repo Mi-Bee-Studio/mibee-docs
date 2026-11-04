@@ -1,0 +1,61 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeReach 用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "产品介绍"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "快速开始"
+        },
+        {
+          "slug": "console",
+          "file": "console.md",
+          "title": "控制台巡礼"
+        }
+      ]
+    },
+    {
+      "title": "会话与能力",
+      "items": [
+        {
+          "slug": "desktop-session",
+          "file": "desktop-session.md",
+          "title": "远程桌面会话"
+        },
+        {
+          "slug": "terminal-ssh-tunnel",
+          "file": "terminal-ssh-tunnel.md",
+          "title": "远程终端、SSH 与端口转发"
+        }
+      ]
+    },
+    {
+      "title": "安全与参考",
+      "items": [
+        {
+          "slug": "pairing",
+          "file": "pairing.md",
+          "title": "配对与 LAN 访问码"
+        },
+        {
+          "slug": "cli",
+          "file": "cli.md",
+          "title": "CLI 参考"
+        },
+        {
+          "slug": "faq",
+          "file": "faq.md",
+          "title": "常见问题与故障排除"
+        }
+      ]
+    }
+  ]
+}

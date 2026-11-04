@@ -1,0 +1,61 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeReach User Manual",
+  "sections": [
+    {
+      "title": "Getting started",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "Introduction"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "Quick start"
+        },
+        {
+          "slug": "console",
+          "file": "console.md",
+          "title": "Console tour"
+        }
+      ]
+    },
+    {
+      "title": "Sessions & features",
+      "items": [
+        {
+          "slug": "desktop-session",
+          "file": "desktop-session.md",
+          "title": "Remote desktop session"
+        },
+        {
+          "slug": "terminal-ssh-tunnel",
+          "file": "terminal-ssh-tunnel.md",
+          "title": "Terminal, SSH & port forwarding"
+        }
+      ]
+    },
+    {
+      "title": "Security & reference",
+      "items": [
+        {
+          "slug": "pairing",
+          "file": "pairing.md",
+          "title": "Pairing & LAN access key"
+        },
+        {
+          "slug": "cli",
+          "file": "cli.md",
+          "title": "CLI reference"
+        },
+        {
+          "slug": "faq",
+          "file": "faq.md",
+          "title": "FAQ & troubleshooting"
+        }
+      ]
+    }
+  ]
+}
