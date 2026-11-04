@@ -48,11 +48,10 @@ channels:
 - 通知必含：severity 图标 + 标题、正文、快照缩略图（`snapshot_url` 存在且渠道支持时）、RFC 3339 时间戳（本地时区）、来源标识（MiBeeBell footer + 规则名）。
 - 聚合计数（×N）与"已升级"标记在渲染层注入正文。
 
-## 新增渠道（贡献者）
+## 渠道适配机制
 
-1. `internal/channel/<name>/` 新建包，实现 `Channel` 接口（`Name` / `Send` / `RateLimit`）+ `init()` 自注册；
-2. DB 或 config 加一段配置即可启用——**不改核心代码**；
-3. 单测三例：httptest 模拟平台 API（成功 / 限流 / 4xx）；
-4. 文档表格补一行（限速声明 + 凭证字段）。
+- 渠道是一个个独立适配器：**一个渠道一个适配器**，新增渠道不改动核心；
+- 在 DB（UI）或 config 加一段配置即可启用一个新渠道实例；
+- 渠道平台政策变化只影响它自己的适配器，其余渠道不受影响。
 
-接口在 `pkg/bellapi`——对外稳定契约，第三方渠道可独立仓库维护。
+需要新渠道适配？欢迎在[发布会仓库](https://github.com/mickeyzzc/releases/issues)提 issue 说明目标平台与凭证形态。

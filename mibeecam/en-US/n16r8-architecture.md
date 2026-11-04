@@ -48,18 +48,14 @@ From `main.c`:
 
 ## Data Flow Diagram
 
-```
-OV3660 Sensor
-  ↓ (SCCB I2C)
-esp_camera_fb_get()
-  ↓ (frame_broadcaster_task, Core 1, priority 5)
-publish_frame()
-  ├─→ mjpeg_streamer (HTTP MJPEG chunked response)
-  └─→ ai_pipeline (face/motion/QR detection)
-       ↓ (JPEG decode → AI processing)
-       ai_result_t (mutex-protected)
-         ↓ (GET /ai/status polling)
-       web canvas overlay (green boxes for faces, motion score, QR text)
+```mermaid
+flowchart TB
+    SEN["OV3660 Sensor"] -->|"SCCB I2C"| GET["esp_camera_fb_get（）"]
+    GET -->|"frame_broadcaster_task · Core 1 · priority 5"| PUB["publish_frame（）"]
+    PUB -->|"HTTP MJPEG chunked response"| MJ["mjpeg_streamer"]
+    PUB -->|"face/motion/QR detection"| AI["ai_pipeline"]
+    AI -->|"JPEG decode → AI processing"| RES["ai_result_t （mutex-protected）"]
+    RES -->|"GET /ai/status polling"| UI["web canvas overlay<br/>green boxes for faces, motion score, QR text"]
 ```
 
 ## Task/Core Allocation
@@ -98,26 +94,26 @@ publish_frame()
 
 ## Module Relationships
 
-```
-main.c
-├─→ config_manager (load/save)
-├─→ wifi_manager (init)
-├─→ camera_driver (init/reinit)
-│   └─→ esp_camera
-├─→ frame_broadcaster (init/start)
-│   ├─→ camera_capture
-│   ├─→ mjpeg_streamer (subscribe)
-│   └─→ ai_pipeline (subscribe)
-├─→ web_server (start)
-│   ├─→ mjpeg_streamer (register handler)
-│   ├─→ flash_led (control)
-│   ├─→ ai_pipeline (get results)
-│   └─→ SPIFFS (static files)
-├─→ rtsp_server (start)
-│   └─→ frame_broadcaster (subscribe)
-├─→ onvif_service (start)
-│   └─→ mdns (announce)
-└─→ at_command (init)
+```mermaid
+flowchart TB
+    MAIN["main.c"] -->|"load/save"| CM["config_manager"]
+    MAIN -->|"init"| WM["wifi_manager"]
+    MAIN -->|"init/reinit"| CD["camera_driver"]
+    CD --> EC["esp_camera"]
+    MAIN -->|"init/start"| FB["frame_broadcaster"]
+    FB --> CAP["camera_capture"]
+    FB -->|"subscribe"| MJ["mjpeg_streamer"]
+    FB -->|"subscribe"| AI["ai_pipeline"]
+    MAIN -->|"start"| WS["web_server"]
+    WS -->|"register handler"| MJ
+    WS -->|"control"| FL["flash_led"]
+    WS -->|"get results"| AI
+    WS -->|"static files"| SP["SPIFFS"]
+    MAIN -->|"start"| RT["rtsp_server"]
+    RT -->|"subscribe"| FB
+    MAIN -->|"start"| OV["onvif_service"]
+    OV -->|"announce"| MD["mdns"]
+    MAIN -->|"init"| AT["at_command"]
 ```
 
 ## Key Design Patterns

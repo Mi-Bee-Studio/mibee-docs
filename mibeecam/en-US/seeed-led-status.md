@@ -6,11 +6,11 @@ The onboard LED (GPIO21, active-low) indicates the current operating status thro
 
 | LED Mode | Visual Display | Status Meaning |
 |----------|---------------|----------------|
-| Solid | ━━━━━━━━ | System booting |
-| Slow blink (1-second cycle) | ━━ ── ━━ ── | AP hotspot mode (not connected to router) |
-| Fast blink (200ms cycle) | ━─ ━─ ━─ ━─ | Connecting to WiFi |
-| Off | ──────── | Normal operation (connected to router) |
-| Double blink | ━━ ━━ ──────── | Error state (initialization failed / recording anomaly) |
+| Solid | Constant on | System booting |
+| Slow blink (1-second cycle) | ON 0.5s → OFF 0.5s, alternating | AP hotspot mode (not connected to router) |
+| Fast blink (200ms cycle) | ON 100ms → OFF 100ms, alternating | Connecting to WiFi |
+| Off | Constant off | Normal operation (connected to router) |
+| Double blink | Two short blinks → long OFF, repeating | Error state (initialization failed / recording anomaly) |
 
 ## Detailed Description
 
@@ -61,12 +61,13 @@ Device has detected a serious error:
 
 ## Quick Diagnosis Flow
 
-```
-Power on → LED solid?
-  ├─ Yes → Wait for initialization to complete
-  └─ No →
-       ├─ Off → Device running normally, access via router IP
-       ├─ Slow blink → AP mode, connect to MiBee Cam-XXXX hotspot to configure WiFi
-       ├─ Fast blink → Connecting to WiFi, wait or check password
-       └─ Double blink → Device fault, check hardware or restart
+```mermaid
+flowchart TB
+    P{"Power on → LED solid?"}
+    P -->|"Yes"| INIT["Wait for initialization to complete"]
+    P -->|"No"| ST{"LED state?"}
+    ST -->|"Off"| A["Device running normally, access via router IP"]
+    ST -->|"Slow blink"| B["AP mode, connect to MiBee Cam-XXXX hotspot to configure WiFi"]
+    ST -->|"Fast blink"| C["Connecting to WiFi, wait or check password"]
+    ST -->|"Double blink"| D["Device fault, check hardware or restart"]
 ```

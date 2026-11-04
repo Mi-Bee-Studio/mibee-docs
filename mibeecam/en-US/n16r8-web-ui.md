@@ -256,13 +256,12 @@ The status bar at the top displays real-time device information:
 
 ## File Structure
 
-```
-main/web_ui/
-├── index.html    # Main HTML structure
-├── style.css     # Styles and responsive design
-├── i18n.js       # Internationalization dictionary
-└── app.js        # Application logic
-```
+| Path | Purpose |
+|------|---------|
+| `main/web_ui/index.html` | Main HTML structure |
+| `main/web_ui/style.css` | Styles and responsive design |
+| `main/web_ui/i18n.js` | Internationalization dictionary |
+| `main/web_ui/app.js` | Application logic |
 
 **Served from SPIFFS**:
 - All files mounted at `/spiffs/`

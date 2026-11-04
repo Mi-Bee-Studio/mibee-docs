@@ -10,46 +10,35 @@ ONVIF（开放网络视频接口论坛）是用于基于 IP 的物理安全产�
 
 该实现专注于 NVR 集成所需的核心流媒体功能，通过标准的 ONVIF SOAP 消息提供设备识别、服务发现和流媒体访问。
 
-## 发现流程 ASCII 流程图
+## 发现流程
 
-```
-NVR                          多播网络                      MiBee Cam
- │                                │                                  │
- │──── 探测（UDP 多播） ────>│──── 239.255.255.250:3702 ──────>│
- │                                │                                  │
- │                                │    onvif_discovery_task()        │
- │                                │    ├─ is_probe_message() ✓       │
- │                                │    ├─ extract_message_id()       │
- │                                │    └─ build_probe_matches()      │
- │                                │                                  │
- │<── 探测匹配（单播） ────│<─── UDP 单播响应 ────────│
- │                                │                                  │
- │  NVR 现在知道设备 IP           │                                  │
- │                                │                                  │
- │──── POST /onvif/device_service (SOAP) ──────────────────────────>│
- │    Action: GetDeviceInformation│                                  │
- │<─── Response: 制造商, 型号, 固件版本, 序列号 ──────────────────│
- │                                │                                  │
- │──── POST /onvif/device_service (SOAP) ──────────────────────────>│
- │    Action: GetCapabilities     │                                  │
- │<─── Response: 设备 + 媒体服务 URL ──────────────────────│
- │                                │                                  │
- │──── POST /onvif/media_service (SOAP) ───────────────────────────>│
- │    Action: GetProfiles         │                                  │
- │<─── Response: 视频配置文件（分辨率, JPEG 编码） ────────│
- │                                │                                  │
- │──── POST /onvif/media_service (SOAP) ───────────────────────────>│
- │    Action: GetStreamUri        │                                  │
- │<─── Response: http://<IP>/stream ───────────────────────────────│
- │                                │                                  │
- │  NVR 连接到 MJPEG 流         │                                  │
- │──── GET http://<IP>:81/stream ─────────────────────────────────>│
+```mermaid
+sequenceDiagram
+    participant NVR as NVR
+    participant NET as 多播网络
+    participant CAM as MiBee Cam
+    NVR->>NET: 探测（UDP 多播）
+    NET->>CAM: 239.255.255.250:3702
+    Note over CAM: onvif_discovery_task（）：is_probe_message（） ✓ · extract_message_id（） · build_probe_matches（）
+    CAM->>NET: UDP 单播响应
+    NET->>NVR: 探测匹配（单播）
+    Note over NVR: NVR 现在知道设备 IP
+    NVR->>CAM: POST /onvif/device_service (SOAP)，Action: GetDeviceInformation
+    CAM->>NVR: Response: 制造商, 型号, 固件版本, 序列号
+    NVR->>CAM: POST /onvif/device_service (SOAP)，Action: GetCapabilities
+    CAM->>NVR: Response: 设备 + 媒体服务 URL
+    NVR->>CAM: POST /onvif/media_service (SOAP)，Action: GetProfiles
+    CAM->>NVR: Response: 视频配置文件（分辨率, JPEG 编码）
+    NVR->>CAM: POST /onvif/media_service (SOAP)，Action: GetStreamUri
+    CAM->>NVR: Response: http://＜IP＞/stream
+    Note over NVR: NVR 连接到 MJPEG 流
+    NVR->>CAM: GET http://＜IP＞:81/stream
 ```
 
 周期性 Hello 公告：
-```
-MiBee Cam ──── Hello（多播） ────> 239.255.255.250:3702
-              （每 ~30 秒）
+```mermaid
+flowchart LR
+    CAM["MiBee Cam"] -->|"Hello（多播），每 ~30 秒"| MC["239.255.255.250:3702"]
 ```
 
 ## 实现的 SOAP 操作

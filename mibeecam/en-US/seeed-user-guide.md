@@ -265,16 +265,11 @@ After each segment completes: NAS upload → Storage cleanup → Start next segm
 
 ### Recording Path
 
-```
-/sdcard/recordings/
-├── 2026-04/
-│   ├── 24/
-│   │   ├── REC_20260424_080000.avi
-│   │   ├── REC_20260424_080500.avi
-│   │   └── ...
-│   └── 25/
-│       └── ...
-```
+| Path | Purpose |
+|------|---------|
+| `/sdcard/recordings/2026-04/` | |
+| `/sdcard/recordings/2026-04/24/` | `REC_20260424_080000.avi`, `REC_20260424_080500.avi`, ... |
+| `/sdcard/recordings/2026-04/25/` | ... |
 
 ### Circular Storage
 

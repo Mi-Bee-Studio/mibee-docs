@@ -31,14 +31,14 @@ ESP-IDF 的 `httpd` 组件（`esp_http_server`）运行在**单线程事件循�
 
 `mjpeg_streamer.c` 在端口 81 上创建自己的 TCP 服务器 socket，完全绕过 httpd：
 
-```
-mjpeg_streamer_init()
-  └── socket() + bind(port 81) + listen()
-  └── xTaskCreatePinnedToCore(mjpeg_listen_task, ..., Core 1, 优先级 3)
-        └── accept() 循环
-             └── 为每个客户端: xTaskCreatePinnedToCore(mjpeg_client_task, ..., Core 1, 优先级 2)
-                  └── fbroadcast_receive() → send() 循环（分块 JPEG）
-                  └── 断开时清理资源
+```mermaid
+flowchart TB
+    INIT["mjpeg_streamer_init（）"] --> SOCK["socket（） + bind（port 81） + listen（）"]
+    INIT --> TASK["xTaskCreatePinnedToCore<br/>mjpeg_listen_task, Core 1, 优先级 3"]
+    TASK --> ACC["accept（） 循环"]
+    ACC --> CT["为每个客户端: xTaskCreatePinnedToCore<br/>mjpeg_client_task, Core 1, 优先级 2"]
+    CT --> LOOP["fbroadcast_receive（） → send（） 循环（分块 JPEG）"]
+    CT --> CLN["断开时清理资源"]
 ```
 
 ### 关键设计属性
@@ -57,28 +57,12 @@ mjpeg_streamer_init()
 
 端口 80 和端口 81 都通过 `frame_broadcaster.c` 消费摄像头帧，但通过不同的机制：
 
-```
-Camera (OV2640)
-  └── esp_camera_fb_get()  [camera_driver.c]
-        │
-video_recorder (Core 0, 优先级 5)       ← 唯一的帧生产者
-  ├── camera_capture(&frame)
-  ├── jpeg_copy = heap_caps_malloc(PSRAM)  ← 与摄像头缓冲区解耦
-  ├── memcpy(jpeg_copy, frame.buf, ...)
-  ├── camera_return_fb(&frame)             ← 尽快释放摄像头
-  └── fbroadcast_publish(jpeg_copy, len)
-        │
-frame_broadcaster [frame_broadcaster.c]
-  ├── 更新最新帧缓存（PSRAM）
-  ├── 为每个订阅者：
-  │     ├── 分配独立的 PSRAM 副本
-  │     ├── 从深度为 1 的队列中排空旧帧（慢客户端丢弃）
-  │     └── 将新帧推入订阅者队列
-  │
-  ├── 订阅者 1：mjpeg_streamer（端口 81）
-  │     └── 在专用任务中 fbroadcast_receive()
-  │
-  └── 订阅者 2：（保留供未来使用，如 RTSP）
+```mermaid
+flowchart TB
+    CAM["Camera （OV2640）<br/>esp_camera_fb_get（） in camera_driver.c"] --> REC["video_recorder, Core 0, 优先级 5——唯一的帧生产者<br/>camera_capture（&frame）<br/>jpeg_copy = heap_caps_malloc（PSRAM）——与摄像头缓冲区解耦<br/>memcpy（jpeg_copy, frame.buf, ...）<br/>camera_return_fb（&frame）——尽快释放摄像头<br/>fbroadcast_publish（jpeg_copy, len）"]
+    REC --> FB["frame_broadcaster in frame_broadcaster.c<br/>更新最新帧缓存（PSRAM）<br/>为每个订阅者：<br/>分配独立的 PSRAM 副本<br/>从深度为 1 的队列中排空旧帧（慢客户端丢弃）<br/>将新帧推入订阅者队列"]
+    FB --> S1["订阅者 1：mjpeg_streamer（端口 81）<br/>在专用任务中 fbroadcast_receive（）"]
+    FB --> S2["订阅者 2：保留供未来使用，如 RTSP"]
 ```
 
 **关键细节**：广播器为每个订阅者分配独立的 PSRAM 副本。这意味着 MJPEG 客户端任务永远不会持有摄像头驱动缓冲区的引用——摄像头可以立即捕获下一帧，无需等待网络 I/O 完成。

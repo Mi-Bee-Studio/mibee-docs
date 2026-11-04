@@ -4,13 +4,21 @@
 
 ## 处理顺序
 
-```
-事件 → [silence 静默] → [persist_filter 持续 N 点] → [dedup 去抖聚合 + 相似聚合]
-     → [cooldown 冷却] → [EWMA 频率打标] → [共因归并] → [依赖抑制]
-     → 规则路由复核 → i18n 渲染 → 分发（escalation 计时挂起）
+```mermaid
+flowchart LR
+  E["事件"] --> G1["silence<br/>静默"]
+  G1 --> G2["persist_filter<br/>持续 N 点"]
+  G2 --> G3["dedup<br/>去抖聚合 + 相似聚合"]
+  G3 --> G4["cooldown<br/>冷却"]
+  G4 --> L0a["EWMA<br/>频率打标"]
+  L0a --> L0b["共因归并"]
+  L0b --> L0c["依赖抑制"]
+  L0c --> RT["规则路由复核"]
+  RT --> RD["i18n 渲染"]
+  RD --> DP["分发<br/>（escalation 计时挂起）"]
 ```
 
-四道闸与 L0 算法统一实现 `pkg/bellapi.Processor` 接口挂在同一条链上——**新增算法 = 接入新 Processor，不改核心**。
+四道闸与 L0 降噪算法挂载在同一条处理链上，全部规则级可覆盖——**新增算法即插即用，不改核心**。
 
 ## 第一闸：silence（静默）
 

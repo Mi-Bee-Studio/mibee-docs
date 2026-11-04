@@ -36,7 +36,7 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 - **Go 1.26, `CGO_ENABLED=0` single binary**: linux/arm64 · armv7 · amd64 and windows/amd64; < 80MB RSS on a Raspberry Pi 3B design line (measured single-instance RSS ≈ 15–21MB).
 - **modernc.org/sqlite** (pure-Go SQLite, WAL), storage layer designed to be PostgreSQL-migratable.
-- **Svelte 5 embedded Web UI** (`go:embed`, dark-first, zh/en) — the full admin UI ships inside the binary.
+- **Embedded web UI** (dark-first, zh/en) — the full admin UI ships inside the binary, no extra frontend to deploy.
 - **memberlist** (SWIM gossip) mesh HA: 2–5 all-active nodes; any node dying never interrupts notifications.
 - Default port `:9080` (distinct from MiBeeNvr `:9090` and MiBeeSteward `:8080`).
 
@@ -44,17 +44,25 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 ![MiBeeBell ecosystem position: event sources flow through the alert pipeline out to notification channels](images/ecosystem.svg)
 
-## Roadmap (internal milestones, not releases)
+## Releases & roadmap
+
+**v0.1.0 is released** (2026-11); runnable artifacts are published on the [release hub](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0):
+
+| Shipped capability | Detail |
+|---|---|
+| Seven ingest entries | token-authed generic webhook / Alertmanager-compatible / PagerDuty Events v2-compatible / Grafana-native / simple JSON / Bark-compatible routes / MQTT subscriptions |
+| 17 channel adapters | WeCom / DingTalk / Feishu (bot · signature · keyword) / SMTP / Telegram / Slack / Discord / ntfy / Bark / Pushover / Twilio SMS / LINE and more |
+| Alert pipeline | dedup · aggregation · cooldown · escalation · silence (incl. daily cross-midnight windows) + recovery notices |
+| Visualization | live data-flow graph (2D/3D), priority switchyard view, channel health towers, AI-triage layer visualization |
+| AI triage (optional) | local model or cloud LLM, off by default; annotates and summarizes only — never gates an alert |
+| First-run setup | set the admin password on first open; fnOS desktop single sign-on |
+| HA & observability | mesh cluster (2–5 nodes, delivery-lease dedup) · OpenTelemetry tracing · Prometheus metrics |
+| Platforms | Linux amd64 / arm64 / armv6 · Windows · native fnOS packages (arm64 / x86) |
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **v0.1** | 4 ingest entries (webhook/Alertmanager/Bark/MQTT) + 8 channels + four gates + full L0 + SQLite + SSE + embedded UI | ✅ shipped |
-| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ shipped (accepted on a real two-node setup) |
-| **v0.3** | paid critical channels (Twilio/PagerDuty/Opsgenie), WeCom app messages, LINE, Scout international push; PagerDuty/simple-JSON/Grafana ingest landed early | 🚧 partially early |
-| **v1.0** | per-person routing, federation, bilingual docs, full GitHub Release + Docker + install.sh distribution | planned |
-
-> MiBeeBell has **not published any release yet** (no tags / no release artifacts; releasing is decided by the maintainer) — this manual tracks the in-development main branch; the first official version will ship via GitHub Releases.
+| **v1.0** | per-person routing, federation, Docker images and full distribution channels | planned |
 
 ## License
 
-To be announced — the license will be decided before the first release.
+To be announced.

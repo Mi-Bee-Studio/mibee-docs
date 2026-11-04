@@ -171,17 +171,13 @@
 
 ### 存储结构
 
-```
-/sdcard/
-├── recordings/              # 录像根目录
-│   └── YYYY-MM/
-│       └── DD/
-│           ├── REC_YYYYMMDD_HHMMSS.avi
-│           └── ...
-└── config/                  # 配置覆盖目录
-    ├── wifi.txt             # KEY=VALUE 格式
-    └── nas.txt              # KEY=VALUE 格式
-```
+| 路径 | 说明 |
+|------|------|
+| `/sdcard/recordings/` | 录像根目录 |
+| `/sdcard/recordings/YYYY-MM/DD/` | `REC_YYYYMMDD_HHMMSS.avi` 等 |
+| `/sdcard/config/` | 配置覆盖目录 |
+| `/sdcard/config/wifi.txt` | KEY=VALUE 格式 |
+| `/sdcard/config/nas.txt` | KEY=VALUE 格式 |
 
 ### 循环存储策略
 

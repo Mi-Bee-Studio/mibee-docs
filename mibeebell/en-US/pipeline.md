@@ -4,13 +4,21 @@ The pipeline is MiBeeBell's core differentiator: **ntfy/Gotify-class tools forwa
 
 ## Processing order
 
-```
-event → [silence] → [persist_filter N-points] → [dedup + similarity aggregation]
-      → [cooldown] → [EWMA frequency tagging] → [common-cause merge] → [dependency suppression]
-      → rule routing recheck → i18n render → dispatch (escalation timer armed)
+```mermaid
+flowchart LR
+  E["event"] --> G1["silence"]
+  G1 --> G2["persist_filter<br/>N points"]
+  G2 --> G3["dedup +<br/>similarity agg"]
+  G3 --> G4["cooldown"]
+  G4 --> L0a["EWMA<br/>frequency tag"]
+  L0a --> L0b["common-cause<br/>merge"]
+  L0b --> L0c["dependency<br/>suppression"]
+  L0c --> RT["rule routing<br/>recheck"]
+  RT --> RD["i18n render"]
+  RD --> DP["dispatch<br/>(escalation armed)"]
 ```
 
-The four gates and L0 algorithms all implement the same `pkg/bellapi.Processor` interface on one chain — **adding an algorithm plugs in a new Processor; the core never changes**.
+The four gates and L0 denoise algorithms mount on one processing chain, every parameter overridable per rule — **adding an algorithm plugs in without touching the core**.
 
 ## Gate 1: silence
 

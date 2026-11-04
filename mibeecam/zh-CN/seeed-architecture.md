@@ -4,17 +4,24 @@
 
 ESP32-S3 摄像头监控系统基于 FreeRTOS 实时操作系统，在双核 ESP32-S3 上运行 27 个松耦合的 C 模块。系统采用事件驱动与轮询混合架构，摄像头采集帧数据后分两路输出：实时 HTTP MJPEG 流和录像存储。
 
-```
-  Camera ──→ Frame Broadcaster ──→ MJPEG Streamer (端口 81) ──→ 浏览器/客户端
-          └→ Video Recorder ──→ SD Card (AVI 分段)
-                             └→ NAS Uploader ──→ WebDAV / HTTP(S) (互斥)
-  Config Manager ←→ NVS ←→ SD Card Override (wifi.txt / nas.txt)
-  WiFi Manager (AP/STA) → Time Sync (SNTP)
-  Status LED ← LED Controller (GPIO21, 低电平有效)
-  Watchdog (30s TWDT, panic) → Health Monitor (60s)
-  ONVIF Discovery (UDP 组播) → NVR 自动发现
-  音频驱动（I2S PDM DSR_16S, 8kHz）→ DC 去除 → 频谱减法 → 噪声门 → G.711 → 音频广播器
-    → RTSP 服务器（端口 554）+ Web 服务器（/api/audio HTTP 流）
+```mermaid
+flowchart TB
+    CAM["Camera"] --> FB["Frame Broadcaster"]
+    FB --> MJ["MJPEG Streamer<br/>端口 81"]
+    MJ --> BR["浏览器/客户端"]
+    FB --> REC["Video Recorder"]
+    REC --> SD["SD Card<br/>AVI 分段"]
+    REC --> NAS["NAS Uploader"]
+    NAS --> UP["WebDAV / HTTP（S）<br/>互斥"]
+    CFG["Config Manager"] <--> NVS["NVS"]
+    NVS <--> OVR["SD Card Override<br/>wifi.txt / nas.txt"]
+    WIFI["WiFi Manager<br/>AP/STA"] --> TSYNC["Time Sync<br/>SNTP"]
+    LEDC["LED Controller<br/>GPIO21, 低电平有效"] --> SLED["Status LED"]
+    WDT["Watchdog<br/>30s TWDT, panic"] --> HM["Health Monitor<br/>60s"]
+    ONVD["ONVIF Discovery<br/>UDP 组播"] --> NA["NVR 自动发现"]
+    AUD["音频驱动<br/>I2S PDM DSR_16S, 8kHz"] --> DCR["DC 去除"] --> NS["频谱减法"] --> NG["噪声门"] --> G711["G.711"] --> AB["音频广播器"]
+    AB --> RTSP["RTSP 服务器<br/>端口 554"]
+    AB --> WEBA["Web 服务器<br/>/api/audio HTTP 流"]
 ```
 
 ### 核心特性
@@ -134,34 +141,19 @@ ESP32-S3 摄像头监控系统基于 FreeRTOS 实时操作系统，在双核 ESP
 
 摄像头采集的 JPEG 帧由录像器写入 AVI 文件，分段完成后触发回调链：
 
-```
-camera_capture()
-    │
-    ▼
-    视频录像器 (recording_task, Core 0)
-    │  ← 帧数据写入 AVI 文件
-    │  ← 按 segment_sec 时长分段（连续 vs 延时模式）
-    │  ← 写入 AVI idx1 索引
-    │
-    ▼  分段完成
-    on_segment_complete(filepath, size)
-    │
-    ├──→ nas_uploader_enqueue(filepath)
-    │       │
-    │       ▼
-    │    上传任务 (Core 1)
-    │       ├── upload_method=1 → WebDAV 上传
-    │       ├── upload_method=2 → HTTP(S) 上传
-    │       └── upload_method=0 → 跳过上传
-    │       失败重试 3 次，连续失败 10 次后暂停 5 分钟
-    │
-    └──→ storage_cleanup()
-            │
-            ▼
-         检查剩余空间 < cleanup_low_pct?（默认 20%）
-            ├── 是 → 删除最旧录像文件，直到 ≥ cleanup_high_pct（默认 30%）
-            │        写入失败时也尝试清理+重试
-            └── 否 → 无操作
+```mermaid
+flowchart TB
+    CAP["camera_capture（）"] --> REC["视频录像器<br/>recording_task, Core 0<br/>帧数据写入 AVI 文件<br/>按 segment_sec 时长分段（连续 vs 延时模式）<br/>写入 AVI idx1 索引"]
+    REC -->|"分段完成"| SEG["on_segment_complete（filepath, size）"]
+    SEG --> ENQ["nas_uploader_enqueue（filepath）"]
+    SEG --> CLN["storage_cleanup（）"]
+    ENQ --> UPT["上传任务<br/>Core 1<br/>失败重试 3 次，连续失败 10 次后暂停 5 分钟"]
+    UPT -->|"upload_method=1"| WD["WebDAV 上传"]
+    UPT -->|"upload_method=2"| HU["HTTP（S） 上传"]
+    UPT -->|"upload_method=0"| SK["跳过上传"]
+    CLN --> CHK{"检查剩余空间 ＜ cleanup_low_pct?（默认 20%）"}
+    CHK -->|"是"| DEL["删除最旧录像文件，直到 ≥ cleanup_high_pct（默认 30%）<br/>写入失败时也尝试清理+重试"]
+    CHK -->|"否"| NOP["无操作"]
 ```
 
 **延时摄影模式**：当 `timelapse_interval_sec > 0` 时，按指定间隔（1-300秒）采集帧而非连续采集。文件使用 `TLM_` 前缀，以 15fps 播放。
@@ -170,28 +162,13 @@ camera_capture()
 
 MJPEG 流服务运行在**端口 81** 作为独立 TCP 服务器，与端口 80 的主 httpd 完全分离。详见[端口分离设计](seeed-port-separation-design.md)。
 
-```
-浏览器 → GET /stream (端口 81)
-    │
-    ▼
-mjpeg_listen_task (Core 1, 优先级 3)
-    └── accept() → 为每个客户端生成 mjpeg_client_task
-         │
-         ▼
-frame_broadcaster → fbroadcast_receive()
-         │
-         ▼
-video_recorder（帧生产者）→ fbroadcast_publish()
-         │  ← recording_task 中的 camera_capture()
-         │  ← PSRAM 副本 → 与摄像头缓冲区解耦
-         │
-         ▼
-HTTP 分块传输 (multipart/x-mixed-replace)
-    │  Content-Type: image/jpeg
-    │  Boundary: --frame
-    │
-    ▼
-浏览器实时渲染
+```mermaid
+flowchart TB
+    B["浏览器 → GET /stream<br/>端口 81"] --> L["mjpeg_listen_task<br/>Core 1, 优先级 3<br/>accept（） → 为每个客户端生成 mjpeg_client_task"]
+    L --> R["frame_broadcaster → fbroadcast_receive（）"]
+    R --> P["video_recorder（帧生产者）→ fbroadcast_publish（）<br/>recording_task 中的 camera_capture（）<br/>PSRAM 副本 → 与摄像头缓冲区解耦"]
+    P --> H["HTTP 分块传输<br/>multipart/x-mixed-replace<br/>Content-Type: image/jpeg<br/>Boundary: --frame"]
+    H --> E["浏览器实时渲染"]
 ```
 
 ### RTSP 服务器数据流

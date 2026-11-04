@@ -77,21 +77,20 @@ The original ESP32 (ai-thinker) has no such clean split — its DMA/camera const
 
 ## Repository Layout Conventions
 
-```
-main/
-├── main.c              # numbered boot sequence
-├── wifi_manager.c/.h   # STA/AP, reconnect, dual-WiFi (ai-thinker)
-├── camera_driver.c/.h  # sensor init/reconfig (board pin table lives here)
-├── frame_broadcaster.c/.h
-├── mjpeg_streamer.c/.h # :81 standalone TCP server
-├── web_server.c/.h     # :80 REST + static fallback
-├── onvif_service.c/.h  # SOAP endpoints
-├── onvif_discovery.c/.h# WS-Discovery
-├── config_manager.c/.h # NVS versioned blob
-├── device_id.c/.h      # eFuse identity
-├── health_monitor.c/.h # self-heal probe
-└── web_ui/             # frontend assets, packed into SPIFFS at build time
-```
+| Path | Purpose |
+|------|---------|
+| `main/main.c` | numbered boot sequence |
+| `main/wifi_manager.c/.h` | STA/AP, reconnect, dual-WiFi (ai-thinker) |
+| `main/camera_driver.c/.h` | sensor init/reconfig (board pin table lives here) |
+| `main/frame_broadcaster.c/.h` | |
+| `main/mjpeg_streamer.c/.h` | :81 standalone TCP server |
+| `main/web_server.c/.h` | :80 REST + static fallback |
+| `main/onvif_service.c/.h` | SOAP endpoints |
+| `main/onvif_discovery.c/.h` | WS-Discovery |
+| `main/config_manager.c/.h` | NVS versioned blob |
+| `main/device_id.c/.h` | eFuse identity |
+| `main/health_monitor.c/.h` | self-heal probe |
+| `main/web_ui/` | frontend assets, packed into SPIFFS at build time |
 
 cJSON is vendored (do not edit). Upstream `managed_components/` changes must go through `patches/` (n16r8 pattern) or vendoring into `components/` (seeed pattern) — never hand-edit the managed copy.
 

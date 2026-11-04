@@ -26,18 +26,15 @@
 MiBee Eye 使用来自 [mediamtx-rpicamera](https://github.com/bluenviron/mediamtx-rpicamera) 项目的 `mtxrpicam` 进行摄像头捕获。此二进制文件捆绑了自己的 `libcamera` 共享库，以避免与系统安装的 libcamera 产生版本冲突。
 
 **`deploy/bin/` 中所需的文件：**
-```
-deploy/bin/
-├── mtxrpicam                        # 摄像头捕获 + H.264 编码二进制文件 (1.7MB)
-├── libcamera.so.9.9                  # 捆绑的 libcamera (5.7MB)
-├── libcamera-base.so.9.9             # 捆绑的 libcamera base (140KB)
-├── ipa_module/
-│   ├── ipa_rpi_vc4.so                # VC4 ISP 模块
-│   └── ipa_rpi_vc4.so.sign           # 模块签名
-├── libpisp/
-│   └── backend_default_config.json   # PiSP 后端配置
-└── ipa_conf/                         # IPA 调优文件
-```
+| 路径 | 说明 |
+|------|------|
+| `deploy/bin/mtxrpicam` | 摄像头捕获 + H.264 编码二进制文件 (1.7MB) |
+| `deploy/bin/libcamera.so.9.9` | 捆绑的 libcamera (5.7MB) |
+| `deploy/bin/libcamera-base.so.9.9` | 捆绑的 libcamera base (140KB) |
+| `deploy/bin/ipa_module/ipa_rpi_vc4.so` | VC4 ISP 模块 |
+| `deploy/bin/ipa_module/ipa_rpi_vc4.so.sign` | 模块签名 |
+| `deploy/bin/libpisp/backend_default_config.json` | PiSP 后端配置 |
+| `deploy/bin/ipa_conf/` | IPA 调优文件 |
 
 **安装 mtxrpicam 包：**
 ```bash

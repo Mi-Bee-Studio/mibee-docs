@@ -4,37 +4,30 @@
 
 > 命令逐字可执行。示例地址使用文档保留段 `192.0.2.10`，替换为你的实例地址。
 
-## 1. 构建与安装
+## 1. 下载与安装
 
-从源码构建（web UI 已预构建内嵌，无需 node）：
+从「[发布会](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0)」下载对应平台的制品并校验（附 `checksums.txt`）：
+
+| 文件 | 适用 |
+|---|---|
+| `mibee-bell_linux_amd64.tar.gz` | Linux x86_64 |
+| `mibee-bell_linux_arm64.tar.gz` | Linux ARM64（树莓派级别） |
+| `mibee-bell_linux_armv6.tar.gz` | Linux ARMv6 |
+| `mibee-bell_windows_amd64.zip` | Windows x86_64 |
+| `mibee-bell-fnos-0.1.0-arm64.fpk` / `-amd64.fpk` | 飞牛 fnOS NAS（应用中心手动安装） |
 
 ```bash
-git clone https://github.com/Mi-Bee-Studio/MiBeeBell.git
-cd MiBeeBell
-make build          # 产出 ./mibee-bell（CGO_ENABLED=0，交叉编译友好）
+tar xzf mibee-bell_linux_amd64.tar.gz && chmod +x mibee-bell
 ```
 
-系统级安装（可选，systemd 托管 + `/opt/mibee-bell` 布局）：
+## 2. 首次启动：设置管理密码
+
+直接运行（配置文件同目录 `config.yaml`，最小配置即可）：
 
 ```bash
-sudo deploy/install.sh ./mibee-bell
-```
-
-## 2. 写一份最小配置
-
-```bash
-./mibee-bell hash-password --password '你的管理密码'
-# 输出 {"password_hash":"$2a$10$..."}，填到下面 auth.password_hash
-
 cat > config.yaml <<'EOF'
 server:
   listen: ":9080"
-
-auth:
-  password_hash: "$2a$10$..."        # 上一步的输出
-
-storage:
-  path: ./mibee-bell.db
 
 ingest:
   webhook_tokens:
@@ -42,9 +35,16 @@ ingest:
       default_source: "myapp"
   alertmanager: true                  # 顺手打开 Prometheus/Grafana 兼容入口
 EOF
+
+./mibee-bell
+# log: mibee-bell listening addr=:9080 ...
 ```
 
-> `auth.password_hash` 为空时管理 API 与 Web UI 停用（日志警告）；摄取入口不受影响。
+浏览器打开 `http://192.0.2.10:9080`，首次进入是「**设置管理员密码**」页面——设置后自动登录，进入通知中心。（fnOS 应用形态下，飞牛管理员经桌面单点进入，无需二次登录。）
+
+也可以走配置文件方式：`./mibee-bell hash-password --password '你的管理密码'`，把输出的 `password_hash` 填到 `auth.password_hash`。
+
+> 管理密码未设置时管理 API 与 Web UI 停用（日志警告）；摄取入口不受影响。
 
 ## 3. 启动
 

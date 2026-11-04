@@ -3,21 +3,21 @@
   "title": "MiBeeHive 用户手册",
   "sections": [
     {
-      "title": "概念与架构",
+      "title": "产品",
       "items": [
-        { "slug": "architecture", "file": "architecture.md", "title": "架构文档" }
+        { "slug": "introduction", "file": "introduction.md", "title": "产品介绍" }
       ]
     },
     {
-      "title": "部署",
+      "title": "功能",
       "items": [
-        { "slug": "deployment", "file": "deployment.md", "title": "部署指南" }
+        { "slug": "features", "file": "features.md", "title": "功能总览" }
       ]
     },
     {
       "title": "参考",
       "items": [
-        { "slug": "api-reference", "file": "api-reference.md", "title": "API 参考" }
+        { "slug": "faq", "file": "faq.md", "title": "常见问题" }
       ]
     }
   ]

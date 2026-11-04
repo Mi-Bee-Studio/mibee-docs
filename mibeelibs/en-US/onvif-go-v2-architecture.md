@@ -48,44 +48,34 @@ type Caller interface {
 
 ## Target layout
 
-```text
-github.com/mickeyzzc/onvif-go/v2
-├── onvif/               the client package (package identifier stays `onvif`)
-│   ├── client.go        NewClient + Client (implements api.Caller) + options
-│   ├── auth.go          auth modes / ladder / clock skew / DiagnoseAuth
-│   ├── errors.go        cross-domain sentinels (aliased from leaves)
-│   └── aliases.go       v1-compatibility re-exports
-├── types/               shared data-model leaf (IPAddress, IntRectangle, ...)
-├── device/              tds: identity, capabilities, system, network, DNS/NTP,
-│                        storage, WiFi — plus the capabilities cache
-├── security/            users, remote user, access policy, certificates
-├── media/               trt: profiles, main/sub selection, StreamSetup,
-│                        encoder/audio/OSD configuration
-├── ptz/   imaging/   events/ (incl. managed subscriptions)   deviceio/
-├── media2/              tr2: the codec-agnostic Media2 configuration model —
-│                        per-encoding options with free-name Encoding
-│                        (the H.265/AV1 answer), verbatim set (v2.1.0)
-├── analytics/           tan: Profile M rule / analytics-module configuration
-│                        client (v2.1.0)
-├── metadata/            tt:MetadataStream parser — the Profile M analytics
-│                        output channel (frames, objects, geometry) (v2.1.0)
-├── discovery/           client-side discovery (probe / listener / directed / post-processing)
-├── wsdiscovery/         WS-Discovery message codec leaf — shared by the client
-│                        side and the device-side responder (#15)
-├── server/              device-side framework (first-class)
-│   ├── server.go        lifecycle, HTTP listener, optional discovery responder
-│   ├── provider.go      pluggable state backends (#19): DeviceInfo / StreamURI /
-│   │                    Snapshot JPEG / Imaging (range+enum validated) / PTZ
-│   ├── simulator/       the current simulator state, as the default provider
-│   ├── services/        stateless handlers translating SOAP ↔ provider calls
-│   ├── soap/            device-side transport: dispatch, request context (#17),
-│   │                    per-action auth policy + PasswordText (#16),
-│   │                    XML response writer: canonical casing, explicit
-│   │                    prefixes, raw-bytes channel (#18)
-│   └── discovery/       device-side WS-Discovery responder (#15)
-├── internal/{api,soap,httpdigest}
-└── cmd/  examples/  testing/  testdata/captures/  docs/{en,zh}
+```mermaid
+flowchart TB
+  CLI["onvif/<br/>client package"] --> SVC["service packages<br/>device · media · media2 · ptz · imaging<br/>events · deviceio · analytics · metadata<br/>discovery · security"]
+  CLI --> SRV["server/<br/>device-side framework"]
+  SVC --> API["internal/api<br/>SOAP envelope"]
+  SRV --> API
+  SRV --> PRV["provider<br/>pluggable state backends"]
+  TYPES["types/<br/>shared data model"] -.-> SVC
+  WSD["wsdiscovery/<br/>message codec"] -.-> CLI
+  WSD -.-> SRV
 ```
+
+| Package | Responsibility |
+|---|---|
+| `onvif/` | the client package (identifier stays `onvif`): `client.go` NewClient + Client (implements api.Caller) + options · `auth.go` auth modes / ladder / clock skew / DiagnoseAuth · `errors.go` cross-domain sentinels (aliased from leaves) · `aliases.go` v1-compatibility re-exports |
+| `types/` | shared data-model leaf (IPAddress, IntRectangle, ...) |
+| `device/` | tds: identity, capabilities, system, network, DNS/NTP, storage, WiFi — plus the capabilities cache |
+| `security/` | users, remote user, access policy, certificates |
+| `media/` | trt: profiles, main/sub selection, StreamSetup, encoder/audio/OSD configuration |
+| `ptz/` · `imaging/` · `events/` · `deviceio/` | PTZ · imaging · events (incl. managed subscriptions) · DeviceIO |
+| `media2/` | tr2: the codec-agnostic Media2 configuration model — per-encoding options with free-name Encoding (the H.265/AV1 answer), verbatim set (v2.1.0) |
+| `analytics/` | tan: Profile M rule / analytics-module configuration client (v2.1.0) |
+| `metadata/` | tt:MetadataStream parser — the Profile M analytics output channel (frames, objects, geometry) (v2.1.0) |
+| `discovery/` | client-side discovery (probe / listener / directed / post-processing) |
+| `wsdiscovery/` | WS-Discovery message codec leaf — shared by the client side and the device-side responder (#15) |
+| `server/` | device-side framework (first-class): `server.go` lifecycle, HTTP listener, optional discovery responder · `provider.go` pluggable state backends (#19): DeviceInfo / StreamURI / Snapshot JPEG / Imaging (range+enum validated) / PTZ · `simulator/` the current simulator state, as the default provider · `services/` stateless handlers translating SOAP ↔ provider calls · `soap/` device-side transport: dispatch, request context (#17), per-action auth policy + PasswordText (#16), XML response writer: canonical casing, explicit prefixes, raw-bytes channel (#18) · `discovery/` device-side WS-Discovery responder (#15) |
+| `internal/{api,soap,httpdigest}` | internal shared: SOAP envelope & transport, HTTPDigest |
+| `cmd/` · `examples/` · `testing/` · `testdata/captures/` · `docs/{en,zh}` | CLI tools · examples · tests · packet captures · docs |
 
 ## Server framework principles
 

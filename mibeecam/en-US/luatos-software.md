@@ -8,24 +8,13 @@ The MiBeeCam software is designed as a real-time embedded system with multiple c
 
 ### Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                        │
-├─────────────────────────────────────────────────────────────┤
-│  Web Server  │ MJPEG Streamer  │ Motion Detection  │ API │
-├─────────────────────────────────────────────────────────────┤
-│                    Service Layer                            │
-├─────────────────────────────────────────────────────────────┤
-│  Time Sync  │ Health Monitor  │ Status LED  │ Config Manager│
-├─────────────────────────────────────────────────────────────┤
-│                    Hardware Layer                           │
-├─────────────────────────────────────────────────────────────┤
-│  Camera Driver  │ WiFi Manager  │ SPIFFS  │ NVS         │
-├─────────────────────────────────────────────────────────────┤
-│                    Platform Layer                           │
-├─────────────────────────────────────────────────────────────┤
-│                 FreeRTOS + ESP-IDF v5.5.4                   │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    APP["Application Layer<br/>Web Server · MJPEG Streamer · Motion Detection · API"]
+    SVC["Service Layer<br/>Time Sync · Health Monitor · Status LED · Config Manager"]
+    HW["Hardware Layer<br/>Camera Driver · WiFi Manager · SPIFFS · NVS"]
+    PLT["Platform Layer<br/>FreeRTOS + ESP-IDF v5.5.4"]
+    APP --> SVC --> HW --> PLT
 ```
 
 ## Core System Modules

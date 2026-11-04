@@ -1,6 +1,6 @@
 # Web UI Tour
 
-MiBeeBell's admin UI is built with Svelte 5 and embedded into the binary via `go:embed` — **no frontend build step, no extra port, it's just there**. Dark-first design, zh/en toggle in the top bar. All screenshots below are from a real demo instance (demo data).
+MiBeeBell's admin UI is embedded into the binary — **no frontend build step, no extra port, it's just there**. Dark-first design, zh/en toggle in the top bar. All screenshots below are from a real demo instance (demo data).
 
 ## Notification Center (history + silences)
 
