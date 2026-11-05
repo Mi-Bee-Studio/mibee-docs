@@ -4,23 +4,7 @@
 
 A single-process Go binary: **ingest layer (seven entry kinds) → event bus (bounded, drop-oldest) → alert pipeline (silence/dedup/cooldown/escalation + L0 algorithms) → dispatcher (retry/rate-limit/audit) → channel plugins**; SQLite as the cross-cutting store; REST + SSE + embedded Web UI as the egress.
 
-```mermaid
-flowchart LR
-    subgraph ingest[Ingest layer]
-        A1[MQTT]
-        A2[Generic Webhook]
-        A3[Alertmanager / PagerDuty / Grafana / simple JSON / Bark]
-    end
-    A1 & A2 & A3 --> N[normalize]
-    N --> BUS{{Event bus<br/>bounded channel · drop-oldest<br/>publishers never block}}
-    BUS --> P[Pipeline: 4 gates + L0]
-    P --> R[i18n rendering<br/>zh-CN / en-US]
-    R --> D[Dispatcher<br/>retry · token bucket · audit]
-    D --> C[WeCom/DingTalk/Feishu · SMTP · TG/Slack/Discord · Webhook · Scout]
-    P --> DB[(SQLite WAL)]
-    D --> DB
-    DB --> E[REST /api/v1 · SSE /api/stream · /metrics · Web UI]
-```
+![MiBeeBell architecture: ingest → event bus → pipeline → dispatcher → channels, SQLite cross-cutting](images/architecture-pipeline.svg)
 
 ## Three key invariants
 
@@ -56,17 +40,7 @@ This boundary means rule/channel changes never touch config files, and config.ya
 
 ## Data flow at a glance
 
-```mermaid
-flowchart LR
-  IN["Ingest: 7 entries"] --> BUS["Event bus"]
-  BUS --> P["Pipeline: silence/dedup/cooldown/escalation"]
-  P --> R["Template rendering"]
-  R --> D["Dispatcher"]
-  D --> C["Channel adapters: 17"]
-  M["mesh cluster<br/>delivery leases"] -.-> P
-  M -.-> D
-  AI["AI triage (optional)"] -. annotate .-> P
-```
+![MiBeeBell data flow: ingest → bus → pipeline → render → dispatch → channels, mesh and AI cross-cutting](images/architecture-dataflow.svg)
 
 ## Observability
 
