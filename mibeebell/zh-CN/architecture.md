@@ -4,23 +4,7 @@
 
 单进程 Go 二进制：**摄取层（七类入口）→ 事件总线（有界、满丢最旧）→ 告警管道（静默/去抖/冷却/升级 + L0 算法）→ 分发器（重试/限速/审计）→ 渠道插件（多渠道）**；SQLite 横切存储；REST + SSE + 嵌入式 Web UI 出口。
 
-```mermaid
-flowchart LR
-    subgraph ingest[摄取层]
-        A1[MQTT]
-        A2[通用 Webhook]
-        A3[Alertmanager / PagerDuty / Grafana / 简单 JSON / Bark]
-    end
-    A1 & A2 & A3 --> N[规范化 normalize]
-    N --> BUS{{事件总线<br/>有界 channel · 满丢最旧<br/>永不阻塞发布者}}
-    BUS --> P[管道：四道闸 + L0]
-    P --> R[i18n 模板渲染<br/>zh-CN / en-US]
-    R --> D[分发器<br/>重试 · 令牌桶 · 审计]
-    D --> C[企微/钉钉/飞书 · SMTP · TG/Slack/Discord · Webhook · Scout]
-    P --> DB[(SQLite WAL)]
-    D --> DB
-    DB --> E[REST /api/v1 · SSE /api/stream · /metrics · Web UI]
-```
+![MiBeeBell 架构：摄取层 → 事件总线 → 告警管道 → 分发器 → 渠道，SQLite 横切](images/architecture-pipeline.svg)
 
 ## 三条关键不变量
 
@@ -56,17 +40,7 @@ mibee-bell export        → 反向导出 YAML（备份/迁移）
 
 ## 数据流总览
 
-```mermaid
-flowchart LR
-  IN["摄取：七类入口"] --> BUS["事件总线"]
-  BUS --> P["告警管道：静默/去抖/冷却/升级"]
-  P --> R["模板渲染"]
-  R --> D["分发器"]
-  D --> C["渠道插件：17 类"]
-  M["mesh 集群<br/>投递租约"] -.-> P
-  M -.-> D
-  AI["AI 分诊（可选）"] -. annotate .-> P
-```
+![MiBeeBell 数据流总览：摄取 → 总线 → 管道 → 渲染 → 分发 → 渠道，mesh 与 AI 横切](images/architecture-dataflow.svg)
 
 ## 可观测性
 
