@@ -7,6 +7,7 @@ name: security-check
 on:
   pull_request:
   push:
+  workflow_dispatch:
   schedule:
     - cron: '23 19 * * *'
 
