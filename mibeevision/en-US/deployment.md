@@ -1,10 +1,10 @@
 # Deployment & Quick Start
 
-MiBeeVision Lite ships as a single binary, downloaded from the **MiBeeNvr GitHub releases page**, free of charge.
+MiBeeVision Lite ships as a single binary, downloaded from the **release hub** ([mickeyzzc/releases](https://github.com/mickeyzzc/releases)), free of charge.
 
 ## Download
 
-Release page: [MiBeeNvr Releases · MiBeeVision Lite v0.1.0](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases/tag/mibee-vision-v0.1.0)
+Release page: [Release hub · MiBeeVision Lite v0.1.0](https://github.com/mickeyzzc/releases/releases/tag/mibee-vision-v0.1.0)
 
 | Asset | Description |
 |---|---|

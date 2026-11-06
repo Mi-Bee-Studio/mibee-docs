@@ -26,13 +26,13 @@ MiBeeVision 使用独立版本线（`mibee-vision-vX.Y.Z`），与 MiBeeNvr 的 
 | 摄像头 | 单摄像头 | 多摄像头 |
 | 推理 | CPU（ONNX Runtime） | GPU 加速（CUDA / TensorRT） |
 | 分析方式 | 录像生成后逐段分析 | 另含历史录像批量补分析 |
-| 分发 | 随 MiBeeNvr 发布页免费分发 | 待公布 |
+| 分发 | 随 MiBeeNvr 发布会（[mickeyzzc/releases](https://github.com/mickeyzzc/releases)）免费分发 | 待公布 |
 
 当前版本的能力清单见[能力总览](features.md)；安装与快速开始见[部署](deployment.md)。
 
 ## 许可
 
-- **软件本体**：闭源专有软件，版权归 MiBee Studio 所有。Lite 版随 MiBeeNvr 免费分发。
+- **软件本体**：闭源专有软件，版权归 MiBee Studio 所有。Lite 版随 MiBeeNvr 发布会免费分发。
 - **内置检测模型 YOLOv8n**：采用 Ultralytics **AGPL-3.0** 许可——使用本程序进行检测即视为接受 AGPL-3.0 的相关义务；**商业闭源分发需另行取得授权**（或将模型替换为宽松许可模型）。
 
 ## 技术形态

@@ -40,7 +40,7 @@ Batch re-analysis of historical footage is on the Pro capability list (planned, 
 
 ### Any restrictions on commercial use?
 
-- The software is proprietary, © MiBee Studio; the Lite edition is distributed free via the MiBeeNvr releases page.
+- The software is proprietary, © MiBee Studio; the Lite edition is distributed free via the release hub.
 - The bundled YOLOv8n model is licensed under Ultralytics AGPL-3.0 — using this program for detection constitutes acceptance of the AGPL-3.0 obligations. **Commercial closed-source distribution requires a separate license** (or replacing the model with a permissively licensed one).
 
 ### How do the version numbers relate?
