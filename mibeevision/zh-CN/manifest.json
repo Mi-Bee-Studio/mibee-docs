@@ -1,0 +1,56 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBeeVision 用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "产品介绍"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "能力总览"
+        }
+      ]
+    },
+    {
+      "title": "概念与架构",
+      "items": [
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "架构"
+        },
+        {
+          "slug": "nvr-integration",
+          "file": "nvr-integration.md",
+          "title": "MiBeeNvr 协同"
+        }
+      ]
+    },
+    {
+      "title": "部署与使用",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "部署与快速开始"
+        }
+      ]
+    },
+    {
+      "title": "参考",
+      "items": [
+        {
+          "slug": "faq",
+          "file": "faq.md",
+          "title": "常见问题"
+        }
+      ]
+    }
+  ]
+}

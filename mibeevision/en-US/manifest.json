@@ -1,0 +1,56 @@
+{
+  "lang": "en-US",
+  "title": "MiBeeVision User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "Product Introduction"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "Feature Overview"
+        }
+      ]
+    },
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "Architecture"
+        },
+        {
+          "slug": "nvr-integration",
+          "file": "nvr-integration.md",
+          "title": "MiBeeNvr Integration"
+        }
+      ]
+    },
+    {
+      "title": "Deployment & Usage",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "Deployment & Quick Start"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+        {
+          "slug": "faq",
+          "file": "faq.md",
+          "title": "FAQ"
+        }
+      ]
+    }
+  ]
+}
