@@ -13,10 +13,10 @@ Rust 版消费的两个开源库：
 
 | 库 | crate | 作用 | 文档 |
 |----|-------|------|------|
-| [onvif-rs](https://github.com/mickeyzzc/onvif-rs) | `onvif-device-rs` | ONVIF Device 服务端：WS-Discovery、Media、PTZ、Imaging、Security | [ONVIF · Rust](https://www.mlsbs.top/docs/mibeelibs/onvif-rs-discovery) |
-| [gb28181-rs](https://github.com/mickeyzzc/gb28181-rs) | `gb28181-rs` | GB28181 设备侧：注册 / 保活、目录、点播、回放 | [GB28181 · Rust](https://www.mlsbs.top/docs/mibeelibs/gb28181-rs-server) |
+| [onvif-rs](https://github.com/mickeyzzc/onvif-rs) | `onvif-device-rs` | ONVIF Device 服务端：WS-Discovery、Media、PTZ、Imaging、Security | [ONVIF · Rust](https://www.mickeybee.cn/docs/mibeelibs/onvif-rs-discovery) |
+| [gb28181-rs](https://github.com/mickeyzzc/gb28181-rs) | `gb28181-rs` | GB28181 设备侧：注册 / 保活、目录、点播、回放 | [GB28181 · Rust](https://www.mickeybee.cn/docs/mibeelibs/gb28181-rs-server) |
 
-也就是说：设备在协议层面的互操作行为（线格式、状态机、应答语义）由这两个开源库定义并经 golden 测试约束——与设备源码是否公开无关。集成方可以直接依库开发、做兼容性验证，或为自己的产品复用同一套协议栈。库的总览见 [MiBee 库总览](https://www.mlsbs.top/docs/mibeelibs/libs-overview)。
+也就是说：设备在协议层面的互操作行为（线格式、状态机、应答语义）由这两个开源库定义并经 golden 测试约束——与设备源码是否公开无关。集成方可以直接依库开发、做兼容性验证，或为自己的产品复用同一套协议栈。库的总览见 [MiBee 库总览](https://www.mickeybee.cn/docs/mibeelibs/libs-overview)。
 
 ## 能力概览
 

@@ -40,7 +40,7 @@ Several Go ONVIF server libraries were evaluated for this project. The primary r
 
 **Selected**: `0x524a/onvif-go` for primary server implementation due to comprehensive ONVIF support and pure Go architecture.
 
-> **Outcome**: the library was extracted into an independently maintained fork, `mickeyzzc/onvif-go/v2`, which is what the product actually consumes today (see the [ONVIF · Go library docs](https://www.mlsbs.top/docs/mibeelibs/onvif-go-architecture)).
+> **Outcome**: the library was extracted into an independently maintained fork, `mickeyzzc/onvif-go/v2`, which is what the product actually consumes today (see the [ONVIF · Go library docs](https://www.mickeybee.cn/docs/mibeelibs/onvif-go-architecture)).
 
 **Reference**: `ohcnetwork/mock-ptz-camera` was used for PTZ implementation patterns and digital PTZ reference architecture (PTZ later removed as dead code).
 
