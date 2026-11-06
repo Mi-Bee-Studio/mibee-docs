@@ -57,4 +57,4 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 ## License
 
-[AGPL-3.0](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/LICENSE) — same as MiBeeNvr / MiBeeSteward.
+To be announced — not open-source for now; this section will be updated once the license is decided.

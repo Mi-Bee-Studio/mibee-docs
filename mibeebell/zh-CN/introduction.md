@@ -57,4 +57,4 @@
 
 ## License
 
-[AGPL-3.0](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/LICENSE)——与 MiBeeNvr / MiBeeSteward 一致。
+待公布——暂不开源，许可证确定后在此更新。
