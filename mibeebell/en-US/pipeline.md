@@ -1,4 +1,4 @@
-# Alert Pipeline (4 Gates + L0)
+# Alert Pipeline (Gates + L0)
 
 The pipeline is MiBeeBell's core differentiator: **ntfy/Gotify-class tools forward every event as-is; MiBeeBell puts a configurable pipeline before the notification exit** — dedup, aggregation, cooldown, escalation, silence, plus an always-on pure-algorithm denoise layer (L0). Design principles: pure functions with explicit state, every gate table-testable, every parameter overridable per rule.
 
@@ -6,19 +6,23 @@ The pipeline is MiBeeBell's core differentiator: **ntfy/Gotify-class tools forwa
 
 ```mermaid
 flowchart LR
-  E["event"] --> G1["silence"]
-  G1 --> G2["persist_filter<br/>N points"]
-  G2 --> G3["dedup +<br/>similarity agg"]
-  G3 --> G4["cooldown"]
-  G4 --> L0a["EWMA<br/>frequency tag"]
-  L0a --> L0b["common-cause<br/>merge"]
-  L0b --> L0c["dependency<br/>suppression"]
-  L0c --> RT["rule routing<br/>recheck"]
-  RT --> RD["i18n render"]
-  RD --> DP["dispatch<br/>(escalation armed)"]
+    EV[Event] --> EWMA["EWMA frequency tagging"]
+    EWMA --> ROUTE{{"Rule routing<br/>first match wins by priority"}}
+    ROUTE -- "no match: stored only" --> DB[("events table")]
+    ROUTE -- "resolved recovery" --> RES["Recovery pairing<br/>bypasses all gates"]
+    ROUTE --> SIL["silence"]
+    SIL --> L0["persist_filter N-points<br/>warning & below, default N=3"]
+    L0 --> DEDUP["dedup"]
+    DEDUP --> COOL["cooldown"]
+    COOL --> AG["similarity aggregation"]
+    AG --> CC["common-cause merge"]
+    CC --> DEP["dependency suppression"]
+    DEP --> ENR["enrich (AI summary/tags, fail-open)"]
+    ENR --> DISP["Dispatch<br/>escalation timer armed"]
+    DISP --> CH[[Channels]]
 ```
 
-The four gates and L0 denoise algorithms mount on one processing chain, every parameter overridable per rule — **adding an algorithm plugs in without touching the core**.
+All gates and L0 algorithms implement the same `pkg/bellapi.Processor` interface on one chain — **adding an algorithm plugs in a new Processor; the core never changes**. The AI pipeline-intervention gates (suppress/aggregate/dispatch, ADR-036) are off by default and pass through at zero cost when off; enabling them requires shadow-mode validation first — see [AI Enhancements](ai.md).
 
 ## Gate 1: silence
 
@@ -41,7 +45,7 @@ A per-`(rule × source_ref)` anti-flap window: **recurrences after a notificatio
 
 ## Gate 4: escalation
 
-After an `error`-level notification fires, if no paired `resolved` arrives within `escalate_after` (default 15 minutes):
+After an `error`-level notification fires, if the rule has `escalate_after` configured (**rule-level, >0 to arm; no global default**) and no paired `resolved` arrives within that window:
 
 1. severity is raised to `critical` and the notification is marked "escalated";
 2. the `escalate_to` channel group is notified additionally (paid channels are only ever allowed here);
@@ -66,7 +70,7 @@ Timers persist in the `escalations` table — **they survive process restarts**;
 
 - Any stage panic → recover → the event goes out in "no-pipeline mode" to the default channel group + a `pipeline_degraded` audit event.
 - AI (L1/L2) hangs off the enrich hook: 2s timeout / budget exhaustion / call failure → fall straight back to L0 templates, **the event still goes out**.
-- AI only downgrades severity (the original value is kept in the `ai_severity_from` tag) and can never drop an event — see [AI Enhancements](ai.md).
+- AI only downgrades severity and, by default, can never drop an event — the sole exception is the controlled intervention framework (ADR-036), off by default and requiring shadow-mode validation, see [AI Enhancements](ai.md).
 
 ## A worked example
 

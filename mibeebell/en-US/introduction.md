@@ -29,14 +29,14 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 1. **Truly self-hosted = zero cloud dependency**: no feature depends on the vendor's cloud; channel credentials live on the user's disk (AES-256-GCM encrypted). Offline, domain-dead, or company-gone — every feature keeps working.
 2. **One codebase, no dual track**: a single product edition — no community/enterprise split.
 3. **Replaceable channel layer**: one channel = one file = one interface. Any platform policy change kills that adapter, not the project.
-4. **AI augments, never gates**: the L0 pure-algorithm layer is always on; AI (L1 triage / L2 summaries) is pluggable, off by default, can only downgrade severity and can never drop an event — with AI dead, notifications still flow.
+4. **AI augments, gated only behind an off-by-default switch**: the L0 pure-algorithm layer is always on; AI (L1 triage / L2 summaries) is pluggable, off by default, can only downgrade severity — with AI dead, notifications still flow. The one capability that lets AI "drop" alerts — the controlled pipeline-intervention framework (ADR-036) — is fully disabled by default and requires validation in shadow (observe-only) mode before it can be enabled.
 5. **Minimum maintenance surface**: no monitoring, no probing, no on-call scheduling, no first-party app client (MiBeeScout owns that niche).
 
 ## Technical shape
 
 - **Go 1.26, `CGO_ENABLED=0` single binary**: linux/arm64 · armv7 · amd64 and windows/amd64; < 80MB RSS on a Raspberry Pi 3B design line (measured single-instance RSS ≈ 15–21MB).
 - **modernc.org/sqlite** (pure-Go SQLite, WAL), storage layer designed to be PostgreSQL-migratable.
-- **Embedded web UI** (dark-first, zh/en) — the full admin UI ships inside the binary, no extra frontend to deploy.
+- **Svelte 5 embedded Web UI** (`go:embed`, dark-first, zh/en) — the full admin UI ships inside the binary.
 - **memberlist** (SWIM gossip) mesh HA: 2–5 all-active nodes; any node dying never interrupts notifications.
 - Default port `:9080` (distinct from MiBeeNvr `:9090` and MiBeeSteward `:8080`).
 
@@ -44,25 +44,17 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 
 ![MiBeeBell ecosystem position: event sources flow through the alert pipeline out to notification channels](images/ecosystem.svg)
 
-## Releases & roadmap
-
-**v0.1.0 is released** (2026-11); runnable artifacts are published on the [release hub](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0):
-
-| Shipped capability | Detail |
-|---|---|
-| Seven ingest entries | token-authed generic webhook / Alertmanager-compatible / PagerDuty Events v2-compatible / Grafana-native / simple JSON / Bark-compatible routes / MQTT subscriptions |
-| 17 channel adapters | WeCom / DingTalk / Feishu (bot · signature · keyword) / SMTP / Telegram / Slack / Discord / ntfy / Bark / Pushover / Twilio SMS / LINE and more |
-| Alert pipeline | dedup · aggregation · cooldown · escalation · silence (incl. daily cross-midnight windows) + recovery notices |
-| Visualization | live data-flow graph (2D/3D), priority switchyard view, channel health towers, AI-triage layer visualization |
-| AI triage (optional) | local model or cloud LLM, off by default; annotates and summarizes only — never gates an alert |
-| First-run setup | set the admin password on first open; fnOS desktop single sign-on |
-| HA & observability | mesh cluster (2–5 nodes, delivery-lease dedup) · OpenTelemetry tracing · Prometheus metrics |
-| Platforms | Linux amd64 / arm64 / armv6 · Windows · native fnOS packages (arm64 / x86) |
+## Roadmap (internal milestones, not releases)
 
 | Milestone | Scope | Status |
 |---|---|---|
-| **v1.0** | per-person routing, federation, Docker images and full distribution channels | planned |
+| **v0.1** | ingest entries (webhook/Alertmanager/Bark/MQTT) + gate pipeline + full L0 + SQLite + SSE + embedded UI | ✅ released |
+| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ released |
+| **v0.3** | full 17-channel set (Twilio/PagerDuty/Opsgenie/WeCom app/LINE…), PagerDuty/simple-JSON/Grafana ingest, AI triage (L1 embedded model + L2 cloud) with the controlled pipeline-intervention framework, first-run setup wizard | ✅ released (delivered with the v0.1.x series) |
+| **v1.0** | per-person routing, federation | planned |
+
+> The first official release, **v0.1.0, shipped on 2026-11-04** (GitHub Releases provide Linux/Windows single binaries and the fnOS fpk package) — see the Releases page for later versions. This manual tracks the latest released version.
 
 ## License
 
-To be announced.
+To be announced — not open-source for now; this section will be updated once the license is decided.

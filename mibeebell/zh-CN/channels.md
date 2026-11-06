@@ -15,8 +15,16 @@
 | `discord` | Discord Webhook | 5 / 60s | 官方 50/min |
 | `webhook` | 通用 Webhook | 10 / 60s | JSON POST + 可选 HMAC-SHA256 签名头 |
 | `scout` | MiBeeScout 通知中心 | — | 事件落库 + 通知中心 API/SSE 消费 |
+| `bark` | Bark（iOS 推送） | — | 服务器 + 设备 key；兼容路由另支持存量 Bark 脚本零改造迁入 |
+| `ntfy` | ntfy | — | 官方 ntfy.sh 或自建；主题订阅 |
+| `pushover` | PushOver | — | token + user |
+| `wecom_app` | 企业微信应用消息 | — | corpid + 应用凭据（走应用消息而非群机器人） |
+| `twilio` | Twilio 语音/短信 | — | 付费渠道：仅允许出现在 `escalate_to` 升级链，受日预算熔断保护 |
+| `pagerduty` | PagerDuty Events v2 | — | 付费渠道：同上 |
+| `opsgenie` | Opsgenie | — | 付费渠道：同上 |
+| `line` | LINE Messaging API | — | channel token |
 
-v0.3 计划：`bark`（客户端化直推）、`ntfy`、`pushover`、`wecom_app`（企微应用消息）、付费组（`twilio` / `pagerduty` / `opsgenie`——只允许出现在 `escalate_to` 升级链）。长尾渠道经通用适配层兜底。
+共 **17 类**内置渠道。长尾渠道经通用 `webhook` 适配层兜底。
 
 ## 渠道配置
 

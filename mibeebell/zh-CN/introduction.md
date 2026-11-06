@@ -29,14 +29,14 @@
 1. **真自托管 = 零云依赖**：任何功能不依赖运营方云服务中转，渠道凭证全部落用户本地磁盘（AES-256-GCM 加密）。断网、官方域名失效、公司消失三种情况下，全部功能依然完整可用。
 2. **单一代码库，无双轨**：只有一个产品版本，无社区版/企业版之分。
 3. **渠道层可替换**：一个渠道一个文件一个接口；任何渠道平台政策变化，死的只是那个适配器，不是项目。
-4. **AI 只做增强不做闸门**：L0 纯算法层永远在线；AI（L1 分诊 / L2 摘要）可插拔可关闭，只降级不升级 severity，永远无法拦截事件——AI 挂了通知照发。
+4. **AI 只做增强，默认不做闸门**：L0 纯算法层永远在线；AI（L1 分诊 / L2 摘要）可插拔可关闭，只降级不升级 severity——AI 挂了通知照发。唯一能让 AI「拦」告警的管道介入能力（ADR-036）默认完全关闭，且必须先在观察模式（shadow）下验证准确率才允许开启。
 5. **最小维护面**：不做监控、不做拨测、不做 on-call 排班、不做自研 App 客户端（MiBeeScout 承担生态位）。
 
 ## 技术形态
 
 - **Go 1.26 · `CGO_ENABLED=0` 单二进制**：linux/arm64 · armv7 · amd64 与 windows/amd64，树莓派 3B 常驻内存 < 80MB（实测单实例 RSS 约 15–21MB）。
 - **modernc.org/sqlite**（纯 Go SQLite，WAL 模式），存储层按 PostgreSQL 可迁移设计。
-- **嵌入式 Web UI**（暗色优先，中/英双语），单二进制自带完整管理界面，无需额外部署前端。
+- **Svelte 5 嵌入式 Web UI**（`go:embed`，暗色优先，中/英双语），单二进制自带完整管理界面。
 - **memberlist**（SWIM gossip）mesh 高可用：2–5 节点全活无主，任一节点死亡通知不中断。
 - 默认端口 `:9080`（与 MiBeeNvr `:9090`、MiBeeSteward `:8080` 错开）。
 
@@ -44,25 +44,17 @@
 
 ![MiBeeBell 生态位置：事件来源经告警管道送达通知渠道](images/ecosystem.svg)
 
-## 版本与路线图
-
-**v0.1.0 已发布**（2026-11），可运行制品统一从「[发布会](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0)」下载：
-
-| 已发布能力 | 说明 |
-|---|---|
-| 七类摄取入口 | 通用 Webhook（令牌鉴权）/ Alertmanager 兼容 / PagerDuty Events v2 兼容 / Grafana 原生 / 简单 JSON / Bark 兼容路由 / MQTT 订阅 |
-| 17 类通知渠道 | 企微 / 钉钉 / 飞书（机器人·签名·关键词）/ SMTP / Telegram / Slack / Discord / ntfy / Bark / Pushover / Twilio SMS / LINE 等 |
-| 告警管道 | 去重 · 聚合 · 冷却 · 升级 · 静默（含每日跨午夜时间窗）+ 恢复通知 |
-| 可视化 | 实时数据流图（2D/3D）、路由编组场视角、渠道健康塔、AI 分诊层可视化 |
-| AI 分诊（可选） | 本地模型或云端 LLM，默认关闭；只做摘要与标注，永不拦截告警 |
-| 首启设密 | 首次打开 Web 界面即设管理员密码；fnOS 桌面单点进入 |
-| 高可用与可观测 | mesh 集群（2–5 节点，投递租约去重）· OpenTelemetry 追踪 · Prometheus 指标 |
-| 平台 | Linux amd64 / arm64 / armv6 · Windows · 飞牛 fnOS 原生应用（arm64 / x86） |
+## 路线图（内部里程碑，非发布版本）
 
 | 里程碑 | 范围 | 状态 |
 |---|---|---|
-| **v1.0** | 按人路由、多 Bell 联邦、Docker 镜像与全量分发渠道 | 计划 |
+| **v0.1** | 摄取入口（webhook/Alertmanager/Bark/MQTT）+ 四道闸 + L0 全量 + SQLite + SSE + 嵌入式 UI | ✅ 已发布 |
+| **v0.2** | mesh 高可用（claim 租约/死亡开关/静默同步）、渠道凭证落库加密、Scout 通知中心 API、http_enrich 外部打标 | ✅ 已发布 |
+| **v0.3** | 全量 17 类渠道（Twilio/PagerDuty/Opsgenie/企微应用/LINE 等）、PagerDuty/简单 JSON/Grafana 摄取入口、AI 分诊（L1 内嵌模型 + L2 云端）与受控介入框架、首装设密向导 | ✅ 已发布（随 v0.1.x 系列交付） |
+| **v1.0** | 按人路由、多 Bell 联邦 | 计划 |
+
+> 首个正式版本 **v0.1.0 已于 2026-11-04 发布**（GitHub Releases 提供 Linux/Windows 单二进制与飞牛 fpk 安装包），后续版本见 Releases 页——本文档跟随最新发布版本更新。
 
 ## License
 
-待公布。
+待公布——暂不开源，许可证确定后在此更新。

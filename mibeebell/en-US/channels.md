@@ -15,8 +15,16 @@ Principle (iron law 3): **one channel = one file = one interface**. A platform p
 | `discord` | Discord webhook | 5 / 60s | official 50/min |
 | `webhook` | generic webhook | 10 / 60s | JSON POST + optional HMAC-SHA256 signature header |
 | `scout` | MiBeeScout notification center | — | events stored + consumed via the notification-center API/SSE |
+| `bark` | Bark (iOS push) | — | server + device key; the compat route also lets existing Bark scripts migrate with zero changes |
+| `ntfy` | ntfy | — | official ntfy.sh or self-hosted; topic subscribe |
+| `pushover` | PushOver | — | token + user |
+| `wecom_app` | WeCom app messages | — | corpid + app credentials (app messages, not the group robot) |
+| `twilio` | Twilio voice/SMS | — | paid channel: allowed only in `escalate_to` chains, protected by the daily-budget breaker |
+| `pagerduty` | PagerDuty Events v2 | — | paid channel: same as above |
+| `opsgenie` | Opsgenie | — | paid channel: same as above |
+| `line` | LINE Messaging API | — | channel token |
 
-Planned for v0.3: `bark` (native client push), `ntfy`, `pushover`, `wecom_app`, and the paid group (`twilio` / `pagerduty` / `opsgenie` — allowed only in `escalate_to` chains). Long-tail channels are covered by the generic adapter layer.
+**17 built-in channel types** in total. Long-tail channels are covered by the generic `webhook` adapter layer.
 
 ## Channel configuration
 

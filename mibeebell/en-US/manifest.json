@@ -33,7 +33,7 @@
         {
           "slug": "pipeline",
           "file": "pipeline.md",
-          "title": "Alert Pipeline (4 Gates + L0)"
+          "title": "Alert Pipeline (Gates + L0)"
         },
         {
           "slug": "ingest",
@@ -79,6 +79,11 @@
           "slug": "integrations-nvr",
           "file": "integrations-nvr.md",
           "title": "MiBeeNvr Integration"
+        },
+        {
+          "slug": "faq",
+          "file": "faq.md",
+          "title": "FAQ & Troubleshooting"
         },
         {
           "slug": "ai",
