@@ -4,23 +4,7 @@
 
 A single-process Go binary: **ingest layer (seven entry kinds) → event bus (bounded, drop-oldest) → alert pipeline (silence/dedup/cooldown/escalation + L0 algorithms) → dispatcher (retry/rate-limit/audit) → channel plugins**; SQLite as the cross-cutting store; REST + SSE + embedded Web UI as the egress.
 
-```mermaid
-flowchart LR
-    subgraph ingest[Ingest layer]
-        A1[MQTT]
-        A2[Generic Webhook]
-        A3[Alertmanager / PagerDuty / Grafana / simple JSON / Bark]
-    end
-    A1 & A2 & A3 --> N[normalize]
-    N --> BUS{{Event bus<br/>bounded channel · drop-oldest<br/>publishers never block}}
-    BUS --> P[Pipeline: 4 gates + L0]
-    P --> R[i18n rendering<br/>zh-CN / en-US]
-    R --> D[Dispatcher<br/>retry · token bucket · audit]
-    D --> C[WeCom/DingTalk/Feishu · SMTP · TG/Slack/Discord · Webhook · Scout]
-    P --> DB[(SQLite WAL)]
-    D --> DB
-    DB --> E[REST /api/v1 · SSE /api/stream · /metrics · Web UI]
-```
+![MiBeeBell architecture: ingest → event bus → pipeline → dispatcher → channels, SQLite cross-cutting](images/architecture-pipeline.svg)
 
 ## Three key invariants
 
@@ -44,60 +28,25 @@ Repositories depend only on `database/sql`; SQL stays ANSI (unix-millisecond int
 
 ## The config / runtime-state boundary
 
-```mermaid
-flowchart TB
-    subgraph YAML["config.yaml (bootstrap + first-boot seed)"]
-        Y1["server / auth / storage / ingest connections"]
-        Y2["rules / channels sections (seeded once at first boot)"]
-    end
-    subgraph DB["SQLite (the single runtime source of truth)"]
-        D1["rules table (UI-editable)"]
-        D2["channels table (encrypted credentials, UI-editable)"]
-        D3["events / notifications / deliveries / silences"]
-    end
-    Y1 --> BOOT["startup assembly"]
-    Y2 -- "seed once" --> D1
-    Y2 -- "seed once" --> D2
-    UI["Web settings changes"] -- "write back to DB" --> D1
-    UI -- "settings sections written back to yaml" --> Y1
-    API["GET /api/v1/rules|channels"] -- "JSON snapshot export (credentials masked)" --> ARC["archive / review"]
+```
+config.yaml              → bootstrap: server / auth / storage / ingest connections
+SQLite rules table       → routing rules (UI-editable)
+SQLite channels table    → channel configs (encrypted credentials, UI-editable)
+config.yaml rules/channels → first-boot seed only (imported once when DB is empty); DB wins afterwards
+mibee-bell export        → reverse-export YAML (backup/migration)
 ```
 
 This boundary means rule/channel changes never touch config files, and config.yaml stays safe for version control (bootstrap and credentials separated).
 
-## Package layout
+## Data flow at a glance
 
-```
-MiBeeBell/
-├── cmd/mibee-bell/       # entry: flags, wiring, graceful shutdown
-├── internal/
-│   ├── config/           # YAML load/validate + hash-password / encrypt-config subcommands
-│   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
-│   ├── eventbus/         # bounded bus (drop-oldest)
-│   ├── mesh/             # memberlist + claim protocol + dead-man switch
-│   ├── ingest/           # one package per source: mqtt / webhook / alertmanager / bark / compat routes (grafana/pagerduty/simple)
-│   ├── rule/             # rule matching (pure functions)
-│   ├── pipeline/         # Processor chain + gates and L0 (incl. ADR-036 ai_gate_*, off by default)
-│   ├── dispatch/         # retry/backoff, token buckets, delivery audit, channel health
-│   ├── channel/          # channel plugins (17 types) + registry (self-registering)
-│   ├── ai/               # Analyzers (L1 embedded/remote decision + L2 openai_compat + gates)
-│   ├── store/            # database/sql repositories (sqlite; postgres reserved) + migrations
-│   ├── render/           # i18n templates (zh-CN/en-US, severity mapping)
-│   ├── api/              # REST + SSE + JWT middleware
-│   └── ui/               # go:embed web/dist
-├── pkg/bellapi/          # Channel / Processor / Analyzer interfaces — stable external contract
-├── migrations/{sqlite,postgres}/
-└── deploy/               # systemd / docker compose / install.sh / fnOS / Zabbix
-```
-
-Dependencies flow one way: `ingest → eventbus → pipeline → dispatch → channel`; `model` is depended on by everyone and depends on nothing. Third-party extensions import only `pkg/bellapi` (internal is closed to outsiders).
+![MiBeeBell data flow: ingest → bus → pipeline → render → dispatch → channels, mesh and AI cross-cutting](images/architecture-dataflow.svg)
 
 ## Observability
 
 - `/metrics` (Prometheus): `bell_events_ingested_total{source}`, `bell_notifications_total{channel,status}`, `bell_events_dropped_total{stage}`, `bell_channel_health{channel}`, `bell_escalation_pending`, `bell_pipeline_stage_duration_seconds`, `bell_ai_calls_total{analyzer,result}`, `bell_enrich_total`.
-- Structured logs (slog, JSON optional): drops, escalations, silence hits and channel degradation all carry event_id.
-- A Grafana dashboard JSON ships in-repo (`deploy/grafana-bell.json`).
+- Structured logs (JSON optional): drops, escalations, silence hits and channel degradation all carry event_id.
 
 ## Deployment shape
 
-Single binary (linux/arm64 · armv7 · amd64, windows/amd64) plus `deploy/` goodies: systemd unit, docker compose (CN and overseas topology examples), install.sh, an fnOS app package and a Zabbix media script. Default port `:9080`.
+A zero-dependency single binary (linux/amd64 · arm64 · armv6, windows/amd64) plus a native fnOS app. Install steps and the systemd unit example live in [Deployment](deployment.md). Default port `:9080`.

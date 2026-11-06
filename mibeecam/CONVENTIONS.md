@@ -30,15 +30,13 @@ mibeecam 是**多合并项目容器**：每个"大集合"（一组相关相机�
 
 侧边栏结构 = manifest 顺序。每个**大集合**遵循"统一 → 分板"模型：
 
-```
-总览（cam- 前缀公共页：总入口 / NVR 接入等）
-├── 大集合（如 "ESP-Cam 系列"，espcam- 统一页）
-│     统一页顺序：总览与板型矩阵 → 总架构 → 统一 API → 统一前端 → 知识库
-├── 大集合成员分组（每组一个 section，组名含产品名，如 "ESP-Cam · Seeed XIAO ESP32-S3 Sense"）
-│     组内推荐顺序：快速开始 → 用户手册 → 硬件 → 架构 → API → 知识库 → 故障排除
-├── 其他大集合（如 "树莓派相机 rpi-cam"，并列 section）
-└── 相机生态共享组件（webui- 等）
-```
+- 总览（cam- 前缀公共页：总入口 / NVR 接入等）
+  - 大集合（如 "ESP-Cam 系列"，espcam- 统一页）
+    - 统一页顺序：总览与板型矩阵 → 总架构 → 统一 API → 统一前端 → 知识库
+  - 大集合成员分组（每组一个 section，组名含产品名，如 "ESP-Cam · Seeed XIAO ESP32-S3 Sense"）
+    - 组内推荐顺序：快速开始 → 用户手册 → 硬件 → 架构 → API → 知识库 → 故障排除
+  - 其他大集合（如 "树莓派相机 rpi-cam"，并列 section）
+  - 相机生态共享组件（webui- 等）
 
 - 禁止把不同仓库的页面混入同一个 section；大集合统一页（espcam-）与成员页（aicam- 等）也分属不同 section。
 - 内容只写**当前最新版本**：不保留旧版页面/旧版字段对照，历史差异收敛进统一页的"契约治理"小节。
@@ -73,7 +71,7 @@ mibeecam 是**多合并项目容器**：每个"大集合"（一组相关相机�
 | 场景 | 写法 |
 |------|------|
 | 站内（mibeecam 内互链） | 相对文件名 `xxx.md` |
-| 跨项目（如 mibeenvr 手册） | 完整 URL `https://www.mlsbs.top/docs/mibeenvr/{slug}` |
+| 跨项目（如 mibeenvr 手册） | 完整 URL `https://www.mickeybee.cn/docs/mibeenvr/{slug}` |
 | 源码/仓库文件 | GitHub 绝对链接 |
 | 页内锚点 | 标题锚（渲染器自动生成） |
 

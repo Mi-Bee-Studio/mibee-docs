@@ -56,11 +56,10 @@ channels:
 - Every notification carries: severity icon + title, body, snapshot thumbnail (when `snapshot_url` exists and the channel supports it), an RFC 3339 timestamp (local timezone), and a source footer (MiBeeBell + rule name).
 - Aggregation counts (×N) and "escalated" markers are injected at render time.
 
-## Adding a channel (contributors)
+## How channel adapters work
 
-1. Create `internal/channel/<name>/`, implement the `Channel` interface (`Name` / `Send` / `RateLimit`) + self-register in `init()`;
-2. Enable with a DB or config entry — **no core changes**;
-3. Unit tests, three cases against an httptest mock (success / rate-limited / 4xx);
-4. Add a row to the docs table (declared rate limit + credential fields).
+- Channels are independent adapters: **one channel, one adapter** — adding a channel never touches the core;
+- A new channel instance is enabled by a DB (UI) or config entry;
+- A platform policy change only affects its own adapter; other channels are unaffected.
 
-The interfaces live in `pkg/bellapi` — a stable external contract; third-party channels can live in their own repositories.
+Need a new channel adapter? Open an issue on the [release hub](https://github.com/mickeyzzc/releases/issues) describing the target platform and its credential style.

@@ -25,18 +25,15 @@ This guide covers deployment of the MiBee Eye ONVIF camera server for single-boa
 MiBee Eye uses `mtxrpicam` from the [mediamtx-rpicamera](https://github.com/bluenviron/mediamtx-rpicamera) project for camera capture. This binary bundles its own `libcamera` shared libraries to avoid version conflicts with the system-installed libcamera.
 
 **Required files in `deploy/bin/`:**
-```
-deploy/bin/
-├── mtxrpicam                        # Camera capture + H.264 encoding binary (1.7MB)
-├── libcamera.so.9.9                  # Bundled libcamera (5.7MB)
-├── libcamera-base.so.9.9             # Bundled libcamera base (140KB)
-├── ipa_module/
-│   ├── ipa_rpi_vc4.so                # VC4 ISP module
-│   └── ipa_rpi_vc4.so.sign           # Module signature
-├── libpisp/
-│   └── backend_default_config.json   # PiSP backend config
-└── ipa_conf/                         # IPA tuning files
-```
+| Path | Purpose |
+|------|---------|
+| `deploy/bin/mtxrpicam` | Camera capture + H.264 encoding binary (1.7MB) |
+| `deploy/bin/libcamera.so.9.9` | Bundled libcamera (5.7MB) |
+| `deploy/bin/libcamera-base.so.9.9` | Bundled libcamera base (140KB) |
+| `deploy/bin/ipa_module/ipa_rpi_vc4.so` | VC4 ISP module |
+| `deploy/bin/ipa_module/ipa_rpi_vc4.so.sign` | Module signature |
+| `deploy/bin/libpisp/backend_default_config.json` | PiSP backend config |
+| `deploy/bin/ipa_conf/` | IPA tuning files |
 
 **Installing mtxrpicam bundle:**
 ```bash

@@ -10,46 +10,35 @@ ONVIF (Open Network Video Interface Forum) is an open standard for IP-based phys
 
 The implementation focuses on the core streaming functionality needed for NVR integration, providing device identification, service discovery, and stream access through standard ONVIF SOAP messages.
 
-## Discovery Flow with ASCII Flowchart
+## Discovery Flow
 
-```
-NVR                          Multicast Network                    MiBee Cam
- │                                │                                  │
- │──── Probe (UDP multicast) ────>│──── 239.255.255.250:3702 ──────>│
- │                                │                                  │
- │                                │    onvif_discovery_task()        │
- │                                │    ├─ is_probe_message() ✓       │
- │                                │    ├─ extract_message_id()       │
- │                                │    └─ build_probe_matches()      │
- │                                │                                  │
- │<── ProbeMatches (unicast) ────│<─── UDP unicast response ────────│
- │                                │                                  │
- │  NVR now knows device IP       │                                  │
- │                                │                                  │
- │──── POST /onvif/device_service (SOAP) ──────────────────────────>│
- │    Action: GetDeviceInformation│                                  │
- │<─── Response: Manufacturer, Model, FW, Serial ──────────────────│
- │                                │                                  │
- │──── POST /onvif/device_service (SOAP) ──────────────────────────>│
- │    Action: GetCapabilities     │                                  │
- │<─── Response: Device + Media service URLs ──────────────────────│
- │                                │                                  │
- │──── POST /onvif/media_service (SOAP) ───────────────────────────>│
- │    Action: GetProfiles         │                                  │
- │<─── Response: Video profile (resolution, JPEG encoding) ────────│
- │                                │                                  │
- │──── POST /onvif/media_service (SOAP) ───────────────────────────>│
- │    Action: GetStreamUri        │                                  │
- │<─── Response: http://<IP>/stream ───────────────────────────────│
- │                                │                                  │
- │  NVR connects to MJPEG stream  │                                  │
- │──── GET http://<IP>:81/stream ─────────────────────────────────>│
+```mermaid
+sequenceDiagram
+    participant NVR as NVR
+    participant NET as Multicast Network
+    participant CAM as MiBee Cam
+    NVR->>NET: Probe (UDP multicast)
+    NET->>CAM: 239.255.255.250:3702
+    Note over CAM: onvif_discovery_task（）: is_probe_message（） ✓ · extract_message_id（） · build_probe_matches（）
+    CAM->>NET: UDP unicast response
+    NET->>NVR: ProbeMatches (unicast)
+    Note over NVR: NVR now knows device IP
+    NVR->>CAM: POST /onvif/device_service (SOAP), Action: GetDeviceInformation
+    CAM->>NVR: Response: Manufacturer, Model, FW, Serial
+    NVR->>CAM: POST /onvif/device_service (SOAP), Action: GetCapabilities
+    CAM->>NVR: Response: Device + Media service URLs
+    NVR->>CAM: POST /onvif/media_service (SOAP), Action: GetProfiles
+    CAM->>NVR: Response: Video profile (resolution, JPEG encoding)
+    NVR->>CAM: POST /onvif/media_service (SOAP), Action: GetStreamUri
+    CAM->>NVR: Response: http://＜IP＞/stream
+    Note over NVR: NVR connects to MJPEG stream
+    NVR->>CAM: GET http://＜IP＞:81/stream
 ```
 
 Also show the periodic Hello announcement:
-```
-MiBee Cam ──── Hello (multicast) ────> 239.255.255.250:3702
-              (every ~30 seconds)
+```mermaid
+flowchart LR
+    CAM["MiBee Cam"] -->|"Hello （multicast）, every ~30 seconds"| MC["239.255.255.250:3702"]
 ```
 
 ## Implemented SOAP Actions

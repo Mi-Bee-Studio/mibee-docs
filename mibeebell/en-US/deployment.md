@@ -6,8 +6,7 @@ One binary (`CGO_ENABLED=0`) for **linux/arm64 · armv7 · amd64** and **windows
 
 | Option | Good for | Notes |
 |---|---|---|
-| **GitHub Releases download** | any platform (recommended to start) | since the first release v0.1.0 (2026-11-04): Linux/Windows single binaries and the fnOS fpk package, no build step |
-| Source build | any platform | `git clone` + `make build`; the web UI ships pre-built and embedded, no node needed |
+| **[Releases hub download](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0)** | any platform (recommended to start) | since the first release v0.1.0 (2026-11-04): Linux/Windows single binaries and the fnOS fpk package, no build step |
 | systemd | Linux daemons | `deploy/mibee-bell.service` + `deploy/install.sh` (/opt/mibee-bell layout) |
 | Docker | NAS / containers | `deploy/compose.cn.yml` (CN topology) / `compose.overseas.yml` (overseas) |
 | fnOS app | fnOS NAS | manual fpk install via App Center (fnOS desktop integration, gateway SSO) |

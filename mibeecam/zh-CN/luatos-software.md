@@ -6,38 +6,37 @@ MiBeeCam 采用模块化设计，基于 ESP-IDF v5.5.4 和 FreeRTOS 实时操作
 
 ## 📁 项目结构
 
-```
-luatos-esp32s3-a10-camera/
-├── main/                    # 主程序目录
-│   ├── main.c              # 系统入口，15 步启动流程
-│   ├── at_command.c/h      # UART0 AT 命令接口（20 个命令）
-│   ├── camera_driver.c/h   # OV2640 摄像头驱动
-│   ├── config_manager.c/h  # NVS 配置存储
-│   ├── event_bus.c/h       # 内存发布/订阅事件总线
-│   ├── frame_broadcaster.c/h # DRAM 帧缓存（引用计数）
-│   ├── health_monitor.c/h  # 健康监控 + Prometheus 指标
-│   ├── motion_detect.c/h   # 运动检测
-│   ├── mjpeg_streamer.c/h  # MJPEG 流媒体
-│   ├── onvif_discovery.c/h # ONVIF WS-Discovery
-│   ├── onvif_service.c/h   # ONVIF SOAP 服务
-│   ├── status_led.c/h      # 状态 LED 控制
-│   ├── time_sync.c/h       # NTP 时间同步
-│   ├── web_server.c/h      # HTTP 服务器 + REST API
-│   ├── webhook.c/h         # Webhook 事件转发
-│   ├── wifi_manager.c/h    # WiFi STA/AP 管理
-│   ├── cJSON.c/h           # JSON 解析器（第三方）
-│   ├── web_ui/             # SPIFFS 静态文件
-│   │   ├── index.html      # 主界面
-│   │   ├── preview.html    # 预览界面
-│   │   └── config.html     # 配置界面
-│   └── CMakeLists.txt      # 组件注册
-├── docs/                   # 双语文档（en/ + zh-CN/）
-├── .github/workflows/      # CI/CD
-├── CMakeLists.txt
-├── sdkconfig.defaults
-├── partitions.csv
-└── idf_component.yml       # ESP-IDF 组件依赖
-```
+| 路径 | 说明 |
+|------|------|
+| `main/` | 主程序目录 |
+| `main/main.c` | 系统入口，15 步启动流程 |
+| `main/at_command.c/h` | UART0 AT 命令接口（20 个命令） |
+| `main/camera_driver.c/h` | OV2640 摄像头驱动 |
+| `main/config_manager.c/h` | NVS 配置存储 |
+| `main/event_bus.c/h` | 内存发布/订阅事件总线 |
+| `main/frame_broadcaster.c/h` | DRAM 帧缓存（引用计数） |
+| `main/health_monitor.c/h` | 健康监控 + Prometheus 指标 |
+| `main/motion_detect.c/h` | 运动检测 |
+| `main/mjpeg_streamer.c/h` | MJPEG 流媒体 |
+| `main/onvif_discovery.c/h` | ONVIF WS-Discovery |
+| `main/onvif_service.c/h` | ONVIF SOAP 服务 |
+| `main/status_led.c/h` | 状态 LED 控制 |
+| `main/time_sync.c/h` | NTP 时间同步 |
+| `main/web_server.c/h` | HTTP 服务器 + REST API |
+| `main/webhook.c/h` | Webhook 事件转发 |
+| `main/wifi_manager.c/h` | WiFi STA/AP 管理 |
+| `main/cJSON.c/h` | JSON 解析器（第三方） |
+| `main/web_ui/` | SPIFFS 静态文件 |
+| `main/web_ui/index.html` | 主界面 |
+| `main/web_ui/preview.html` | 预览界面 |
+| `main/web_ui/config.html` | 配置界面 |
+| `main/CMakeLists.txt` | 组件注册 |
+| `docs/` | 双语文档（en/ + zh-CN/） |
+| `.github/workflows/` | CI/CD |
+| `CMakeLists.txt` | |
+| `sdkconfig.defaults` | |
+| `partitions.csv` | |
+| `idf_component.yml` | ESP-IDF 组件依赖 |
 
 ## 🔧 核心模块详解
 

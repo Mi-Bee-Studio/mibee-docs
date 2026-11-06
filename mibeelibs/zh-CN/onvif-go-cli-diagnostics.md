@@ -40,11 +40,8 @@ onvif diagnostics -endpoint http://192.168.1.201/onvif/device_service \
 
 输出文件按设备自身身份命名（可用时）：
 
-```text
-camera-logs/
-├── Hikvision_DS-2CD2143G2-I_5.7.1_diag_20260920-1030.json
-└── Hikvision_DS-2CD2143G2-I_5.7.1_xmlcapture_20260920-1030.tar.gz
-```
+- `camera-logs/<设备名>_diag_<时间戳>.json` —— 探测结果报告
+- `camera-logs/<设备名>_xmlcapture_<时间戳>.tar.gz` —— 原始 SOAP 报文归档
 
 归档内每次 SOAP 交互一个文件，外加描述设备与采集上下文的
 `metadata.json`（V2 格式）。

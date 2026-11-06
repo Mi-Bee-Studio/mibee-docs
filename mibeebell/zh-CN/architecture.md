@@ -4,23 +4,7 @@
 
 单进程 Go 二进制：**摄取层（七类入口）→ 事件总线（有界、满丢最旧）→ 告警管道（静默/去抖/冷却/升级 + L0 算法）→ 分发器（重试/限速/审计）→ 渠道插件（多渠道）**；SQLite 横切存储；REST + SSE + 嵌入式 Web UI 出口。
 
-```mermaid
-flowchart LR
-    subgraph ingest[摄取层]
-        A1[MQTT]
-        A2[通用 Webhook]
-        A3[Alertmanager / PagerDuty / Grafana / 简单 JSON / Bark]
-    end
-    A1 & A2 & A3 --> N[规范化 normalize]
-    N --> BUS{{事件总线<br/>有界 channel · 满丢最旧<br/>永不阻塞发布者}}
-    BUS --> P[管道：四道闸 + L0]
-    P --> R[i18n 模板渲染<br/>zh-CN / en-US]
-    R --> D[分发器<br/>重试 · 令牌桶 · 审计]
-    D --> C[企微/钉钉/飞书 · SMTP · TG/Slack/Discord · Webhook · Scout]
-    P --> DB[(SQLite WAL)]
-    D --> DB
-    DB --> E[REST /api/v1 · SSE /api/stream · /metrics · Web UI]
-```
+![MiBeeBell 架构：摄取层 → 事件总线 → 告警管道 → 分发器 → 渠道，SQLite 横切](images/architecture-pipeline.svg)
 
 ## 三条关键不变量
 
@@ -44,60 +28,25 @@ SQLite：WAL 模式、`busy_timeout=5s`、单写连接（写路径串行化）�
 
 ## 配置与运行态的边界
 
-```mermaid
-flowchart TB
-    subgraph YAML["config.yaml（引导 + 首启种子）"]
-        Y1["server / auth / storage / ingest 连接"]
-        Y2["rules / channels 段（仅首启 seed 一次）"]
-    end
-    subgraph DB["SQLite（唯一运行态来源）"]
-        D1["rules 表（UI 可编辑）"]
-        D2["channels 表（凭证加密落库，UI 可编辑）"]
-        D3["events / notifications / deliveries / silences"]
-    end
-    Y1 --> BOOT[启动装配]
-    Y2 -- "seed 一次" --> D1
-    Y2 -- "seed 一次" --> D2
-    UI["Web 设置页修改"] -- "写回 DB" --> D1
-    UI -- "settings 段写回 yaml" --> Y1
-    API["GET /api/v1/rules|channels"] -- "JSON 快照导出（凭证脱敏）" --> ARC[归档/审阅]
+```
+config.yaml             → 引导配置：server / auth / storage / ingest 连接
+SQLite rules 表          → 路由规则（UI 可编辑）
+SQLite channels 表       → 渠道配置（凭证加密落库，UI 可编辑）
+config.yaml 的 rules/channels → 仅首次启动 seed（DB 为空时导入一次），此后 DB 为准
+mibee-bell export        → 反向导出 YAML（备份/迁移）
 ```
 
 这条边界让"改规则/换渠道"不需要碰配置文件，也让配置文件可以安全进版本管理（引导配置与凭证分离）。
 
-## 包结构
+## 数据流总览
 
-```
-MiBeeBell/
-├── cmd/mibee-bell/       # 入口：flag、装配、优雅退出
-├── internal/
-│   ├── config/           # YAML 加载/校验 + hash-password / encrypt-config 子命令
-│   ├── model/            # Event / Notification / Delivery / Rule / Channel / Silence
-│   ├── eventbus/         # 有界总线（满丢最旧）
-│   ├── mesh/             # memberlist 组网 + claim 协议 + 死亡开关
-│   ├── ingest/           # 每源一个子包：mqtt / webhook / alertmanager / bark / 兼容路由（grafana/pagerduty/simple）
-│   ├── rule/             # 规则匹配（纯函数）
-│   ├── pipeline/         # Processor 链 + 闸门与 L0（含 ADR-036 ai_gate_*，默认关）
-│   ├── dispatch/         # 重试退避、令牌桶、投递审计、渠道健康
-│   ├── channel/          # 渠道插件（17 类）+ registry（自注册）
-│   ├── ai/               # Analyzer（L1 内嵌/远端决策 + L2 openai_compat + gates）
-│   ├── store/            # database/sql 仓储（sqlite/postgres 预留）+ 迁移
-│   ├── render/           # i18n 模板（zh-CN/en-US，severity 映射）
-│   ├── api/              # REST + SSE + JWT 中间件
-│   └── ui/               # go:embed web/dist
-├── pkg/bellapi/          # Channel / Processor / Analyzer 三接口——对外稳定契约
-├── migrations/{sqlite,postgres}/
-└── deploy/               # systemd / Docker compose / install.sh / fnOS / Zabbix
-```
-
-依赖方向单向：`ingest → eventbus → pipeline → dispatch → channel`；`model` 被所有人依赖、不依赖任何人。第三方扩展只 import `pkg/bellapi`（internal 禁止外部访问）。
+![MiBeeBell 数据流总览：摄取 → 总线 → 管道 → 渲染 → 分发 → 渠道，mesh 与 AI 横切](images/architecture-dataflow.svg)
 
 ## 可观测性
 
 - `/metrics`（Prometheus）：`bell_events_ingested_total{source}`、`bell_notifications_total{channel,status}`、`bell_events_dropped_total{stage}`、`bell_channel_health{channel}`、`bell_escalation_pending`、`bell_pipeline_stage_duration_seconds`、`bell_ai_calls_total{analyzer,result}`、`bell_enrich_total`。
-- 结构化日志（slog，JSON 可选）：丢弃 / 升级 / 静默命中 / 渠道降级等关键决策全部带 event_id。
-- Grafana 面板 JSON 随仓库提供（`deploy/grafana-bell.json`）。
+- 结构化日志（JSON 可选）：丢弃 / 升级 / 静默命中 / 渠道降级等关键决策全部带 event_id。
 
 ## 部署形态
 
-单二进制（linux/arm64 · armv7 · amd64，windows/amd64）+ `deploy/` 提供 systemd unit、Docker compose（国内/海外两套拓扑示例）、install.sh、fnOS 应用打包与 Zabbix 媒体脚本。默认端口 `:9080`。
+单二进制零依赖（linux/amd64 · arm64 · armv6，windows/amd64）+ 飞牛 fnOS 原生应用。安装与 systemd 示例见[部署](deployment.md)。默认端口 `:9080`。

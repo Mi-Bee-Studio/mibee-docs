@@ -49,7 +49,7 @@ curl -X POST "http://192.0.2.10:9080/api/ingest/webhook/<你的token>" \
 | 任意脚本 / cron / CI | curl POST 通用 webhook | 一行 |
 | 内置 "Send to PagerDuty" 的工具（NetApp / OpenSearch / …） | 端点换成 pagerduty 入口 | **零改造** |
 | Bark 生态存量脚本 | `api.day.app/yourkey` → `http://192.0.2.10:9080/yourkey` | 改个域名 |
-| Zabbix 6+ | `deploy/zabbix/` 官方 media 脚本 | 一次配置 |
+| Zabbix 6+ | 官方 media 脚本（发布附件提供） | 一次配置 |
 | Uptime Kuma / PRTG / 企微机器人格式等 | 薄适配层：十几行脚本把各家 JSON 映射成信封三件套再 POST | 一个转换脚本 |
 
 薄适配示例（Uptime Kuma → Bell，Python 十行）：

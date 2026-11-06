@@ -2,8 +2,11 @@
 
 MiBeeNvr（开源 NVR）内置「告警通知」外发能力：把相机离线/画面冻结、存储健康、移动侦测、AI 事件、门铃、GB28181 告警等以 `mibee-alert/1` JSON 报文 POST 到 webhook 接收端。**MiBeeBell 是它开箱即用的接收端——零转换直连**。
 
-```
-NVR ──POST /api/ingest/webhook/{token}──▶ MiBeeBell 管道 ──▶ 渠道（企微/TG/邮件…）+ Scout
+```mermaid
+flowchart LR
+  N["MiBeeNvr"] -- "POST /api/ingest/webhook/{token}" --> B["MiBeeBell 管道"]
+  B --> C["渠道<br/>企微 / TG / 邮件…"]
+  B --> S["MiBeeScout"]
 ```
 
 ## 1. 注册摄取 token

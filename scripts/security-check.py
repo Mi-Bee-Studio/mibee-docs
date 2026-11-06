@@ -115,6 +115,7 @@ PLACEHOLDER_VALUES = {
     "secure_password_123", "complex_password", "secure_admin_password",
     "super-secret-key", "secret123", "securepassword123", "videoSrc0", "enc0",
     "mbv_…", "pbx-password", "a-long-random-password",  # mibeenvr v0.14.0 手册：API Key 前缀示意 mbv_…、SIP 门铃 PBX secret 示例（2026-10-24 登记）
+    "nvr-ingest-9f3k2", "my-ingest-token-1", "my-secret-token",  # 接入教程 webhook token 示例：蜂铃首发手册（integrations-nvr/quick-start，issue #24）与 mibeenvr v0.14.1 通知手册（notifications，PR #26 引入、同性质后补登记）（2026-10-31 登记）
 }
 ALLOWED_PASSWORDS = OFFICIAL_DEFAULT_PASSWORDS | VENDOR_DEFAULTS | PLACEHOLDER_VALUES
 

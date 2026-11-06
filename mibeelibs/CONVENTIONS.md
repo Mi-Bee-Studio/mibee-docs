@@ -53,7 +53,7 @@
 | 场景 | 写法 |
 |------|------|
 | 集合内互链 | 相对文件名 `xxx.md` |
-| 跨集合（mibeecam / mibeenvr 等） | 完整 URL `https://www.mlsbs.top/docs/{project}/{slug}` |
+| 跨集合（mibeecam / mibeenvr 等） | 完整 URL `https://www.mickeybee.cn/docs/{project}/{slug}` |
 | 上游仓库/源码/ISSUE | GitHub 绝对链接 |
 
 ## 7. 双语与版本
@@ -75,5 +75,5 @@
 
 1. **各库仓的 `docs/`（`en-US/` + `zh-CN/` + 索引）是手册唯一真源**；修订与新页以 PR 落各库仓。
 2. **本仓（mibeelibs/）为镜像**：库仓 docs 变更合并后，同步到本仓对应语言目录（内容一致；跨库链接按宿主适配——库仓内用指向兄弟仓 docs 的绝对 GitHub 链接，本仓内保持本仓相对链接）。
-3. **库仓文档不得出现**：失效域名（mlsbs.top）、"去文档站看"的引导；库仓 README 的 Documentation 节只指向本仓 docs。
+3. **库仓文档不得出现**：已弃用的旧文档站域名、"去文档站看"的引导；库仓 README 的 Documentation 节只指向本仓 docs。
 4. 收录规则、slug、manifest 结构不变；镜像同步提交标题 `docs(mibeelibs): mirror <repo> <简述>`。

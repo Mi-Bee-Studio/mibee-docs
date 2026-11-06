@@ -6,8 +6,7 @@
 
 | 方式 | 适用 | 说明 |
 |---|---|---|
-| **GitHub Releases 下载** | 所有平台（推荐起步） | 首个正式版 v0.1.0（2026-11-04）起提供 Linux/Windows 单二进制与飞牛 fpk 安装包，免构建 |
-| 源码构建 | 所有平台 | `git clone` + `make build`；web UI 已预构建内嵌，无需 node |
+| **[发布会 Releases 下载]({HUB})** | 所有平台（推荐起步） | 首个正式版 v0.1.0（2026-11-04）起提供 Linux/Windows 单二进制与飞牛 fpk 安装包，免构建 |
 | systemd | Linux 常驻 | `deploy/mibee-bell.service` + `deploy/install.sh`（/opt/mibee-bell 布局） |
 | Docker | NAS / 容器环境 | `deploy/compose.cn.yml`（国内拓扑）/ `compose.overseas.yml`（海外拓扑） |
 | fnOS 应用 | 飞牛 NAS | 应用中心手动安装 fpk（fnOS 桌面集成，网关免登） |

@@ -49,5 +49,4 @@ No. Config and the SQLite database live in the data directory and upgrades prese
 
 ## Still stuck?
 
-- Repository manuals: [docs/user-guide.md](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/docs/user-guide.md) (with the full quick troubleshooting table) and [docs/troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/docs/troubleshooting.md) (the expanded eight-section runbook);
-- When filing a GitHub issue, please include: the version string (`/healthz`), relevant log lines (redacted), and one minimal reproducible event.
+- When reporting an issue, please include: the version string (`/healthz`), relevant log lines (redacted), and one minimal reproducible event.

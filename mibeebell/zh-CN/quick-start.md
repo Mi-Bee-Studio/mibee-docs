@@ -4,23 +4,14 @@
 
 > 命令逐字可执行。示例地址使用文档保留段 `192.0.2.10`，替换为你的实例地址。
 
-## 1. 安装（三选一）
+## 1. 安装（两种方式）
 
 **飞牛（fnOS）应用**（推荐）：下载对应架构的 `mibee-bell-fnos-<版本>-arm64.fpk`（或 `-x86.fpk`）→ 应用中心手动安装 → 桌面「蜂铃」图标进入。
 
-**二进制**：从 [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeBell/releases) 下载对应平台可执行文件，放到任意目录：
+**二进制**：从[发布会 Releases](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0) 下载对应平台可执行文件（附 checksums.txt 校验），放到任意目录：
 
 ```bash
 ./mibee-bell -listen :9080
-```
-
-**从源码构建**（web UI 已预构建内嵌，无需 node）：
-
-```bash
-git clone https://github.com/Mi-Bee-Studio/MiBeeBell.git
-cd MiBeeBell
-make build          # 产出 ./mibee-bell（CGO_ENABLED=0，交叉编译友好）
-sudo deploy/install.sh ./mibee-bell    # 可选：systemd 托管 + /opt/mibee-bell 布局
 ```
 
 零配置即可启动：无 config.yaml 时监听 `:9080`、SQLite 落同目录 `bell.db`，其余配置全部在 Web 界面完成（自动写回 yaml）。

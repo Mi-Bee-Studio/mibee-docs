@@ -41,43 +41,34 @@ type Caller interface {
 
 ## 目标布局
 
-```text
-github.com/mickeyzzc/onvif-go/v2
-├── onvif/               客户端包（包标识符仍为 `onvif`）
-│   ├── client.go        NewClient + Client（实现 api.Caller）+ 选项
-│   ├── auth.go          鉴权模式 / 梯队 / 时钟偏差 / DiagnoseAuth
-│   ├── errors.go        跨域哨兵（自 leaf 包 alias）
-│   └── aliases.go       v1 兼容再导出
-├── types/               共享数据模型 leaf（IPAddress、IntRectangle 等）
-├── device/              tds：身份、能力、系统、网络、DNS/NTP、存储、WiFi
-│                        ——能力缓存随本包
-├── security/            用户、远程用户、访问策略、证书
-├── media/               trt：profile、主/子码流选择、StreamSetup、
-│                        编码/音频/OSD 配置
-├── ptz/   imaging/   events/（含托管订阅）   deviceio/
-├── media2/              tr2：编解码无关的 Media2 配置模型——按编码的
-│                        options、自由名 Encoding（H.265/AV1 的答案）、
-│                        逐字透传的 set（v2.1.0）
-├── analytics/           tan：Profile M 规则/分析模块配置客户端（v2.1.0）
-├── metadata/            tt:MetadataStream 解析器——Profile M 分析输出
-│                        通道（帧、目标、几何）（v2.1.0）
-├── discovery/           客户端发现（探测/监听/定向/后处理）
-├── wsdiscovery/         WS-Discovery 报文编解码 leaf——客户端与
-│                        设备端应答器共享（#15）
-├── server/              设备端框架（一等公民）
-│   ├── server.go        生命周期、HTTP 监听、可选发现应答器挂载
-│   ├── provider.go      可插拔状态后端（#19）：DeviceInfo / StreamURI /
-│   │                    Snapshot JPEG / Imaging（范围+枚举校验）/ PTZ
-│   ├── simulator/       现有模拟器状态实现 → 默认 provider
-│   ├── services/        无状态 handler：SOAP ↔ provider 调用翻译
-│   ├── soap/            设备端传输：dispatch、请求上下文（#17）、
-│   │                    按动作鉴权 + PasswordText（#16）、
-│   │                    XML 写出器：规范大小写、显式前缀、
-│   │                    raw bytes 通道（#18）
-│   └── discovery/       设备侧 WS-Discovery 应答器（#15）
-├── internal/{api,soap,httpdigest}
-└── cmd/  examples/  testing/  testdata/captures/  docs/{en,zh}
+```mermaid
+flowchart TB
+  CLI["onvif/<br/>客户端包"] --> SVC["服务包<br/>device · media · media2 · ptz · imaging<br/>events · deviceio · analytics · metadata<br/>discovery · security"]
+  CLI --> SRV["server/<br/>设备端框架"]
+  SVC --> API["internal/api<br/>SOAP 信封"]
+  SRV --> API
+  SRV --> PRV["provider<br/>可插拔状态后端"]
+  TYPES["types/<br/>共享数据模型"] -.-> SVC
+  WSD["wsdiscovery/<br/>报文编解码"] -.-> CLI
+  WSD -.-> SRV
 ```
+
+| 包 | 职责 |
+|---|---|
+| `onvif/` | 客户端包（包标识符仍为 `onvif`）：`client.go` NewClient + Client（实现 api.Caller）+ 选项 · `auth.go` 鉴权模式 / 梯队 / 时钟偏差 / DiagnoseAuth · `errors.go` 跨域哨兵（自 leaf 包 alias）· `aliases.go` v1 兼容再导出 |
+| `types/` | 共享数据模型 leaf（IPAddress、IntRectangle 等） |
+| `device/` | tds：身份、能力、系统、网络、DNS/NTP、存储、WiFi——能力缓存随本包 |
+| `security/` | 用户、远程用户、访问策略、证书 |
+| `media/` | trt：profile、主/子码流选择、StreamSetup、编码/音频/OSD 配置 |
+| `ptz/` · `imaging/` · `events/` · `deviceio/` | 云台 · 影像 · 事件（含托管订阅）· DeviceIO |
+| `media2/` | tr2：编解码无关的 Media2 配置模型——按编码的 options、自由名 Encoding（H.265/AV1 的答案）、逐字透传的 set（v2.1.0） |
+| `analytics/` | tan：Profile M 规则/分析模块配置客户端（v2.1.0） |
+| `metadata/` | tt:MetadataStream 解析器——Profile M 分析输出通道（帧、目标、几何）（v2.1.0） |
+| `discovery/` | 客户端发现（探测/监听/定向/后处理） |
+| `wsdiscovery/` | WS-Discovery 报文编解码 leaf——客户端与设备端应答器共享（#15） |
+| `server/` | 设备端框架（一等公民）：`server.go` 生命周期、HTTP 监听、可选发现应答器挂载 · `provider.go` 可插拔状态后端（#19）：DeviceInfo / StreamURI / Snapshot JPEG / Imaging（范围+枚举校验）/ PTZ · `simulator/` 现有模拟器状态实现 → 默认 provider · `services/` 无状态 handler：SOAP ↔ provider 调用翻译 · `soap/` 设备端传输：dispatch、请求上下文（#17）、按动作鉴权 + PasswordText（#16）、XML 写出器：规范大小写、显式前缀、raw bytes 通道（#18） · `discovery/` 设备侧 WS-Discovery 应答器（#15） |
+| `internal/{api,soap,httpdigest}` | 内部共享：SOAP 信封与传输、HTTPDigest |
+| `cmd/` · `examples/` · `testing/` · `testdata/captures/` · `docs/{en,zh}` | 命令行工具 · 示例 · 测试 · 抓包样本 · 文档 |
 
 ## 服务端框架原则
 

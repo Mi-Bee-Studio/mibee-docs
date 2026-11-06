@@ -4,23 +4,14 @@ Goal: get MiBeeBell running on a Linux box, fire your first alert and receive th
 
 > Commands are copy-paste ready. Example addresses use the documentation range `192.0.2.10` — replace with your instance address.
 
-## 1. Install (pick one)
+## 1. Install (two ways)
 
 **fnOS app** (recommended): download the matching `mibee-bell-fnos-<version>-arm64.fpk` (or `-x86.fpk`) → App Center manual install → open "Bell" from the desktop.
 
-**Binary**: grab the matching build from [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeBell/releases), drop it anywhere:
+**Binary**: grab the matching build from the [Releases hub](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0) (with checksums.txt), drop it anywhere:
 
 ```bash
 ./mibee-bell -listen :9080
-```
-
-**From source** (the web UI ships pre-built and embedded — no node needed):
-
-```bash
-git clone https://github.com/Mi-Bee-Studio/MiBeeBell.git
-cd MiBeeBell
-make build          # produces ./mibee-bell (CGO_ENABLED=0, cross-compile friendly)
-sudo deploy/install.sh ./mibee-bell    # optional: systemd-managed /opt/mibee-bell layout
 ```
 
 Zero config works: without a config.yaml it listens on `:9080` and stores SQLite in `./bell.db`; everything else is configured in the Web UI (written back to yaml automatically).

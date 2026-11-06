@@ -113,19 +113,12 @@ The status LED (GPIO33) indicates different system states:
 
 ### File Organization
 Photos are stored in the following directory structure:
-```
-/sdcard/photos/
-├── 2024-12-30/
-│   ├── 14-30-25.jpg
-│   ├── 14-32-10.jpg
-│   └── 14-35-42.jpg
-├── 2024-12-31/
-│   ├── 09-15-33.jpg
-│   └── 09-18-05.jpg
-└── motion_events/
-    ├── 2024-12-30/
-    └── 2024-12-31/
-```
+| Path | Purpose |
+|------|---------|
+| `/sdcard/photos/` | Photo root directory |
+| `/sdcard/photos/2024-12-30/` | `14-30-25.jpg`, `14-32-10.jpg`, `14-35-42.jpg` |
+| `/sdcard/photos/2024-12-31/` | `09-15-33.jpg`, `09-18-05.jpg` |
+| `/sdcard/photos/motion_events/` | `2024-12-30/`, `2024-12-31/` |
 
 ### Storage Management
 - **Automatic Cleanup**: When free space < 20%, oldest photos are deleted

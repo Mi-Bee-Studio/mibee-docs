@@ -21,11 +21,11 @@ ffmpeg -f mjpeg -i http://192.168.1.50:8080/stream \
   -c:v copy -f rtsp rtsp://nvr-host:8554/live/esp32-cam1
 ```
 
-推流接入（RTMP/SRT）与拉流地址配置详见 NVR 手册 [SRT/RTMP 推流接入](https://www.mlsbs.top/docs/mibeenvr/srt-rtmp)。
+推流接入（RTMP/SRT）与拉流地址配置详见 NVR 手册 [SRT/RTMP 推流接入](https://www.mickeybee.cn/docs/mibeenvr/srt-rtmp)。
 
 ## 直连与自动发现
 
-- **ONVIF 自动发现**：rpi-cam 与 N16R8 支持 WS-Discovery / ONVIF，在 NVR Web 界面一键发现添加 → [ONVIF 自动发现](https://www.mlsbs.top/docs/mibeenvr/onvif-discovery)
+- **ONVIF 自动发现**：rpi-cam 与 N16R8 支持 WS-Discovery / ONVIF，在 NVR Web 界面一键发现添加 → [ONVIF 自动发现](https://www.mickeybee.cn/docs/mibeenvr/onvif-discovery)
 - **RTSP 直连**：契约 v1.9（2026-09-18）起 N16R8 的 RTSP 免认证，在 NVR 添加摄像头时选择 RTSP、凭据留空即可
-- **树莓派相机专项指引** → [树莓派摄像头接入](https://www.mlsbs.top/docs/mibeenvr/raspberrypi)
-- **更多品牌兼容性** → [摄像头品牌兼容指南](https://www.mlsbs.top/docs/mibeenvr/camera-guide)
+- **树莓派相机专项指引** → [树莓派摄像头接入](https://www.mickeybee.cn/docs/mibeenvr/raspberrypi)
+- **更多品牌兼容性** → [摄像头品牌兼容指南](https://www.mickeybee.cn/docs/mibeenvr/camera-guide)

@@ -94,15 +94,13 @@ Actual latency ≈ frame delay (66ms) + encode time + network send + browser dec
 
 `motion_detect.c:42` defines `CAPTURE_INTERVAL_MS = 500`:
 
-```
 1. Capture reference frame A (~80ms)
 2. Wait 500ms
 3. Capture comparison frame B (~80ms)
 4. JPEG byte sampling diff (~10ms)
 5. Trigger + capture photo (~150ms incl. SD write)
-─────────────
+
 Total: ~700-1500ms
-```
 
 With double-confirmation debouncing, trigger response is stable at **1-2 second range**. Far from "real-time".
 

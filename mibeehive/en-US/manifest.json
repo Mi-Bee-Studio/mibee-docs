@@ -3,21 +3,21 @@
   "title": "MiBeeHive User Manual",
   "sections": [
     {
-      "title": "Concepts & Architecture",
+      "title": "Product",
       "items": [
-        { "slug": "architecture", "file": "architecture.md", "title": "Architecture" }
+        { "slug": "introduction", "file": "introduction.md", "title": "Product Introduction" }
       ]
     },
     {
-      "title": "Deployment",
+      "title": "Features",
       "items": [
-        { "slug": "deployment", "file": "deployment.md", "title": "Deployment Guide" }
+        { "slug": "features", "file": "features.md", "title": "Feature Overview" }
       ]
     },
     {
       "title": "Reference",
       "items": [
-        { "slug": "api-reference", "file": "api-reference.md", "title": "API Reference" }
+        { "slug": "faq", "file": "faq.md", "title": "FAQ" }
       ]
     }
   ]

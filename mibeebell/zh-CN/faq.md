@@ -49,5 +49,4 @@ SSE 断开。最常见原因是反向代理缓冲了事件流——对 `/api/str
 
 ## 还没解决？
 
-- 仓库内手册：[docs/user-guide.md](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/docs/user-guide.md)（含完整故障排除速查表）与 [docs/troubleshooting.md](https://github.com/Mi-Bee-Studio/MiBeeBell/blob/main/docs/troubleshooting.md)（八节展开版）；
-- GitHub Issues 提交时请附：版本串（`/healthz`）、相关日志行（脱敏后）、一条最小复现事件。
+- 反馈问题时请附：版本串（`/healthz`）、相关日志行（脱敏后）、一条最小复现事件。

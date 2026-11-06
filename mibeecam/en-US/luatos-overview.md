@@ -89,35 +89,34 @@ Adjust motion sensitivity via Web UI or AT commands:
 
 ## Project Structure
 
-```
-luatos-esp32s3-a10-camera/
-├── main/
-│   ├── main.c              # System entry, 15-step startup
-│   ├── at_command.c/h      # UART0 AT command interface (20 commands)
-│   ├── camera_driver.c/h   # OV2640 camera driver
-│   ├── config_manager.c/h  # NVS config storage
-│   ├── event_bus.c/h       # In-memory pub/sub event bus
-│   ├── frame_broadcaster.c/h # DRAM frame cache
-│   ├── health_monitor.c/h  # Health monitoring + Prometheus
-│   ├── motion_detect.c/h   # Motion detection
-│   ├── mjpeg_streamer.c/h  # MJPEG streaming
-│   ├── onvif_discovery.c/h # ONVIF WS-Discovery
-│   ├── onvif_service.c/h   # ONVIF SOAP service
-│   ├── status_led.c/h      # Status LED control
-│   ├── time_sync.c/h       # NTP time sync
-│   ├── web_server.c/h      # HTTP server + REST API
-│   ├── webhook.c/h         # Webhook event forwarding
-│   ├── wifi_manager.c/h    # WiFi STA/AP management
-│   ├── cJSON.c/h           # JSON parser (third-party)
-│   ├── web_ui/             # SPIFFS static files
-│   └── CMakeLists.txt      # Component registration
-├── docs/                   # Bilingual documentation (en/ + zh-CN/)
-├── .github/workflows/      # CI/CD
-├── CMakeLists.txt
-├── sdkconfig.defaults
-├── partitions.csv
-└── idf_component.yml       # ESP-IDF component dependencies
-```
+| Path | Purpose |
+|------|---------|
+| `main/` | |
+| `main/main.c` | System entry, 15-step startup |
+| `main/at_command.c/h` | UART0 AT command interface (20 commands) |
+| `main/camera_driver.c/h` | OV2640 camera driver |
+| `main/config_manager.c/h` | NVS config storage |
+| `main/event_bus.c/h` | In-memory pub/sub event bus |
+| `main/frame_broadcaster.c/h` | DRAM frame cache |
+| `main/health_monitor.c/h` | Health monitoring + Prometheus |
+| `main/motion_detect.c/h` | Motion detection |
+| `main/mjpeg_streamer.c/h` | MJPEG streaming |
+| `main/onvif_discovery.c/h` | ONVIF WS-Discovery |
+| `main/onvif_service.c/h` | ONVIF SOAP service |
+| `main/status_led.c/h` | Status LED control |
+| `main/time_sync.c/h` | NTP time sync |
+| `main/web_server.c/h` | HTTP server + REST API |
+| `main/webhook.c/h` | Webhook event forwarding |
+| `main/wifi_manager.c/h` | WiFi STA/AP management |
+| `main/cJSON.c/h` | JSON parser (third-party) |
+| `main/web_ui/` | SPIFFS static files |
+| `main/CMakeLists.txt` | Component registration |
+| `docs/` | Bilingual documentation (en/ + zh-CN/) |
+| `.github/workflows/` | CI/CD |
+| `CMakeLists.txt` | |
+| `sdkconfig.defaults` | |
+| `partitions.csv` | |
+| `idf_component.yml` | ESP-IDF component dependencies |
 
 ## Technical Specifications
 

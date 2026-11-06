@@ -42,34 +42,33 @@ cd seeed-esp32s3-cam
 
 Project structure:
 
-```
-seeed-esp32s3-cam/
-├── main/                 # Firmware source code (20 C modules)
-│   ├── main.c            # Entry point, 20-step boot process
-│   ├── camera_driver.c   # Camera driver
-│   ├── video_recorder.c  # AVI recording engine
-│   ├── mjpeg_streamer.c  # MJPEG real-time streaming
-│   ├── web_server.c      # HTTP server + REST API
-│   ├── nas_uploader.c    # NAS upload scheduler
-│   ├── wifi_manager.c    # WiFi AP/STA management
-│   ├── config_manager.c  # NVS configuration persistence
-│   ├── storage_manager.c # SD card + circular cleanup
-│   ├── status_led.c      # LED state machine
-│   ├── time_sync.c       # SNTP time synchronization
-│   ├── webdav_client.c   # WebDAV client
-│   ├── http_upload_client.c # HTTP/HTTPS upload client
-│   ├── motion_detector.c # Motion detection engine
-│   ├── ota_updater.c     # OTA firmware update
-│   ├── webhook.c         # HTTP event notification
-│   ├── ws_server.c       # WebSocket real-time push
-│   ├── sha256.c          # SHA-256 hash
-│   ├── logging.c         # Logging utility
-│   ├── cJSON.c/h         # JSON parsing library
-│   └── web_ui/           # Web management interface (6 HTML pages)
-├── docs/                 # Project documentation
-├── partitions.csv        # Partition table
-└── sdkconfig.defaults    # Hardware default configuration
-```
+| Path | Purpose |
+|------|---------|
+| `main/` | Firmware source code (20 C modules) |
+| `main/main.c` | Entry point, 20-step boot process |
+| `main/camera_driver.c` | Camera driver |
+| `main/video_recorder.c` | AVI recording engine |
+| `main/mjpeg_streamer.c` | MJPEG real-time streaming |
+| `main/web_server.c` | HTTP server + REST API |
+| `main/nas_uploader.c` | NAS upload scheduler |
+| `main/wifi_manager.c` | WiFi AP/STA management |
+| `main/config_manager.c` | NVS configuration persistence |
+| `main/storage_manager.c` | SD card + circular cleanup |
+| `main/status_led.c` | LED state machine |
+| `main/time_sync.c` | SNTP time synchronization |
+| `main/webdav_client.c` | WebDAV client |
+| `main/http_upload_client.c` | HTTP/HTTPS upload client |
+| `main/motion_detector.c` | Motion detection engine |
+| `main/ota_updater.c` | OTA firmware update |
+| `main/webhook.c` | HTTP event notification |
+| `main/ws_server.c` | WebSocket real-time push |
+| `main/sha256.c` | SHA-256 hash |
+| `main/logging.c` | Logging utility |
+| `main/cJSON.c/h` | JSON parsing library |
+| `main/web_ui/` | Web management interface (6 HTML pages) |
+| `docs/` | Project documentation |
+| `partitions.csv` | Partition table |
+| `sdkconfig.defaults` | Hardware default configuration |
 
 ---
 

@@ -49,7 +49,7 @@ curl -X POST "http://192.0.2.10:9080/api/ingest/webhook/<your-token>" \
 | Any script / cron / CI | curl POST to the generic webhook | one line |
 | Tools with built-in PagerDuty (NetApp / OpenSearch / …) | point them at the pagerduty entry | **zero refactor** |
 | Existing Bark scripts | `api.day.app/yourkey` → `http://192.0.2.10:9080/yourkey` | change a hostname |
-| Zabbix 6+ | official media script in `deploy/zabbix/` | one-time setup |
+| Zabbix 6+ | official media script (provided with the release) | one-time setup |
 | Uptime Kuma / PRTG / WeCom-bot payloads / … | thin adapter: a dozen lines mapping their JSON onto the envelope, then POST | one small script |
 
 Thin adapter example (Uptime Kuma → Bell, ten lines of Python):
