@@ -26,13 +26,13 @@ MiBeeVision uses its own version line (`mibee-vision-vX.Y.Z`), independent of th
 | Cameras | Single camera | Multiple cameras |
 | Inference | CPU (ONNX Runtime) | GPU acceleration (CUDA / TensorRT) |
 | Analysis | Segment-by-segment as recordings appear | Plus batch re-analysis of historical footage |
-| Distribution | Free, distributed via the MiBeeNvr releases page | TBA |
+| Distribution | Free, distributed via the release hub ([mickeyzzc/releases](https://github.com/mickeyzzc/releases)) | TBA |
 
 See the [feature overview](features.md) for what the current version delivers, and [Deployment](deployment.md) to get started.
 
 ## License
 
-- **The software** is proprietary, © MiBee Studio. The Lite edition is distributed free of charge via the MiBeeNvr releases page.
+- **The software** is proprietary, © MiBee Studio. The Lite edition is distributed free of charge via the release hub.
 - **The bundled detection model (YOLOv8n)** is licensed under Ultralytics **AGPL-3.0** — using this program for detection constitutes acceptance of the AGPL-3.0 obligations. **Commercial closed-source distribution requires a separate license** (or replacing the model with a permissively licensed one).
 
 ## Technical profile

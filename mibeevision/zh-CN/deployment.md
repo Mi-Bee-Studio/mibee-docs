@@ -1,10 +1,10 @@
 # 部署与快速开始
 
-MiBeeVision Lite 以单二进制分发，从 **MiBeeNvr 的 GitHub 发布页**下载，免费使用。
+MiBeeVision Lite 以单二进制分发，从「**发布会**」（[mickeyzzc/releases](https://github.com/mickeyzzc/releases)）下载，免费使用。
 
 ## 下载
 
-发布地址：[MiBeeNvr Releases · MiBeeVision Lite v0.1.0](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases/tag/mibee-vision-v0.1.0)
+发布地址：[发布会 · MiBeeVision Lite v0.1.0](https://github.com/mickeyzzc/releases/releases/tag/mibee-vision-v0.1.0)
 
 | 资产 | 说明 |
 |---|---|
