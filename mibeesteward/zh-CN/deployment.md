@@ -26,7 +26,17 @@ flowchart TD
     F -->|"否"| H["单机二进制部署：systemd 管理"]
 ```
 
+
+### 打包路线与非目标（决策记录，2026-10-24）
+
+已交付：nfpm 产线的 **deb/rpm**（amd64/arm64/armhf，#620）与 OpenWrt ipk/apk/tar.gz 家族；apt/yum **软件仓库**在 deb/rpm 收到真实用户反馈前排期（#621），Home Assistant add-on 与 Helm chart 同样等待需求信号（#622、#623）。
+
+按需备选池（nfpm 同一路径，信号出现时产出成本低）：**pacman**（Arch/Manjaro；只出产物不进 AUR 维护）、**Alpine apk**（与 OpenWrt 24.10+ 包同属 apk-tools 家族但仓库/ABI 策略各自独立；静态二进制使产物近乎零成本）、**nix flake**（独立路径非 nfpm；群体小众）。
+
+明确不做：**snap**（扫描器需要 raw socket 做 ICMP/ARP，沙箱与产品天性相克）、**flatpak / AppImage**（面向 GUI 应用的格式；本产品是无头服务）、**Homebrew**（macOS 非目标平台）、**群晖 SPK / 威联通 QPKG**（每厂商 SDK 锁定与签名负担，而 NAS 上的 Docker 已服务该场景）。
+
 ## 二进制部署
+
 
 ### 下载
 
@@ -39,6 +49,7 @@ make build
 # 或交叉编译
 make build-linux-amd64
 ```
+
 
 ### 软件包安装（deb / rpm）
 
@@ -61,6 +72,7 @@ sudo dnf install ./mibee-steward-<version>-1.x86_64.rpm
 - agent 包 `mibee-agent` 生命周期相同：`/etc/mibee/agent.yaml` + 专用 `mibee-agent` 系统用户；`network.name`/`cidr` 从默认路由推导，`center.url` / `center.auth_token` 未填时服务保持停止（[distributed.md](distributed.md)）。
 - 包只带默认构建；`-full` 能力变体仍是手工构建（[构建变体](build-variants.md)）。
 
+
 ### 最小配置
 
 ```bash
@@ -74,6 +86,7 @@ sudo cp -r configs/* /opt/mibee-steward/configs/
 sudo chown -R mibee:mibee /opt/mibee-steward
 sudo chmod +x /opt/mibee-steward/mibee-steward
 ```
+
 
 ### 配置生产环境
 
@@ -92,6 +105,7 @@ auth:
   cookie_same_site: "strict"
 ```
 
+
 ### Systemd 服务
 
 ```bash
@@ -105,6 +119,7 @@ sudo systemctl start mibee-steward
 
 ## Docker 部署
 
+
 ### 使用预构建镜像（GHCR）
 
 从 v0.4.0 起，每个 release 自动发布多架构容器镜像到 GitHub Container Registry（amd64 / arm64）。镜像标签支持 `latest`、`:版本号`（如 `0.4.0`）、`:主.次版本`（如 `0.4`）与 `:commit-sha`：
@@ -114,10 +129,11 @@ sudo systemctl start mibee-steward
 docker pull ghcr.io/mi-bee-studio/mibeesteward:latest
 
 # 或锁定具体版本
-docker pull ghcr.io/mi-bee-studio/mibeesteward:0.4.0
+docker pull ghcr.io/mi-bee-studio/mibeesteward:0.9.0
 ```
 
 预构建镜像是**非特权变体**（LLDP/eBPF 编译为 stub）。如需被动探测能力，用源码 + `make docker-build-priv` 自行构建。
+
 
 ### docker-compose
 
@@ -136,6 +152,7 @@ services:
 volumes:
   mibee-data:
 ```
+
 
 ### 网络模式选型（重要）
 
@@ -163,6 +180,7 @@ flowchart LR
 > 3. **被动多播失效**：bridge 不转发 224/239 多播，mDNS/SSDP 监听源会自禁用。
 >
 > 补救：bridge 模式下在 `scanner.router_arp.routers` 里列出网关路由器 IP，让扫描器通过 SNMP walk 路由器的 ARP 表补 MAC；但这只能补 MAC，救不了 ICMP/多播。
+
 
 ### host 模式完整示例
 
@@ -195,6 +213,7 @@ docker compose --profile host build
 ```
 
 Makefile 封装了常用流程：`make docker-up`（host profile，推荐）、`make docker-up-bridge`（演示）、`make docker-up-macvlan`、`make docker-build-priv`（特权变体）。
+
 
 ### 直接运行预构建镜像
 
@@ -271,9 +290,11 @@ sudo certbot --nginx -d your-domain.com
 
 ## 数据与备份
 
+
 ### 数据位置
 
 SQLite 数据库默认位于 `./data/mibee.db`（二进制部署）或容器内 `/data/mibee.db`（Docker 部署）。
+
 
 ### 备份策略
 
@@ -290,6 +311,7 @@ SQLite 数据库默认位于 `./data/mibee.db`（二进制部署）或容器内 
 
 备份脚本会自动验证完整性并清理过期备份。
 
+
 ### 自动养护
 
 每轮保留清理（默认每 6 小时，`retention.sweep_interval_hours`）同时执行存储健康巡检：WAL 检查点并截断（`PRAGMA wal_checkpoint(TRUNCATE)`，将预写日志页折回主文件，`-wal` 归零）、刷新 SQLite 统计信息（`PRAGMA optimize`），并将磁盘体积与高容量表行数导出到 Prometheus：
@@ -302,6 +324,7 @@ SQLite 数据库默认位于 `./data/mibee.db`（二进制部署）或容器内 
 这是容量规划的增长基线，也是自监控样例（见 `deploy/prometheus`）中库体积告警的数据源。
 
 所有导出指标均有开箱即用的 Grafana 面板（`deploy/grafana/`），见[生态集成指南](integrations.md)。
+
 
 ### 容量规划（实测基线）
 
@@ -326,6 +349,7 @@ sudo systemctl start mibee-steward
 
 ## 升级
 
+
 ### 二进制升级
 
 ```bash
@@ -335,9 +359,11 @@ sudo cp mibee-steward /opt/mibee-steward/
 sudo systemctl start mibee-steward
 ```
 
+
 ### 软件包升级（deb / rpm）
 
 在旧包上直接安装新包即是全部升级动作：prerm 停服务 → postinst 重启，配置与数据保留。下方数据兼容性规则同样适用。
+
 
 ### Docker 升级
 
@@ -347,6 +373,45 @@ docker compose up -d
 ```
 
 数据兼容性：自 v0.7 起 schema 只在首次启动时全新创建，不做原地升级。记录为旧版本号的数据库会在启动时被拒绝并给出指引；跨版本升级的做法是先备份 `data/` 目录（`scripts/backup.sh`），用新数据库启动，设备由下一次扫描重新发现。schema 版本兼容时，替换二进制即完成升级。ARMv7 设备无 release 预编译产物，需本地 `make build-linux-arm` 交叉编译。
+
+> **跨 schema 8 → 9（资产档案库组合，#662–#669）**——新建库后有两点需要预期：
+>
+> 1. **档案学习窗从部署日重新起算**。周期模式豁免（`archive.smart.*`）从 `asset_archive_events` 学习，而这是张从零开始的新表——一台「每年十一月总会回来」的设备需要重新积累约两个月（一个学习周期）的出现点，智能豁免才会重新生效。已知回归规律的设备可以先用 `force_active` pin 立即保护。
+> 2. 台账列（`lifecycle_state` / `owner` / `asset_no`）与标签指派只在新数据库中存在；若旧资产库把这些数据记在 `user_attributes` 或设备备注里，需要重新录入——旧库的 CSV 导出（设备页 → 导出）是现实的迁移来源。
+
+
+### Home Assistant add-on（#622）
+
+add-on 源包在 `deploy/homeassistant`（拷入独立 hassio-addons 仓库；镜像在 GHCR release 之上包一层 options→env 入口）。`host_network: true`——扫描器即其所在 LAN；状态落 `/data/steward` 升级保留；密钥为 add-on options 且空白即安全默认（空 master key 宁禁用 v3 凭据库不造弱钥；admin 密码永远走浏览器首启）。HA 盒上的 center 覆盖该盒桥接的 LAN——多网段站点仍需每段一个 agent 汇报至此。
+
+### apt / yum 软件仓库（#621，需求信号前保持手动）
+
+发布器已就绪但**手动触发**（workflow `apt-yum-repo`，workflow_dispatch）：以专用 GPG 密钥签名 release 的 deb/rpm 产物（secrets `GPG_PRIVATE_KEY` / `GPG_PASSPHRASE`——私钥绝不入库），reprepro 建 apt 池、createrepo_c + rpmsign 建 yum 树，把 `apt/`、`yum/` 与公钥 `KEY.gpg.asc` 发布到 `gh-pages` 分支。未配置 secrets 时带提示退出、什么都不发——未签名仓库比没有仓库更糟。
+
+启用后安装即：
+
+```bash
+# Debian/Ubuntu
+curl -fsSL https://mi-bee-studio.github.io/MiBeeSteward/KEY.gpg.asc | sudo tee /etc/apt/keyrings/mibee.asc
+echo "deb [signed-by=/etc/apt/keyrings/mibee.asc] https://mi-bee-studio.github.io/MiBeeSteward/apt stable main" | sudo tee /etc/apt/sources.list.d/mibee.list
+sudo apt update && sudo apt install mibee-steward
+
+# Fedora/RHEL（rpm 产物带签名后）
+sudo rpm --import https://mi-bee-studio.github.io/MiBeeSteward/KEY.gpg.asc
+sudo dnf config-manager --add-repo https://mi-bee-studio.github.io/MiBeeSteward/yum
+```
+
+
+### Home Assistant add-on（#622）
+
+add-on 源包在 `deploy/homeassistant`（拷入独立 hassio-addons 仓库；镜像在 GHCR release 之上包一层 options→env 入口）。`host_network: true`——扫描器即其所在 LAN；状态落 `/data/steward` 升级保留；密钥为 add-on options 且空白即安全默认（空 master key 宁禁用 v3 凭据库不造弱钥；admin 密码永远走浏览器首启）。HA 盒上的 center 覆盖该盒桥接的 LAN——多网段站点仍需每段一个 agent 汇报至此。
+
+
+### Kubernetes / k3s（Helm，#623）
+
+center 附带 Helm chart（`deploy/helm/mibee-steward`，CI lint 把关）。架构**单实例设计**：状态为 RWO PVC 上的 SQLite（WAL），`replicas: 1` 锁死、策略 Recreate——双写不是拓扑，更多 LAN 覆盖意味着更多 **agent** 而非更多 center 副本。pod 默认**不做** hostNetwork：预期形态是混合部署——center 在集群内、每目标 LAN 一个 agent 在集群外，指向 service/ingress URL。
+
+密钥永不进 values：创建 Opaque secret（`MIBEE_AUTH_JWT_SECRET`、`MIBEE_SECURITY_MASTER_KEY`、`MIBEE_AUTH_INITIAL_ADMIN_PASSWORD`）并 `--set secrets.existingName=...`；评估安装可 `--set secrets.create=true`（随机 jwt、浏览器首启设密；master key 保持未设）。详见 `deploy/helm/mibee-steward/README.md`。
 
 ### 管理员密码重置
 

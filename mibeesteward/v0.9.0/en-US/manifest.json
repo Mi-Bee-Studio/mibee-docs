@@ -1,0 +1,141 @@
+{
+  "lang": "en-US",
+  "title": "MiBee Steward User Manual",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "Introduction"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "Quick Start"
+        },
+        {
+          "slug": "user-guide",
+          "file": "user-guide.md",
+          "title": "User Guide"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web UI Tour"
+        }
+      ]
+    },
+    {
+      "title": "Concepts & Architecture",
+      "items": [
+        {
+          "slug": "product-scope",
+          "file": "product-scope.md",
+          "title": "Product Scope"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "Feature Overview"
+        },
+        {
+          "slug": "comparison",
+          "file": "comparison.md",
+          "title": "Comparison"
+        },
+        {
+          "slug": "discovery",
+          "file": "discovery.md",
+          "title": "Discovery"
+        },
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "Architecture"
+        },
+        {
+          "slug": "agent-rs",
+          "file": "agent-rs.md",
+          "title": "Distributed Agent (Rust)"
+        }
+      ]
+    },
+    {
+      "title": "Deployment & Configuration",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "Deployment"
+        },
+        {
+          "slug": "distributed",
+          "file": "distributed.md",
+          "title": "Distributed Deployment"
+        },
+        {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt Deployment"
+        },
+        {
+          "slug": "build-variants",
+          "file": "build-variants.md",
+          "title": "Build Variants & Capability Matrix"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "Configuration"
+        }
+      ]
+    },
+    {
+      "title": "Reference & Advanced",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API Reference"
+        },
+        {
+          "slug": "integrations",
+          "file": "integrations.md",
+          "title": "Integrations"
+        },
+        {
+          "slug": "benchmark",
+          "file": "benchmark.md",
+          "title": "Benchmarks"
+        },
+        {
+          "slug": "playbooks",
+          "file": "playbooks.md",
+          "title": "Scenario Playbooks"
+        },
+        {
+          "slug": "ebpf",
+          "file": "ebpf.md",
+          "title": "eBPF"
+        },
+        {
+          "slug": "fingerprint-spec",
+          "file": "fingerprint-spec.md",
+          "title": "Fingerprint Spec"
+        },
+        {
+          "slug": "development",
+          "file": "development.md",
+          "title": "Development"
+        },
+        {
+          "slug": "changelog",
+          "file": "changelog.md",
+          "title": "Changelog"
+        }
+      ]
+    }
+  ]
+}

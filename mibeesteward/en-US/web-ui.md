@@ -12,19 +12,31 @@ The first visit to `http://<host>:8080` redirects to the login page. Sign in wit
 
 ## Dashboard
 
-The dashboard is the landing view: device status distribution, heartbeat success rate, device type distribution, and other widget cards; recent scan activity (alive / new / duration); and the offline devices that need attention. The widget layout is customizable (add/remove widgets), and a scan can be kicked off from the top-right corner.
+The dashboard is the landing view: device status distribution, heartbeat success rate, device type distribution, and other widget cards; recent scan activity (alive / new / duration); and the offline devices that need attention. Two ledger-caliber cards join the grid (#669): **lifecycle distribution** (the active fleet by ledger state, archive excluded) and **device count by tag** (per dictionary tag — a device counts once per carried tag, so the sum may exceed the total). The widget layout is customizable (add/remove widgets), and a scan can be kicked off from the top-right corner.
 
 ![Dashboard](images/dashboard.webp)
 
 ## Device Inventory
 
-The device list is the day-to-day workhorse: every registered device across all networks, filterable by status/type, searchable, and sortable. Each row shows IP, MAC, OUI vendor, inferred type and brand, and online status; the identification source (protocol evidence vs hostname heuristic) is distinguished by a badge.
+The device list is the day-to-day workhorse: every registered device across all networks, filterable by status/type/lifecycle, searchable, and sortable. Each row shows IP, MAC, OUI vendor, inferred type and brand, and online status; the identification source (protocol evidence vs hostname heuristic) is distinguished by a badge. Two asset-ledger layers ride on top (#665, #669): dictionary **tag chips** under the name (batch tagging over selected rows, server-side `tag_id` filtering), and the **lifecycle badge** for non-`in_use` states (spare / in repair / lent out / retired in muted state colors — the population norm stays quiet). The ledger itself — lifecycle state, responsible person (owner), and the organization's asset number — is edited in the device form; a physical asset with neither IP nor MAC is a first-class device whose `asset_no` is its identity, and the search box matches owner and asset number too.
 
 ![Device list](images/devices.webp)
 
 Click any device for the detail page: base info, scan attributes (SNMP sysName/description, open ports, detected services and versions), TLS certificates, heartbeat history, neighbor relationships, config backup versions, and attached documents, all on one page.
 
 ![Device detail](images/device-detail.webp)
+
+## Asset Archive & Ledger
+
+Offline devices are archived, not deleted (#663): a scanner-discovered device offline past the threshold (per-device override > global `archive.offline_days`) moves to the **Archive** (档案库) with its full history preserved; coming back online continuously past the restore window auto-returns it; `force_archive` / `force_active` pins override the automation; and the periodic-pattern learner (#664) exempts devices that keep returning on a stable cycle. The Archive page lists the filed devices with their badges and archive times, offers manual restore (force-breaking a pin asks first), and opens each device's **dossier** — a six-source timeline (archive events, change log, config versions, TLS certificates, documents, sightings) of everything the system ever knew about the asset.
+
+![Archive list](images/archive.webp)
+
+![Archive dossier](images/archive-dossier.webp)
+
+The tag dictionary is managed under Settings → Tags: the four built-ins (internal / external / temporary / pending) are delete-protected, custom tags get a color picker, and the same chips flow into the device list, the device form, and the dashboard's tag-distribution card.
+
+![Tag dictionary settings](images/tags-settings.webp)
 
 ## Discovery & Identification
 
@@ -41,6 +53,8 @@ The Scanner page launches manual scans or manages recurring tasks: enter target 
 For switched networks with LLDP / CDP / Bridge-MIB support, the topology page renders the device relationship graph automatically: core/distribution/access layers in distinct colors, edges carrying local/remote ports, VLAN tags, and STP roles; when a bridge's dot1dStp walk says which switch is the root bridge (#525), the graph roots on that collected fact instead of guessing by ARP in-degree; a device present in several segments (dual-NIC routers, the box bridging two LANs) wears a blue ring and a marker - the cross-segment link points (#556) - and its card lists each presence as segment · CIDR · address with the reporting vantage; the legend doubles as a layer filter, and clicking a node highlights its neighbors with a detail card.
 
 ![Network topology](images/topology.webp)
+
+The graph renders through one of two interchangeable canvases chosen in the toolbar: the classic 2D force graph (ECharts) or a 3D scene (three.js; the choice persists in the URL as `&dim=3d`). The 3D view stacks the hierarchy along the vertical axis - gateway on top, then switches/routers, access, endpoints - and supports orbit/zoom, dragging individual nodes into place (positions survive refreshes), hover cards (name · IP · type · status · brand), and the same panels and double-click-to-device navigation as 2D. Node identification is controlled next to it: **color by layer** (the hierarchy) or **color by device type** - six buckets (network gear / cameras / computers & servers / mobile / smart devices & IoT / other), where the gateway and core layers always classify as network gear regardless of the vendor string a scanner reported - and **label density** (auto / all / none) so a large graph can label every point. The type chips double as click-to-filter toggles (they combine with the layer pills; edges drop with their endpoints), unidentified-neighbor edges render as dashed links to a synthetic stub, and edges past their freshness window (10 min generic / 5 min WiFi) fade to dashed on their own.
 
 ## Change Center
 
