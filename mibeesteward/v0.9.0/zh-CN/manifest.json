@@ -1,0 +1,141 @@
+{
+  "lang": "zh-CN",
+  "title": "MiBee Steward 用户手册",
+  "sections": [
+    {
+      "title": "入门",
+      "items": [
+        {
+          "slug": "introduction",
+          "file": "introduction.md",
+          "title": "产品介绍"
+        },
+        {
+          "slug": "quick-start",
+          "file": "quick-start.md",
+          "title": "快速开始"
+        },
+        {
+          "slug": "user-guide",
+          "file": "user-guide.md",
+          "title": "用户手册"
+        },
+        {
+          "slug": "web-ui",
+          "file": "web-ui.md",
+          "title": "Web 界面巡礼"
+        }
+      ]
+    },
+    {
+      "title": "概念与架构",
+      "items": [
+        {
+          "slug": "product-scope",
+          "file": "product-scope.md",
+          "title": "产品边界"
+        },
+        {
+          "slug": "features",
+          "file": "features.md",
+          "title": "功能总览"
+        },
+        {
+          "slug": "comparison",
+          "file": "comparison.md",
+          "title": "与其他方案对比"
+        },
+        {
+          "slug": "discovery",
+          "file": "discovery.md",
+          "title": "自动发现"
+        },
+        {
+          "slug": "architecture",
+          "file": "architecture.md",
+          "title": "架构"
+        },
+        {
+          "slug": "agent-rs",
+          "file": "agent-rs.md",
+          "title": "分布式 Agent（Rust）"
+        }
+      ]
+    },
+    {
+      "title": "部署与配置",
+      "items": [
+        {
+          "slug": "deployment",
+          "file": "deployment.md",
+          "title": "部署"
+        },
+        {
+          "slug": "distributed",
+          "file": "distributed.md",
+          "title": "分布式部署"
+        },
+        {
+          "slug": "openwrt",
+          "file": "openwrt.md",
+          "title": "OpenWrt 部署"
+        },
+        {
+          "slug": "build-variants",
+          "file": "build-variants.md",
+          "title": "构建变体与能力矩阵"
+        },
+        {
+          "slug": "configuration",
+          "file": "configuration.md",
+          "title": "配置参考"
+        }
+      ]
+    },
+    {
+      "title": "参考与进阶",
+      "items": [
+        {
+          "slug": "api",
+          "file": "api.md",
+          "title": "API 参考"
+        },
+        {
+          "slug": "integrations",
+          "file": "integrations.md",
+          "title": "集成"
+        },
+        {
+          "slug": "benchmark",
+          "file": "benchmark.md",
+          "title": "基准测试"
+        },
+        {
+          "slug": "playbooks",
+          "file": "playbooks.md",
+          "title": "场景玩法指引"
+        },
+        {
+          "slug": "ebpf",
+          "file": "ebpf.md",
+          "title": "eBPF"
+        },
+        {
+          "slug": "fingerprint-spec",
+          "file": "fingerprint-spec.md",
+          "title": "指纹规范"
+        },
+        {
+          "slug": "development",
+          "file": "development.md",
+          "title": "开发"
+        },
+        {
+          "slug": "changelog",
+          "file": "changelog.md",
+          "title": "更新日志"
+        }
+      ]
+    }
+  ]
+}

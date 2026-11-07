@@ -96,7 +96,7 @@ cp agent-rs/target/aarch64-unknown-linux-musl/release/mibee-agent /usr/local/bin
 # systemd mibee-agent 服务，首装即生成 /etc/mibee/agent.yaml；生命周期见
 # deployment.md「软件包安装」）
 sudo apt install ./mibee-agent_<version>_amd64.deb
-cp agent-rs/target/aarch64-unknown-linux-musl/release/mibee-agent /usr/local/bin/mibee-agent
+```cp agent-rs/target/aarch64-unknown-linux-musl/release/mibee-agent /usr/local/bin/mibee-agent
 ```
 
 ### 3. 配置并启动

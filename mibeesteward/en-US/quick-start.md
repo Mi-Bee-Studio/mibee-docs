@@ -13,7 +13,7 @@ This guide shows how to get MiBee Steward running in minutes and complete your f
 
 ### Option 1: GitHub Releases
 
-Download the binary for your architecture from the [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) page (current version: v0.5.0):
+Download the binary for your architecture from the [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) page (current version: v0.9.0):
 
 ```bash
 chmod +x mibee-steward
@@ -23,7 +23,7 @@ chmod +x mibee-steward
 ### Option 2: Docker
 
 ```bash
-docker pull ghcr.io/mi-bee-studio/mibeesteward:0.4.0
+docker pull ghcr.io/mi-bee-studio/mibeesteward:0.9.0
 ```
 
 Scanning operates at the network-namespace level, so run the container with host networking and declare `NET_RAW` / `NET_ADMIN`:
@@ -33,14 +33,16 @@ docker run -d --name mibee \
   --network host \
   --cap-add NET_RAW --cap-add NET_ADMIN \
   -v "$PWD/configs:/app/configs:ro" \
-  ghcr.io/mi-bee-studio/mibeesteward:0.4.0
+  ghcr.io/mi-bee-studio/mibeesteward:0.9.0
 ```
 
 > Docker's default bridge mode sits behind NAT, which breaks ICMP, ARP/MAC, and multicast probing, it cannot be used for real asset inventory. See [Deployment](deployment.md).
 
 ## Minimal Configuration
 
-Create `config.yaml`. The smallest useful config is the listen address, your local network CIDR, and two required auth keys (`auth.jwt_secret` must be at least 32 characters; an empty `auth.initial_admin_password` aborts startup):
+**Zero-config path (#682)**: if the config file does not exist, the very first `./mibee-steward` run generates a minimal one at the `-config` path (default `config.yaml`) — a random `jwt_secret`, an empty admin password so the browser first-run setup creates it — and starts right away. Write a config yourself only when you want to tune something.
+
+Create `config.yaml`. The smallest useful config is the listen address, your local network CIDR, and the JWT secret (`auth.jwt_secret` must be at least 32 characters). `initial_admin_password` may stay empty — the first visit to the UI then opens the first-run setup that creates the admin password in the browser:
 
 ```yaml
 server:
@@ -53,7 +55,7 @@ network:
 
 auth:
   jwt_secret: "change-me-to-a-random-string-32-chars-min"   # ≥32 chars, required
-  initial_admin_password: "your-strong-password"            # required; change after first login
+  initial_admin_password: ""                                # empty = browser first-run setup; or set a temp password (first login forces a change)
 ```
 
 Every config key can be overridden by an environment variable with the `MIBEE_` prefix (dots become underscores, e.g. `network.cidr` → `MIBEE_NETWORK_CIDR`):
@@ -64,7 +66,7 @@ export MIBEE_AUTH_JWT_SECRET="$(openssl rand -base64 32)"
 export MIBEE_AUTH_INITIAL_ADMIN_PASSWORD="your-strong-password"
 ```
 
-For production, always set `auth.jwt_secret` and `auth.initial_admin_password`. See the [Configuration Reference](configuration.md) for all options.
+For production, always set a unique `auth.jwt_secret`; for the admin password either set `initial_admin_password` to a one-time value (the first login forces a change) or leave it empty and create the password through the browser first-run setup. See the [Configuration Reference](configuration.md) for all options.
 
 ## Start and Log In
 
@@ -72,7 +74,7 @@ For production, always set `auth.jwt_secret` and `auth.initial_admin_password`. 
 ./mibee-steward --config config.yaml
 ```
 
-Open http://localhost:8080 and log in with `admin` and the configured initial password; change the password immediately after the first login. Health check:
+Open http://localhost:8080. If `initial_admin_password` is empty, the login page switches to a first-run form: create the admin password there and you are logged straight in. Otherwise log in with `admin` and the configured password, and the first login forces you to replace it. Health check:
 
 ![Login page](images/login.webp)
 
@@ -85,8 +87,10 @@ curl http://localhost:8080/api/v1/health
 Curious what the inventory looks like before wiring a real subnet? Start in demo mode, a fictional fleet (two networks, ~20 devices with portraits, change history, probe results) is seeded on first boot and kept active with simulated events:
 
 ```bash
-./mibee-steward -demo -config configs/config.example.yaml
+./mibee-steward -demo
 ```
+
+(No config file yet? One is generated on first start — see [zero-config first run](#minimal-configuration) above; or pass `-config configs/config.example.yaml` to try the checked-in example.)
 
 Open the UI and explore; an amber banner marks demo mode and offers a one-click **Clear demo data** to switch to real inventorying.
 
@@ -147,7 +151,8 @@ The response is `{ hosts, total, alive, duration_ms }`; each host carries `ip`, 
 | No devices found | Verify `network.cidr` and `targets`; check that the firewall allows ICMP and SNMP (UDP 161) |
 | Devices online but unidentified | Check the SNMP community (default `public`), or pass `community` explicitly in the scan request |
 | Scanning misbehaves in Docker | Switch to host networking (see above) |
-| Service fails to start | Read the startup log: a missing `auth.jwt_secret` (<32 chars) or an empty `auth.initial_admin_password` exits immediately; then check write permissions on the `data/` directory |
+| Service fails to start | Read the startup log: a missing `auth.jwt_secret` (<32 chars) exits immediately (an empty `initial_admin_password` is fine — that is the browser first-run path); then check write permissions on the `data/` directory |
+| Want a self-check | `./mibee-steward doctor -config config.yaml` — validates the config and checks the database, port conflicts, backups, and (agent mode) center reachability |
 | Forgot the admin password | `./mibee-steward reset-admin-password -config config.yaml` (interactive prompt, or `-password 'new-pass'` / env `MIBEE_RESET_PASSWORD`) |
 
 ## Next Steps

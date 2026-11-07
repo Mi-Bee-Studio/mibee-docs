@@ -407,6 +407,9 @@ Per-target interval/timeout live on each `probe_targets` row (managed in the UI/
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `probe.max_concurrency` | int | 8 | Max simultaneous probes (semaphore). Replaces the previously hard-coded bound of 8; 0 = default, capped at 64. Env `MIBEE_PROBE_MAX_CONCURRENCY`. |
+| `probe.notify_fail_threshold` | int | 3 | Consecutive failing runs a probe track (per target × vantage) needs before `probe_failed` fires into notifications. 0 = default 3, range 1–10; at the recommended 300s cadence the default declares within 15 minutes. Env `MIBEE_PROBE_NOTIFY_FAIL_THRESHOLD`. |
+| `notify.retry_window_minutes` | int | 30 | Bounded delayed-retry window for retryable delivery failures (#633): the receiver being briefly unreachable requeues with growing backoff until the window expires, then a final failed row. 0 = default 30, negative = disabled. In-memory only (does not survive restart). Env `MIBEE_NOTIFY_RETRY_WINDOW_MINUTES`. |
+| `agent_fleet.offline_threshold_minutes` | int | 10 | How stale an agent's `last_report_at` must be before `agent_offline` fires. 0 = default 10 (two fully quiet cycles at the recommended probe cadence), range 1–1440. Env `MIBEE_AGENT_FLEET_OFFLINE_THRESHOLD_MINUTES`. |
 | `probe.quality.enabled` | bool | false | Network egress quality assessment: a system-seeded matrix of public probe points executed from EVERY vantage (center + all agents), analyzed per network. A bare config defaults to **disabled**; `configs/config.example.yaml` ships `enabled: true` as the recommended value. Env `MIBEE_PROBE_QUALITY_ENABLED`. |
 | `probe.quality.window_minutes` | int | 15 | Analyzer lookback window (5–1440). Env `MIBEE_PROBE_QUALITY_WINDOW_MINUTES`. |
 | `probe.quality.interval_seconds` | int | 120 | Seeded cadence of every quality target (≥10). |
@@ -597,8 +600,6 @@ The synchronous scan endpoint (`POST /api/v1/scanner/scan`) imposes a hard targe
 |-----|------|---------|-------------|
 | `retention.heartbeat_results_days` | int | 7 | Heartbeat results retention (days) |
 | `retention.device_liveness_days` | int | 7 (mirrors the heartbeat window) | Device liveness series retention (days). Defaults to the `heartbeat_results_days` value when unset. |
-| `retention.silent_device_days_mac` | int | 7 | Physical deletion of silent scanner-discovered devices with a MAC: deleted after this many days without observation |
-| `retention.silent_device_hours_no_mac` | int | 24 | Physical deletion of silent devices without a MAC: deleted after this many hours without observation |
 | `retention.scan_results_days` | int | 30 | Scan results retention (days) |
 | `retention.scan_task_runs_days` | int | 30 | Scan task run records retention (days) |
 | `retention.audit_logs_days` | int | 90 | Audit logs retention (days) |
@@ -612,6 +613,26 @@ The synchronous scan endpoint (`POST /api/v1/scanner/scan`) imposes a hard targe
 | `retention.probe_results_days` | int | 30 | Synthetic-probe result history retention (days). `probe_tls_certs` is not swept, it holds only each target's current chain |
 | `retention.sweep_interval_hours` | int | 6 | Cleanup sweep interval (hours) |
 | `retention.batch_size` | int | 5000 | Max rows per cleanup batch |
+
+## Archive Configuration (#663, #664)
+
+The asset-archive engine REPLACES the old silent-device physical prune: a
+scanner-discovered device offline past the threshold is archived (history
+kept), not deleted. Thresholds are re-read from the settings overlay every
+engine tick, so runtime changes apply without a restart.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `archive.offline_days` | int | 7 | Days a device may stay offline before it moves to the archive. Per-device override: `devices.archive_offline_days_override` (NULL/0 = follow this). Devices without a MAC take a 24h fast lane. |
+| `archive.restore_online_minutes` | int | 60 | How long an archived device must stay CONTINUOUSLY online before it auto-restores into the asset library. Shorter appearances record `online_blip` events and stay archived. |
+| `archive.sweep_interval_seconds` | int | 60 | Archive engine tick (seconds). The restore timer needs finer granularity than the retention sweeper's 6h. |
+| `archive.smart.disabled` | bool | false | Opts OUT of the periodic-pattern learner (inverted flag so the Go zero value keeps the learner ON). |
+| `archive.smart.min_history_days` | int | 60 | Minimum appearance-event history span before the learner trusts a pattern (user rule: under 2 months of history, smart detection does not engage). |
+| `archive.smart.max_threshold_days` | int | 30 | Only effective thresholds BELOW this engage the learner (user rule: a month-scale threshold should not be second-guessed by smartness). |
+
+Pins override everything: `force_active` is never auto-archived,
+`force_archive` is never auto-restored. Manual devices (`scan_source !=
+'scanner_v2'`) respond to manual archive only.
 
 ## Flow Telemetry Configuration (#500)
 
