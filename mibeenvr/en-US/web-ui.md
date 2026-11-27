@@ -1,6 +1,6 @@
 # Web UI Tour
 
-> For MiBeeNvr v0.14.0
+> For MiBeeNvr v0.15.0
 
 The MiBee NVR web interface is organized into five top-level pages plus the single-camera live page. This page is a feature cheat sheet; step-by-step configuration lives in the dedicated guides.
 
@@ -10,16 +10,18 @@ The MiBee NVR web interface is organized into five top-level pages plus the sing
 
 The default page after login — a live multi-camera grid:
 
-- **Grid layout**: the "Configure" button opens the **camera picker** to choose which cameras to show (up to 4)
+- **Grid layout**: the "Configure" button opens the **camera picker** to choose which cameras to show (4 by default, with 6/9/12/16 tiers subject to the server's HLS preview budget)
 - **Header quality switch**: a **Smooth / HD** toggle for the whole grid — "Smooth" rides the camera's [sub-stream](sub-stream.md) (default), slashing bandwidth and decode load when viewing many cameras at once; cameras without one silently fall back to the main stream
 - **Per tile**: camera name, live badge, playback protocol (WebCodecs / MJPEG, etc.), and a **health score**
 - **Tile controls**: unmute (cameras with audio) and fullscreen
-- **AI overlay**: with [browser-side AI detection](ai-detection.md) enabled, detection boxes draw directly on the feed
+- **AI overlay**: with [browser-side AI detection](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/ai-detection-tuning.md) enabled, detection boxes draw directly on the feed
 - **Click a tile** to open that camera's live page
 
-The picker is built for larger fleets: a **search box** filters by name / group; the **Online only** toggle hides offline cameras by default (already-selected offline ones stay visible so you can deselect them); cameras are organized into per-group sections with counts, and **Add group** fills the remaining grid slots with that group's cameras in order. The selected-chips strip shows pick order 1-4, each removable with ×.
+The picker is built for larger fleets: a **search box** filters by name / group; the **Online only** toggle hides offline cameras by default (already-selected offline ones stay visible so you can deselect them); cameras are organized into per-group sections with counts, and **Add group** fills the remaining grid slots with that group's cameras in order. Selected chips are numbered in pick order and removable with ×.
 
-> H.265 cameras play in the browser via WASM decoding — no HTTPS or plugins needed; see [Streaming Protocol Selection](streaming.md).
+Above four tiles, enable **Photo wall**: anchor the enlarged tile top-left, top-right, bottom-left, bottom-right, or center, or choose two or three featured tiles. Small tiles dense-pack the remainder and featured tiles can rotate. In HD mode above four tiles, only featured tiles use the main stream; the rest stay on sub-streams. Refreshes suspend while the grid is hidden and resume on return; `/flow` polling drops to half frequency, and route keep-alive suspension further reduces idle load.
+
+> H.265 cameras play in the browser via WASM decoding — no HTTPS or plugins needed; see [Streaming Protocol Selection](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/streaming-protocol-selection.md).
 
 ## Cameras
 
@@ -77,9 +79,9 @@ Operations at a glance, organized into four tabs:
 
 ## Settings
 
-Nine pages: **General** (timezone / port / frontend prefs), **Storage** (root path, [candidate volumes & migration](storage-management.md)), **Camera Access**, **Streaming**, **GB28181**, **AI Detection** (browser-side detection + MiBeeVision integration + per-camera config), **Recording & Processing** (incl. [activity-aware cleanup](adaptive-recording.md#activity-scores--retrieval)), **Advanced**, **About**.
+Nine pages: **General** (timezone / port / frontend prefs), **Storage** (root path, [candidate volumes & migration](storage-management.md)), **Camera Access**, **Streaming**, **GB28181**, **AI Detection** (browser-side detection + MiBeeVision integration + per-camera config), **Recording & Processing** (incl. [activity-aware cleanup](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/adaptive-recording.md#activity-scores--retrieval)), **Advanced**, **About**.
 
-- The "A new version is available" badge on the nav signals an upgrade (see the [Upgrade Guide](upgrade-faq.md))
+- The "A new version is available" badge on the nav signals an upgrade (see the [Upgrade Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/upgrade-guide.md))
 - Most settings apply immediately; a few (like the storage path) need a restart
 
 ## Live Page (Single Camera)
@@ -101,6 +103,6 @@ Opened from the grid or a camera card at `#/live/{id}`:
 
 ## Next Steps
 
-- [Getting Started](quickstart.md) — add your first camera
+- [Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/getting-started.md) — add your first camera
 - [CLI Reference](cli.md) — command-line administration
-- [Live Relay](relay.md) — push feeds to streaming platforms
+- [Live Relay](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/relay-guide.md) — push feeds to streaming platforms

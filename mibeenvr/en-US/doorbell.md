@@ -5,7 +5,7 @@ that speaks SIP as a UA) ring the NVR directly: press the bell and the web UI
 shows an incoming-call popup with the caller, an optional snapshot of the
 linked camera, and **answer / reject**. Answering opens a genuine two-way
 G.711 intercom (browser mic ↔ doorbell speaker). Deliberately decoupled from
-[GB28181](gb28181.md) — no shared numbering or config; the two systems
+[GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md) — no shared numbering or config; the two systems
 can run side by side.
 
 Default **off**.
@@ -67,7 +67,7 @@ The section applies on the next start — saving answers
 `restart_required: true` and the panel's status strip flips to
 "Enabled — restart pending" (config on, server not yet rebuilt). Once
 running, the strip lists the stations currently registered
-([`GET /api/doorbell/status`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/doorbell.md)).
+([`GET /api/doorbell/status`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/api/doorbell.md)).
 
 ## Security posture
 
@@ -128,5 +128,5 @@ the same contract as the GB28181 talk socket).
 
 ## Next steps
 
-- [Events & automation](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/README.md) — the `doorbell.*` event topics
-- [GB28181](gb28181.md) — the platform-side protocol for cameras
+- [Events & automation](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/api/README.md) — the `doorbell.*` event topics
+- [GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md) — the platform-side protocol for cameras

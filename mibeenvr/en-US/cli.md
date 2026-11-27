@@ -1,6 +1,6 @@
 # CLI Reference
 
-> For MiBeeNvr v0.14.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
+> For MiBeeNvr v0.15.0 · command name `mibee-nvr` (prebuilt bundles may carry an arch suffix, e.g. `mibee-nvr-amd64`)
 
 MiBee NVR follows a "single binary + subcommands" design: **running it without a subcommand starts the server**, while subcommands run an administrative tool and exit.
 
@@ -121,7 +121,7 @@ Downloads the ONNX model needed for browser-side AI detection (YOLOv11-nano, ~5.
 mibee-nvr download-model --config mibee-nvr.yaml
 ```
 
-Includes 5 exponential-backoff retries plus size/integrity checks — useful for pre-downloading in offline environments and shipping it with the package. The model powers [browser-side AI detection](ai-detection.md).
+Includes 5 exponential-backoff retries plus size/integrity checks — useful for pre-downloading in offline environments and shipping it with the package. The model powers [browser-side AI detection](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/ai-detection-tuning.md).
 
 ## merge-cameras — Merge Cameras
 
@@ -165,7 +165,7 @@ Behavior notes:
 - The command may run while the NVR is live (WAL concurrency, same as cleanup/repair); cameras with timelapse enabled are refused though — their windows belong to the server's merge scheduler (use `--force` or stop the server).
 - **Self-downgrades on execute** (nice 19 + lowest best-effort IO class; `--no-throttle` disables): merges at the NVR's default priority starve online recording (2026-09-12 incident: load 8-13 for 4.5h, recordings dropped 17→10; renicing after the fact could not undo the storm).
 - **Directory-form source deletion is rate-limited** (pause every 200 files, `--delete-throttle`): unlinking the millions of small files in MJPEG/timelapse frame directories saturates the ext4 journal (jbd2) for tens of minutes and slows all disk IO.
-- Merge intermediates (frame extract/copy dirs) are written under the **storage root** at `<root>/periodic-merge/tmp/`, never the system `/tmp` (a 1s-sampled natural-day window needs ~3.5-7GB and small root partitions hit ENOSPC); merge output is generated streaming (#747), so memory use is independent of window size. Intermediates left behind by an interrupted run (Ctrl-C/crash) are reclaimed by the NVR server's startup sweep (grace period `storage.periodic_temp_grace_s`, default 24h — see [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md#storageperiodic_temp_grace_s)).
+- Merge intermediates (frame extract/copy dirs) are written under the **storage root** at `<root>/periodic-merge/tmp/`, never the system `/tmp` (a 1s-sampled natural-day window needs ~3.5-7GB and small root partitions hit ENOSPC); merge output is generated streaming (#747), so memory use is independent of window size. Intermediates left behind by an interrupted run (Ctrl-C/crash) are reclaimed by the NVR server's startup sweep (grace period `storage.periodic_temp_grace_s`, default 24h — see [Configuration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/configuration.md#storageperiodic_temp_grace_s)).
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -363,7 +363,7 @@ mibee-nvr update --check
 
 # manual upgrade to the latest stable (requires sudo)
 sudo mibee-nvr update
-sudo mibee-nvr update --version v0.14.0
+sudo mibee-nvr update --version v0.15.0
 
 # root-helper entry (ExecStart of the update service; the request file is
 # written by the app and consumed exactly once — removed on ANY outcome)
@@ -381,11 +381,11 @@ mibee-nvr update --apply-request /var/lib/mibee-nvr/update-request.json
 - **Linux bare-metal only**: permanently disabled for Docker deployments (the container is immutable — use Watchtower / `docker compose pull`); Windows/macOS desktop builds are refused too (a self-update would silently resolve to the linux binary).
 - `update.download_mirror` switches artifact downloads to a mirror (the version check still hits the GitHub API).
 
-For the auto-apply switch (`update.auto_apply`) and the service/polkit setup see [Automatic Updates](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/deployment-autoupdate.md).
+For the auto-apply switch (`update.auto_apply`) and the service/polkit setup see [Automatic Updates](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/deployment-autoupdate.md).
 
 ## gen-gb35114-certs — Issue GB35114 Pilot Certificates
 
-Only present in `-tags gb35114` builds (a default build explains the rebuild instead). Issues self-signed pilot material for GB35114 secure registration (identities serve levels A/B/C): an SM2 platform identity plus device identities signed by the platform, laid out to match the three path keys of `gb28181.security35114`. See the [GB28181 guide — GB35114 Security](gb28181.md).
+Only present in `-tags gb35114` builds (a default build explains the rebuild instead). Issues self-signed pilot material for GB35114 secure registration (identities serve levels A/B/C): an SM2 platform identity plus device identities signed by the platform, laid out to match the three path keys of `gb28181.security35114`. See the [GB28181 guide — GB35114 Security](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md).
 
 ```bash
 mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
@@ -406,4 +406,4 @@ mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
 
 - [Configuration Reference](config.md) — top-level YAML key cheat sheet
 - [Setup Wizard](wizard.md) — first-run configuration in the browser
-- [Upgrade Guide](upgrade-faq.md) — upgrades and data migration
+- [Upgrade Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/upgrade-guide.md) — upgrades and data migration

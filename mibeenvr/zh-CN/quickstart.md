@@ -50,7 +50,7 @@ docker compose --project-directory . -f deploy/docker/docker-compose.yml up -d
 
 > **注意**：无需准备配置文件！MiBee NVR 在没有配置文件的情况下启动时会自动初始化。
 
-> **在 NAS 上运行（群晖 / 威联通 / unRAID / 飞牛 / iStoreOS / 极空间）？** 请参阅[部署指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/deployment.md#在-nas-os-上部署)中的各平台指南——涵盖 host 网络（ONVIF 摄像头自动发现所需）、数据卷路径与端口冲突。
+> **在 NAS 上运行（群晖 / 威联通 / unRAID / 飞牛 / iStoreOS / 极空间）？** 请参阅[部署指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/deployment.md#在-nas-os-上部署)中的各平台指南——涵盖 host 网络（ONVIF 摄像头自动发现所需）、数据卷路径与端口冲突。
 
 
 

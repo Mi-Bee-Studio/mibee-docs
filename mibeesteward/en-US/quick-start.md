@@ -13,17 +13,22 @@ This guide shows how to get MiBee Steward running in minutes and complete your f
 
 ### Option 1: GitHub Releases
 
-Download the binary for your architecture from the [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) page (current version: v0.9.0):
+Download the binary for your architecture from the [MiBee Steward v0.10.0 release](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases/tag/v0.10.0):
 
 ```bash
-chmod +x mibee-steward
-./mibee-steward --config config.yaml
+# amd64; the arm64 asset is mibee-steward-linux-arm64
+chmod +x mibee-steward-linux-amd64
+./mibee-steward-linux-amd64 --config config.yaml
 ```
+
+Checksums are in `SHA256SUMS.center`; variants with optional LLDP/CDP and ARP support are `mibee-steward-linux-amd64-full` / `mibee-steward-linux-arm64-full`.
+
+> **Upgrading from v0.9.x or older?** v0.10.0 crosses schema v9 → v10 → v11 with no in-place upgrade. Run `scripts/backup.sh`, remove the old database, start with a fresh one, and rescan. Probe history resets, and archive entries do not survive the rebuild. See the [deployment guide](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/docs/en/deployment.md#v09x--v0100-schema-boundary-procedure).
 
 ### Option 2: Docker
 
 ```bash
-docker pull ghcr.io/mi-bee-studio/mibeesteward:0.9.0
+docker pull ghcr.io/mi-bee-studio/mibeesteward:0.10.0
 ```
 
 Scanning operates at the network-namespace level, so run the container with host networking and declare `NET_RAW` / `NET_ADMIN`:
@@ -33,7 +38,7 @@ docker run -d --name mibee \
   --network host \
   --cap-add NET_RAW --cap-add NET_ADMIN \
   -v "$PWD/configs:/app/configs:ro" \
-  ghcr.io/mi-bee-studio/mibeesteward:0.9.0
+  ghcr.io/mi-bee-studio/mibeesteward:0.10.0
 ```
 
 > Docker's default bridge mode sits behind NAT, which breaks ICMP, ARP/MAC, and multicast probing, it cannot be used for real asset inventory. See [Deployment](deployment.md).

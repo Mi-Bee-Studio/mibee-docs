@@ -548,7 +548,7 @@ PUT /api/cameras/camera-id
 
 ## Related Documentation
 
-- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md)
+- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/configuration.md)
 - [Camera Guide](camera-guide.md)
-- [API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/README.md)
-- [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/troubleshooting.md)
+- [API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/api/README.md)
+- [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/troubleshooting.md)

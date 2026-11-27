@@ -49,7 +49,7 @@
 | 里程碑 | 范围 | 状态 |
 |---|---|---|
 | **v0.1** | 摄取入口（webhook/Alertmanager/Bark/MQTT）+ 四道闸 + L0 全量 + SQLite + SSE + 嵌入式 UI | ✅ 已发布 |
-| **v0.2** | mesh 高可用（claim 租约/死亡开关/静默同步）、渠道凭证落库加密、Scout 通知中心 API、http_enrich 外部打标 | ✅ 已发布 |
+| **v0.2** | mesh 高可用（claim 租约/死亡开关/静默同步）、渠道凭证落库加密、Scout 通知中心 API、http_enrich 外部打标、按人订阅、多 Bell 联邦、生态发现 | ✅ **v0.2.0 已发布（2026-11-11）** |
 | **v0.3** | 全量 17 类渠道（Twilio/PagerDuty/Opsgenie/企微应用/LINE 等）、PagerDuty/简单 JSON/Grafana 摄取入口、AI 分诊（L1 内嵌模型 + L2 云端）与受控介入框架、首装设密向导 | ✅ 已发布（随 v0.1.x 系列交付） |
 | **v1.0** | 按人路由、多 Bell 联邦 | 计划 |
 

@@ -410,21 +410,39 @@ Per-target interval/timeout live on each `probe_targets` row (managed in the UI/
 | `probe.notify_fail_threshold` | int | 3 | Consecutive failing runs a probe track (per target × vantage) needs before `probe_failed` fires into notifications. 0 = default 3, range 1–10; at the recommended 300s cadence the default declares within 15 minutes. Env `MIBEE_PROBE_NOTIFY_FAIL_THRESHOLD`. |
 | `notify.retry_window_minutes` | int | 30 | Bounded delayed-retry window for retryable delivery failures (#633): the receiver being briefly unreachable requeues with growing backoff until the window expires, then a final failed row. 0 = default 30, negative = disabled. In-memory only (does not survive restart). Env `MIBEE_NOTIFY_RETRY_WINDOW_MINUTES`. |
 | `agent_fleet.offline_threshold_minutes` | int | 10 | How stale an agent's `last_report_at` must be before `agent_offline` fires. 0 = default 10 (two fully quiet cycles at the recommended probe cadence), range 1–1440. Env `MIBEE_AGENT_FLEET_OFFLINE_THRESHOLD_MINUTES`. |
-| `probe.quality.enabled` | bool | false | Network egress quality assessment: a system-seeded matrix of public probe points executed from EVERY vantage (center + all agents), analyzed per network. A bare config defaults to **disabled**; `configs/config.example.yaml` ships `enabled: true` as the recommended value. Env `MIBEE_PROBE_QUALITY_ENABLED`. |
+| `probe.quality.enabled` | bool | true (absent key = ON) | Network egress quality assessment: a system-seeded matrix of public probe points executed from EVERY vantage (center + all agents), analyzed per network. **An absent key now defaults ON** (upgrade-carried old configs no longer silently lose the feature); only an explicit `enabled: false` turns it off. The runtime switch lives in the web UI (Settings → Probes, settings-center override, no restart). Env `MIBEE_PROBE_QUALITY_ENABLED`. |
 | `probe.quality.window_minutes` | int | 15 | Analyzer lookback window (5–1440). Env `MIBEE_PROBE_QUALITY_WINDOW_MINUTES`. |
 | `probe.quality.interval_seconds` | int | 120 | Seeded cadence of every quality target (≥10). |
 | `probe.quality.http_degraded_ms` | int | 800 | p50 latency threshold (http legs) marking a vantage degraded, on top of the ok-rate threshold. |
 | `probe.quality.dns_degraded_ms` | int | 300 | Same for dns legs. |
 | `probe.quality.ok_rate_threshold` | float | 0.9 | Minimum success rate within the window (0..1]. |
-| `probe.quality.groups` | map | see below | The probe-point matrix, `group name → [{name, module, target, options}]`. The reserved group `domestic` drives the primary verdict; `international` (and any other name) is reference-only — cross-border variance is its own signal, not an egress fault. Empty = the shipped defaults: a domestic group (two public resolvers for DNS differential diagnosis, mainstream HTTP sites, a 204 endpoint, a DNS-free direct-IP TCP leg) plus an international reference group. Every value is configurable; nothing is hardcoded. |
-| `probe.autogen.enabled` | bool | false | Discover-then-probe: auto-create device-bound probe targets (`source=auto`) from discovered services. Default OFF — it writes rows on its own, so it must be a deliberate choice. Turning it off parks the auto population (rows + history kept). |
+| `probe.quality.loss_pct_threshold` | float | 5 | Burst-sampled packet-loss percentage (#744) that marks a vantage degraded, on top of the ok-rate threshold. Consumed as the stable verdict code `loss_burst`. |
+| `probe.quality.jitter_degraded_ms` | float | 30 | Burst jitter budget in ms (#744, mean absolute difference of consecutive echo RTTs); exceeding it marks a vantage degraded with the stable verdict code `jitter_high`. |
+| `probe.quality.groups` | map | see below | The probe-point matrix, `group name → [{name, module, target, options}]`. The reserved group `domestic` drives the primary verdict; `international` (and any other name) is reference-only — cross-border variance is its own signal, not an egress fault. Empty = the shipped defaults: a domestic group (two public resolvers for DNS differential diagnosis, mainstream HTTP sites, a 204 endpoint, a DNS-free direct-IP TCP leg) plus an international reference group. Every value is configurable; nothing is hardcoded. Burst metrics (`loss_burst` / `jitter_high`) from icmp targets feed the verdicts too. |
+| `probe.quality.episodes.enabled` | bool | (follows quality) | Degradation-episode detector switch (#720). Absent = follow `probe.quality.enabled`; explicit false is the off switch. |
+| `probe.quality.episodes.latency_ratio` | float | 2.0 | A track's window p50 counts as degraded at `p50 >= max(base × ratio, base + min_delta)`. |
+| `probe.quality.episodes.latency_min_delta_ms` | int | 50 | Absolute latency floor so a 3ms baseline cannot "double" into noise. |
+| `probe.quality.episodes.ok_rate_drop` | float | 0.3 | Window ok-rate counts as degraded at `ok_rate <= base − drop` (0..1). |
+| `probe.quality.episodes.min_windows` | int | 2 | Consecutive degraded 15-minute windows before a track candidate counts (2 ≈ 30 sustained minutes). |
+| `probe.quality.episodes.alert_requires_attribution` | bool | true | The #716 ruling, enforced: degraded episodes without a same-window egress/path change stay recorded (UI yellow) but never notify. Explicit false allows notifying unattributed episodes. |
+| `probe.autogen.enabled` | bool | false | Discover-then-probe: auto-create device-bound probe targets (`source=auto`) from discovered services. Default OFF — it writes rows on its own, so it must be a deliberate choice (flip it any time in Settings → Probes — the change takes effect immediately with one reconcile sweep; the probes page LAN empty state also offers a one-click sweep). Turning it off parks the auto population (rows + history kept). |
 | `probe.autogen.services` | []string | ["http","https"] | Service identities eligible for auto targets (matched against `host_services.service`). |
 | `probe.autogen.device_types` | []string | [] | Restrict generation to those device types; empty = all. |
 | `probe.autogen.interval_seconds` | int | 300 | Probe interval of auto targets (≥10). |
 | `probe.autogen.max_targets` | int | 100 | Population cap (1–1000) so a 1000-device LAN cannot explode into 3000 targets. |
 | `probe.autogen.sweep_interval_minutes` | int | 15 | Reconcile cadence: create targets for new services, park targets whose service left the scan, revive on reappearance. Manual targets are never touched. |
+| `probe.autogen.mesh_enabled` | bool | true (absent key = ON) | Site-to-site N×N mesh (#747): auto-generate vantage-matrix targets (center → each agent, each agent → every other agent) from reported source addresses, so the RTT/loss/jitter matrix exists without manual wiring. Absent = ON (explicit `false` disables). |
+| `probe.egress.enabled` | bool | false | Egress identity recorder (#718): every interval the center asks a set of public echo sources (HTTP/STUN/DNS) which public IP the current egress presents, enriches the distinct IPs with their origin ASN, and stores the round in `data/probe_ext.db`. Recording only — changes never notify (#716). The same source set + cadence is also pushed to agents that declared the `egress` capability: every vantage runs its own rounds and reports them home (`POST /agents/egress-report`, token-bound identity, ASN enrichment on the center). A bare config defaults to **disabled**; `configs/config.example.yaml` ships `enabled: true` as the recommended value. Env `MIBEE_PROBE_EGRESS_ENABLED`. |
+| `probe.egress.interval_seconds` | int | 300 | Round cadence (60–86400). Env `MIBEE_PROBE_EGRESS_INTERVAL_SECONDS`. |
+| `probe.egress.asn_resolvers` | []string | ["223.5.5.5"] | DNS servers used for the Team Cymru origin-ASN TXT lookups, in preference order. |
+| `probe.egress.sources` | []source | built-in set | Echo sources; a non-empty list REPLACES the built-in multi-transport set. Entry: `{name, kind: http\|stun\|dns, target}` (http: URL returning the IP in the body; stun: `host:port`; dns: `server\|qname`). The pushed agent plans use whatever this resolves to. |
+| `probe.trace.categories` | []string | ["external","quality"] | Probe-target categories that get periodic zero-privilege path traces (#719). `lan` stays off — internal paths are the topology page's job. The schedule also rides the agents' probe plans (agents declaring `trace` — a Linux-only capability): each vantage traces on its own and reports, and a failed probe additionally triggers one snapshot per target per 10 minutes (`trigger=failure`). |
+| `probe.trace.interval_minutes` | int | 30 | Baseline trace cadence per target (≥5). |
+| `probe.trace.max_ttl` | int | 30 | TTL walk bound (8–64). Silent-middle egress needs the full walk: no early give-up. |
+| `probe.trace.per_hop_ms` | int | 500 | Per-TTL wait (100–3000). |
+| `probe.trace.concurrency` | int | 2 | Simultaneous traces (≤8). |
 
-Quality seeding semantics (applied at startup, idempotent): enabled — missing matrix rows are created (`source=system`, vantage `all`), drifted rows are refreshed from config (module/target/options), and a `source=system` row whose config entry was removed is deleted **with its result history**; disabled — every system target is parked (disabled, kept for history). A row deleted in the UI is reseeded on the next restart; to remove a target permanently, remove it from `groups` (or disable `probe.quality`).
+Quality seeding semantics (applied at startup, idempotent; re-run immediately when the Settings → Probes switch flips): enabled — missing matrix rows are created (`source=system`, vantage `all`), drifted rows are refreshed from config (module/target/options), parked system rows are **revived** (the matrix follows the master switch; row-level parking does not apply to system targets), and a `source=system` row whose config entry was removed is deleted **with its result history**; disabled — every system target is parked (disabled, kept for history). A row deleted in the UI is reseeded on the next restart; to remove a target permanently, remove it from `groups` (or disable `probe.quality`).
 
 **Example** (matching `configs/config.example.yaml`):
 ```yaml
@@ -437,6 +455,8 @@ probe:
     http_degraded_ms: 800
     dns_degraded_ms: 300
     ok_rate_threshold: 0.9
+    loss_pct_threshold: 5
+    jitter_degraded_ms: 30
     groups:
       domestic:
         - {name: quality-dns-ali,    module: dns,  target: www.baidu.com, options: {record: A, resolver: 223.5.5.5}}
@@ -454,6 +474,7 @@ probe:
     interval_seconds: 300
     max_targets: 100
     sweep_interval_minutes: 15
+    mesh_enabled: true
 ```
 
 The verdict semantics the matrix feeds (why two resolvers, why a direct-IP TCP leg, why the international group is reference-only) are explained in [Architecture → Synthetic Probing](architecture.md) and surfaced by `GET /api/v1/probe-quality`.
@@ -611,6 +632,7 @@ The synchronous scan endpoint (`POST /api/v1/scanner/scan`) imposes a hard targe
 | `retention.host_services_days` | int | 30 | Host service records retention (days) |
 | `retention.host_tls_certs_days` | int | 30 | TLS certificate records retention (days) |
 | `retention.probe_results_days` | int | 30 | Synthetic-probe result history retention (days). `probe_tls_certs` is not swept, it holds only each target's current chain |
+| `retention.probe_ext_days` | int | 30 | Egress echo rounds + path samples + per-stage timing rows retention (days), the `data/probe_ext.db` side database (#716/#717/#718/#719). |
 | `retention.sweep_interval_hours` | int | 6 | Cleanup sweep interval (hours) |
 | `retention.batch_size` | int | 5000 | Max rows per cleanup batch |
 
@@ -665,9 +687,26 @@ The inbound SNMP trap channel (#509) — devices speaking unprompted. `linkDown`
 
 Operational notes: open the UDP port in the firewall for the trap sources only (the listener sees any packet that reaches it); v3 traps (USM, credential-name references against the vault) are the designed follow-up — no v3 keys exist yet, so no one can enable a stub.
 
+## LAN Announce Configuration (#729)
+
+The opposite direction of `scanner.discovery`: this instance announcing ITSELF on the LAN so the Scout app's one-shot scan recognizes it as a MiBee service (type `steward`) instead of requiring a hand-typed address. Three surfaces under one switch: the mDNS advertisement `_mibee-steward._tcp`, the public identity endpoint `GET /.well-known/mibee-service` (`{"service":"steward","name","ver","id"}` — unauthenticated, exactly four fields, same disclosure posture as `/health`), and a UDP responder answering the shared `MIBEE-NVR-DISCv1?` probe on the steward port with `type=steward`.
+
+Default ON: the app shows nothing it cannot find, so announcing IS the visibility. A failed surface logs once and never blocks boot (the instance simply loses that one discovery path). The published data is deliberately minimal — a stable instance ID (`data/instance-id`, generated once and reused across restarts/upgrades/IP changes; an unwritable data dir degrades to an ephemeral ID with a warn), the instance name, the API port.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `announce.enabled` | bool | `true` | Master switch; `false` also unregisters the well-known HTTP endpoint (404) |
+| `announce.name` | string | `""` | Announced instance name (mDNS + well-known); empty = OS hostname |
+| `announce.mdns` | bool | `true` | `_mibee-steward._tcp` advertisement (5353/udp; coexists with avahi/umdns) |
+| `announce.udp` | bool | `true` | UDP discovery responder (the app's fallback for multicast-restricted Wi-Fi) |
+| `announce.udp_port` | int | `49091` | Steward discovery port (adjacent to the NVR's 49090; registry confirmation tracked in #729) |
+| `announce.tls` | bool | `false` | Announced scheme hint — `true` only when a TLS-terminating reverse proxy fronts the same port clients discover |
+
+Named `announce` (not `discovery`) to stay unambiguous next to `scanner.discovery`: THAT block is this instance discovering others; this block is being discoverable.
+
 ## Docker Configuration Template
 
-The repository ships a ready-to-use Docker Compose config template at [`configs/config.docker.yaml`](../../configs/config.docker.yaml). It pre-configures paths and network settings appropriate for containerized deployment, copy it as your starting `config.yaml` and adjust `auth.jwt_secret` and `auth.initial_admin_password` for production.
+The repository ships a ready-to-use Docker Compose config template at [`configs/config.docker.yaml`](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/configs/config.docker.yaml). It pre-configures paths and network settings appropriate for containerized deployment, copy it as your starting `config.yaml` and adjust `auth.jwt_secret` and `auth.initial_admin_password` for production.
 
 ## Complete Configuration Example
 

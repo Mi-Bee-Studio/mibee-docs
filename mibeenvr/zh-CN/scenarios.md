@@ -29,7 +29,7 @@ flowchart LR
 curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install.sh | sudo bash
 ```
 
-用 Docker 或在群晖 / 威联通 / 飞牛 fnOS 商店里安装也完全可以——参见[快速入门](quickstart.md)。装好后浏览器打开 `http://设备IP:9090`。
+用 Docker 或在群晖 / 威联通 / 飞牛 fnOS 商店里安装也完全可以——参见[快速入门](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/getting-started.md)。装好后浏览器打开 `http://设备IP:9090`。
 
 ### 第 2 步：跟着初始化向导走（2 分钟）
 
@@ -86,7 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install
 - 类别过滤：只留 `person`
 - 跳帧率：省电设备设 8–10，桌面设 3–5
 
-详细建议见 [AI 检测调参指南](ai-detection.md)——里面有边缘设备 / 桌面 / 布防 / 演示四种场景的推荐值。
+详细建议见 [AI 检测调参指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/ai-detection-tuning.md)——里面有边缘设备 / 桌面 / 布防 / 演示四种场景的推荐值。
 
 ### 第 4 步：让报警进入你的生活
 
@@ -145,7 +145,7 @@ curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install
 **小贴士**：
 
 - 转推与录制互不影响——同一摄像头边录像边转推是设计内行为
-- 详情见[直播转推](relay.md)
+- 详情见[直播转推](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/relay-guide.md)
 
 ---
 
@@ -200,7 +200,7 @@ NVR 侧把推流当作一路普通摄像头——录制、直播、AI 一切照�
 
 ![小米设备扫描](images/xiaomi-scan.webp)
 
-之后录像落在你自己的硬盘上，没有订阅费、没有隐私顾虑。支持 CS2 新协议机型与 7 款 TUTK 老型号（大白、小方、小白、Aqara G2 等），详见[小米摄像头接入](xiaomi.md)。
+之后录像落在你自己的硬盘上，没有订阅费、没有隐私顾虑。支持 CS2 新协议机型与 7 款 TUTK 老型号（大白、小方、小白、Aqara G2 等），详见[小米摄像头接入](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/xiaomi-setup.md)。
 
 ---
 
@@ -208,4 +208,4 @@ NVR 侧把推流当作一路普通摄像头——录制、直播、AI 一切照�
 
 - 想全面了解功能边界：[功能总览](features.md)
 - 正在和其他方案比较：[同类方案对比](comparison.md)
-- 遇到问题：先看[故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/troubleshooting.md)
+- 遇到问题：先看[故障排除](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/troubleshooting.md)

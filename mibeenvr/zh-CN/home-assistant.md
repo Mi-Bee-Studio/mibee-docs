@@ -1,6 +1,6 @@
 # 接入 Home Assistant
 
-> 适用于 MiBee NVR v0.14.0+（内置 RTSP 输出、MQTT 触发与状态发布）；仓库内附带的 custom integration 自 v0.13.0 起提供
+> 适用于 MiBee NVR v0.15.0+（内置 RTSP 输出、MQTT 触发与状态发布）；仓库内附带的 custom integration 自 v0.15.0 起提供
 
 MiBee NVR 自带一个可选的 Home Assistant 自定义集成（方案 0：自动发现、按相机生成实体与开关）；不装它也完全可行——通过 RTSP 输出、REST API、MQTT 触发与状态发布四个能力，可以拼出完整的接入方案。本文按用途拆分路径，全部可独立启用。
 
@@ -25,7 +25,7 @@ MiBee NVR 自带一个可选的 Home Assistant 自定义集成（方案 0：自�
 
 ## 方案 0：自定义集成（推荐）
 
-仓库内置一个 Home Assistant 自定义集成（[源码与实体清单](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/deploy/home-assistant)）。安装后自动发现局域网内的 NVR，并为每台相机创建：
+仓库内置一个 Home Assistant 自定义集成（[源码与实体清单](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/deploy/home-assistant/README.md)）。安装后自动发现局域网内的 NVR，并为每台相机创建：
 
 - **摄像头实体** — H.264/H.265 走 NVR 内置 RTSP 输出（HA `stream`，延迟 1–3 秒）；MJPEG/JPEG 相机走 `stream.mjpeg` 直通（HA 原生 MJPEG 摄像头）。
 - **二进制传感器 ×2** — *Connected*（连接状态）与 *Recording*（正在写录像段）。
@@ -36,7 +36,7 @@ MiBee NVR 自带一个可选的 Home Assistant 自定义集成（方案 0：自�
 ```bash
 git clone https://github.com/Mi-Bee-Studio/MiBeeNvr.git /tmp/mibee-nvr
 mkdir -p <HA配置目录>/custom_components
-cp -r /tmp/mibee-nvr/deploy/home-assistant/custom_components/mibee_nvr \
+cp -r /tmp/mibee-nvr/custom_components/mibee_nvr \
       <HA配置目录>/custom_components/
 ```
 
@@ -100,7 +100,7 @@ camera:
 
 ## 方案 B：MQTT 触发联动（HA → NVR）
 
-运动传感器触发时让 NVR 立即录制。先在 NVR 侧配置 MQTT（详见 [MQTT 集成](mqtt.md)）：
+运动传感器触发时让 NVR 立即录制。先在 NVR 侧配置 MQTT（详见 [MQTT 集成](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md)）：
 
 ```yaml
 # mibee-nvr.yaml
@@ -113,7 +113,7 @@ mqtt:
   password: "mqtt_password"
 ```
 
-NVR 订阅 `mibee/trigger/{camera_id}`，支持 `record`（启动摄像头取流；是否写盘由相机「启用录制」开关决定，加 `duration` 可开限时强制录制窗口、不受开关限制）、`stop`（停止取流）与 `snapshot`（快照落盘并发布 `camera.snapshot` 事件）。HA 自动化示例（对仅直播相机建议带 `duration`，确保真正落盘，详见 [MQTT 集成](mqtt.md)）：
+NVR 订阅 `mibee/trigger/{camera_id}`，支持 `record`（启动摄像头取流；是否写盘由相机「启用录制」开关决定，加 `duration` 可开限时强制录制窗口、不受开关限制）、`stop`（停止取流）与 `snapshot`（快照落盘并发布 `camera.snapshot` 事件）。HA 自动化示例（对仅直播相机建议带 `duration`，确保真正落盘，详见 [MQTT 集成](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md)）：
 
 ```yaml
 automation:
@@ -133,7 +133,7 @@ automation:
 
 ### C1：MQTT 状态发布（推荐）
 
-两条发布通道（详见 [MQTT 集成 — 状态发布](mqtt.md#状态发布)）：
+两条发布通道（详见 [MQTT 集成 — 状态发布](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md#状态发布)）：
 
 - `{prefix}/health/{camera_id}`：健康告警（断连/冻结/恢复）。需 `mqtt.enabled: true` + `health.alerts.mqtt: true`。
 - `{prefix}/event/{topic}`：录像与摄像头事件（`segment.completed`、`camera.added`、`camera.quality`、`storage.health.changed`）。需 `mqtt.enabled: true` + `mqtt.status_events: true`。
@@ -196,6 +196,6 @@ muted: true
 
 ## 下一步
 
-- [MQTT 集成](mqtt.md) — 触发动作与状态发布的完整参考
-- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md) — `server.rtsp`、`mqtt`、`health.alerts` 等全部字段
-- [API 概览](./api.md) — REST 接口与鉴权说明
+- [MQTT 集成](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md) — 触发动作与状态发布的完整参考
+- [配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/configuration.md) — `server.rtsp`、`mqtt`、`health.alerts` 等全部字段
+- [API 概览](api.md) — REST 接口与鉴权说明

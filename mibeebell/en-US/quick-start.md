@@ -6,9 +6,9 @@ Goal: get MiBeeBell running on a Linux box, fire your first alert and receive th
 
 ## 1. Install (two ways)
 
-**fnOS app** (recommended): download the matching `mibee-bell-fnos-<version>-arm64.fpk` (or `-x86.fpk`) → App Center manual install → open "Bell" from the desktop.
+**fnOS app** (recommended): download `mibee-bell-fnos-0.2.0-arm64.fpk` (ARM64) or `mibee-bell-fnos-0.2.0-amd64.fpk` (x86) from the [v0.2.0 release page](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.2.0) → App Center manual install → open "Bell" from the desktop.
 
-**Binary**: grab the matching build from the [Releases hub](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0) (with checksums.txt), drop it anywhere:
+**Binary**: grab the matching build from the [Release hub v0.2.0](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.2.0) (with checksums.txt), drop it anywhere:
 
 ```bash
 ./mibee-bell -listen :9080

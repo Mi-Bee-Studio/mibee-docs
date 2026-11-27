@@ -3,7 +3,7 @@
 标准 SIP 门禁设备（Doorbird、Akuvox、海康门口机——一切以 SIP UA 身份说话
 的设备）可以直接呼叫 NVR：按铃后 Web UI 弹出来电框，显示呼叫者、关联相机
 的抓拍（可选），并可**接听 / 拒绝**。接听后是真正的双向 G.711 对讲（浏览器
-麦克风 ↔ 门铃喇叭）。与 [GB28181](gb28181.md) 刻意解耦——编号、配置
+麦克风 ↔ 门铃喇叭）。与 [GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md) 刻意解耦——编号、配置
 互不相干，两套系统可并存。
 
 默认**关闭**。
@@ -60,7 +60,7 @@ INVITE 只要 From 用户在配置列表中即被接受——不对每条 INVITE
 本节改动在下次启动时生效——保存的响应带 `restart_required: true`，面板的
 状态条会切换为"已启用——等待重启生效"（配置已开、服务尚未重建）。运行中
 时状态条列出当前已注册的门站
-（[`GET /api/doorbell/status`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/doorbell.md)）。
+（[`GET /api/doorbell/status`](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/api/doorbell.md)）。
 
 ## 安全姿态
 
@@ -114,5 +114,5 @@ REST 接口（给集成用）：`GET /api/doorbell/status`、`GET /api/doorbell/
 
 ## 下一步
 
-- [事件与自动化](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md)——`doorbell.*` 事件主题
-- [GB28181](gb28181.md)——面向摄像头的平台侧协议
+- [事件与自动化](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/api/README.md)——`doorbell.*` 事件主题
+- [GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md)——面向摄像头的平台侧协议

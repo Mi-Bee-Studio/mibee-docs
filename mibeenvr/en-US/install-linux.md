@@ -1,6 +1,6 @@
 # Native Linux packages (deb / rpm)
 
-For Docker-free installs on **Debian / Ubuntu** (amd64, arm64) and **RHEL / Fedora / Rocky / AlmaLinux / openSUSE** (x86_64, aarch64). Other architectures (armv7 included): use the [bare-metal deployment](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/deployment.md) or [Docker](install-docker.md).
+For Docker-free installs on **Debian / Ubuntu** (amd64, arm64) and **RHEL / Fedora / Rocky / AlmaLinux / openSUSE** (x86_64, aarch64). Other architectures (armv7 included): use the [bare-metal deployment](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/deployment.md) or [Docker](install-docker.md).
 
 ## Install
 

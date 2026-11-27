@@ -1,6 +1,6 @@
 # ONVIF Auto-Discovery
 
-> For MiBeeNvr v0.14.0
+> For MiBeeNvr v0.15.0
 
 MiBee NVR automatically discovers IP cameras on your local network using the ONVIF protocol and detects their encoding format (H.264 / H.265) without manual configuration.
 
@@ -109,10 +109,10 @@ cameras:
 
 ## Camera Brand Compatibility
 
-See the [Camera Brand Compatibility Guide](https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/docs/zh/camera-guide.md) for detailed ONVIF configuration across 20+ brands including Hikvision, Dahua, Uniview, Axis, and Reolink.
+See the [Camera Brand Compatibility Guide](camera-guide.md) for detailed ONVIF configuration across 20+ brands including Hikvision, Dahua, Uniview, Axis, and Reolink.
 
 ## Next Steps
 
-- [Xiaomi Camera Integration](xiaomi.md) — TUTK P2P connection
+- [Xiaomi Camera Integration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/xiaomi-setup.md) — TUTK P2P connection
 - [SRT / RTMP Push-Stream Ingest](srt-rtmp.md) — Push-stream camera configuration
 - [Raspberry Pi Camera Integration](raspberrypi.md) — libcamera configuration

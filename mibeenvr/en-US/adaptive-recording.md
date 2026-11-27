@@ -1,6 +1,6 @@
 # Adaptive Recording (Motion-Aware)
 
-> For MiBeeNvr v0.14.0
+> For MiBeeNvr v0.15.0
 
 In most surveillance scenes nothing happens 95% of the time — yet continuous recording still writes every frame at full bitrate. **Adaptive recording** lets the NVR drop to "timelapse-grade" sparse keyframe writing while the scene is calm, and instantly resume full-rate recording the moment activity appears, with zero frame loss at the transition. Field-tested on static scenes: **75%–98% less disk usage**, while the first frame of every event still lands in the recording.
 
@@ -30,7 +30,7 @@ Five activity signals can pull a camera back to full rate — any one of them su
 | Video spike | P-frame size deviation above `spike_factor`× baseline (the default path; works for every H.264/H.265 camera) |
 | [Audio trigger](#audio-trigger) | A loud 1-second window — breaking glass, shouting, alarms (needs G.711 audio) |
 | [Pixel-domain gating](#pixel-domain-gating-pixgate) | "Real foreground movement" as judged by classic CV over a ~1fps sampled decode of the sub-stream — lets constant-bitrate smart-codec cameras tell motion from stillness |
-| Camera-side motion detection | With `motion_source: camera:onvif`, subscribes to the camera's ONVIF MotionAlarm events (`reason=onvif_motion`) — see the [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md) |
+| Camera-side motion detection | With `motion_source: camera:onvif`, subscribes to the camera's ONVIF MotionAlarm events (`reason=onvif_motion`) — see the [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/onvif-guide.md) |
 | External semantic trigger | `POST /api/cameras/{id}/adaptive/trigger` — called by MiBeeVision when a target is detected, or by home automation, an AI backend, any external system (e.g. "person detected") |
 
 ## How This Compares in the Industry
@@ -230,7 +230,7 @@ curl -u admin:password -X POST \
 | `hold` | How long to stay full-rate (e.g. `"30s"`, 0–10m; default hold when omitted) |
 | `dbfs` | Optional loudness reference at trigger time (logged) |
 
-The MQTT integration's trigger-based recording ([MQTT Integration](mqtt.md)) uses the same path.
+The MQTT integration's trigger-based recording ([MQTT Integration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md)) uses the same path.
 
 ## Ambient Audio Layer
 
@@ -283,4 +283,4 @@ Two scorer enhancements since v0.13:
 - [Sub-Stream](sub-stream.md) — sub-stream access (prerequisite for tiered recording and pixel-domain gating)
 - [Audio](audio.md) — audio recording, monitoring, and talk-back
 - [Storage Management](storage-management.md) — per-camera storage roots, candidates, and migration
-- [MQTT Integration](mqtt.md) — external-event triggered recording
+- [MQTT Integration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md) — external-event triggered recording

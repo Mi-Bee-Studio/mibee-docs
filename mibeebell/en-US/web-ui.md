@@ -28,21 +28,21 @@ Everything you reach for daily lives on this page:
 
 ![Notification detail with delivery records](images/history-detail.webp)
 
-## Data-flow graph (2D / 3D)
+## Data-flow graph (2D)
 
-The "Data flow" panel at the top of each page is a live visualization of the pipeline: **sources → routing → channels**, solid lines = deliveries, dashed = escalations, red = failures; the number beside a node is its 24h traffic. The 2D/3D toggle sits at the top right (3D supports drag-rotate and wheel-zoom). With AI triage enabled, its health and usage show up live in the graph too.
+The "Data flow" panel at the top of each page is a live visualization of the pipeline: **sources → routing → channels**, solid lines = deliveries, dashed = escalations, red = failures; the number beside a node is its 24h traffic. v0.2.0 uses a single flat 2D renderer; the former 3D view and its drag-rotate / wheel-zoom toggle have been removed. With AI triage enabled, its health and usage show up live in the graph too.
 
-![Data flow 3D view](images/flow-3d.webp)
+![Data flow](images/architecture-dataflow.svg)
 
 Each page has its own angle:
 
 - **Notifications**: the global flow overview;
 - **Rules**: a marshalling-yard view, rules stacked top-down by priority — never-matched rules (dashed tracks) stand out at a glance;
-- **Channels**: "health towers" — tower height = 24h traffic, tower body = success/failure ratio, tower top color = health.
+- **Channels**: delivery-health flows by channel.
 
-![Rules marshalling-yard view](images/rules-3d.webp)
+![Rules marshalling-yard view](images/rules.webp)
 
-![Channels health-tower view](images/channels-3d.webp)
+![Channels](images/channels.webp)
 
 ## Routing Rules
 

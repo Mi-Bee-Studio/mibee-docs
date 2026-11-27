@@ -396,21 +396,39 @@ scanner:
 | `probe.notify_fail_threshold` | int | 3 | 拨测轨道（目标 × 视角）连续失败多少次后向通知管道发出 `probe_failed`。0 = 默认 3，范围 1–10；推荐 300s 周期下默认约 15 分钟内判定。环境变量 `MIBEE_PROBE_NOTIFY_FAIL_THRESHOLD`。 |
 | `notify.retry_window_minutes` | int | 30 | 可重试投递失败的有界延迟重投窗口（#633）：接收方短暂不可达时按指数退避持续重入队，窗口到期写最终失败行。0 = 默认 30，负数 = 关闭。仅内存态（进程重启即失效）。环境变量 `MIBEE_NOTIFY_RETRY_WINDOW_MINUTES`。 |
 | `agent_fleet.offline_threshold_minutes` | int | 10 | agent 的 `last_report_at` 陈旧多少分钟后发出 `agent_offline`。0 = 默认 10（推荐拨测周期下容忍两个完整静默周期），范围 1–1440。环境变量 `MIBEE_AGENT_FLEET_OFFLINE_THRESHOLD_MINUTES`。 |
-| `probe.quality.enabled` | bool | false | 网络出口质量评估：系统种入的公共拨测点矩阵，从每个视角（中心 + 全部 agent）执行、按网络分析。裸配置默认**关闭**；`configs/config.example.yaml` 以 `enabled: true` 作为推荐值出厂。环境变量 `MIBEE_PROBE_QUALITY_ENABLED`。 |
+| `probe.quality.enabled` | bool | true（键缺省=开） | 网络出口质量评估：系统种入的公共拨测点矩阵，从每个视角（中心 + 全部 agent）执行、按网络分析。**键缺失时默认开启**（升级保留的旧配置不再静默失去该特性），只有显式 `enabled: false` 才关闭。运行时开关可在 Web「设置 → 拨测」调整（设置中心覆盖，无需重启）。环境变量 `MIBEE_PROBE_QUALITY_ENABLED`。 |
 | `probe.quality.window_minutes` | int | 15 | 分析器回看窗口（5–1440）。环境变量 `MIBEE_PROBE_QUALITY_WINDOW_MINUTES`。 |
 | `probe.quality.interval_seconds` | int | 120 | 每个质量目标的种入周期（≥10）。 |
 | `probe.quality.http_degraded_ms` | int | 800 | http 腿的 p50 延迟阈值，超出即标记视角降级（叠加在成功率阈值之上）。 |
 | `probe.quality.dns_degraded_ms` | int | 300 | dns 腿的同上阈值。 |
 | `probe.quality.ok_rate_threshold` | float | 0.9 | 窗口内最低成功率（0..1]。 |
-| `probe.quality.groups` | map | 见下 | 拨测点矩阵，`组名 → [{name, module, target, options}]`。保留组 `domestic` 驱动主判定；`international`（及任何其它组名）仅作参照--跨境波动是独立信号，不算出口故障。留空 = 出厂默认：国内组（双公共解析器做 DNS 差分诊断、主流 HTTP 站点、204 端点、免 DNS 的直连 IP TCP 腿）加国际参照组。所有取值均可配置，无一硬编码。 |
-| `probe.autogen.enabled` | bool | false | 发现即拨测：从发现的服务自动创建设备绑定目标（`source=auto`）。默认关闭--它会自行写行，必须是有意识的选择。关闭时挂起整个 auto 存量（行与历史保留）。 |
+| `probe.quality.loss_pct_threshold` | float | 5 | 突发采样的丢包率阈值（#744），超出即在成功率阈值之外把该视角标记为劣化，对应稳定判定码 `loss_burst`。 |
+| `probe.quality.jitter_degraded_ms` | float | 30 | 突发抖动预算（ms，#744，相邻回显 RTT 差分均值），超出即以稳定判定码 `jitter_high` 把该视角标记为劣化。 |
+| `probe.quality.groups` | map | 见下 | 拨测点矩阵，`组名 → [{name, module, target, options}]`。保留组 `domestic` 驱动主判定；`international`（及任何其它组名）仅作参照--跨境波动是独立信号，不算出口故障。留空 = 出厂默认：国内组（双公共解析器做 DNS 差分诊断、主流 HTTP 站点、204 端点、免 DNS 的直连 IP TCP 腿）加国际参照组。所有取值均可配置，无一硬编码。icmp 目标的突发指标（`loss_burst` / `jitter_high`）同样参与判定。 |
+| `probe.quality.episodes.enabled` | bool | （跟随 quality） | 劣化段检测器开关（#720）。缺省时跟随 `probe.quality.enabled`；显式 false 即关闭。 |
+| `probe.quality.episodes.latency_ratio` | float | 2.0 | 轨道窗口 p50 在 `p50 >= max(基线 × ratio, 基线 + min_delta)` 时计为劣化。 |
+| `probe.quality.episodes.latency_min_delta_ms` | int | 50 | 延迟劣化的绝对增量下限——3ms 的基线不会"翻倍"成噪音。 |
+| `probe.quality.episodes.ok_rate_drop` | float | 0.3 | 窗口成功率在 `成功率 <= 基线 − drop` 时计为劣化（0..1）。 |
+| `probe.quality.episodes.min_windows` | int | 2 | 连续劣化的 15 分钟窗数门槛（2 ≈ 持续 30 分钟）。 |
+| `probe.quality.episodes.alert_requires_attribution` | bool | true | #716 裁定的落地：无同窗口出口/路径变更可归因的劣化段只记录（界面黄色）不通知。显式 false 允许无归因也通知。 |
+| `probe.autogen.enabled` | bool | false | 发现即拨测：从发现的服务自动创建设备绑定目标（`source=auto`）。默认关闭--它会自行写行，必须是有意识的选择（Web「设置 → 拨测」可随时开关，翻转即生效并立即同步一轮；拨测页内网分区的空态也有"一键为已发现服务创建拨测"）。关闭时挂起整个 auto 存量（行与历史保留）。 |
 | `probe.autogen.services` | []string | ["http","https"] | 可生成 auto 目标的服务身份（匹配 `host_services.service`）。 |
 | `probe.autogen.device_types` | []string | [] | 限定仅这些设备类型生成；留空 = 全部。 |
 | `probe.autogen.interval_seconds` | int | 300 | auto 目标的探测间隔（≥10）。 |
 | `probe.autogen.max_targets` | int | 100 | 存量上限（1–1000），避免千台设备的 LAN 炸出 3000 个目标。 |
 | `probe.autogen.sweep_interval_minutes` | int | 15 | 对账周期：为新服务建目标、为离开扫描的服务挂起目标、回归即复活。手工目标永不触碰。 |
+| `probe.autogen.mesh_enabled` | bool | true（键缺省=开） | 站点间 N×N 矩阵（#747）：根据上报的源地址自动生成视角矩阵目标（中心 → 每个 agent、每个 agent → 其它 agent），无需手工接线即有 RTT/丢包/抖动矩阵。缺省即开启，显式 `false` 才关闭。 |
+| `probe.egress.enabled` | bool | false | 出口身份记录器（#718）：每到 interval，center 向一组公网回显源（HTTP/STUN/DNS）询问当前出口呈现的公网 IP，对去重后的 IP 做来源 ASN 富化，并把整轮结果存入 `data/probe_ext.db`。只记录——变更本身不通知（#716）。同一份回显源与周期也会下发给声明了 `egress` 能力的 agent：每个视角各自跑轮次并回传（`POST /agents/egress-report`，令牌绑定身份，ASN 由 center 富化）。裸配置默认**关闭**；`configs/config.example.yaml` 以推荐值 `enabled: true` 出厂。环境变量 `MIBEE_PROBE_EGRESS_ENABLED`。 |
+| `probe.egress.interval_seconds` | int | 300 | 采集周期（60–86400）。环境变量 `MIBEE_PROBE_EGRESS_INTERVAL_SECONDS`。 |
+| `probe.egress.asn_resolvers` | []string | ["223.5.5.5"] | Team Cymru 来源 ASN TXT 查询所用的 DNS 服务器，按优先级排列。 |
+| `probe.egress.sources` | []source | 内置源组 | 回显源；非空即**整体替换**内置多协议源组。条目：`{name, kind: http\|stun\|dns, target}`（http：返回 IP 的 URL；stun：`host:port`；dns：`server\|qname`）。 |
+| `probe.trace.categories` | []string | ["external","quality"] | 参与周期性零权限路径追踪（#719）的拨测目标分类。`lan` 保持关闭——内网路径是拓扑页的职责。追踪计划同样随 agent 的拨测计划下发（声明 `trace` 能力的 agent——仅 Linux）：各视角自行追踪并回传，拨测失败时每目标每 10 分钟额外触发一次快照（`trigger=failure`）。 |
+| `probe.trace.interval_minutes` | int | 30 | 每目标的基线追踪周期（≥5）。 |
+| `probe.trace.max_ttl` | int | 30 | TTL 走查上限（8–64）。中间跳静默的出口需要走完全程：不提前放弃。 |
+| `probe.trace.per_hop_ms` | int | 500 | 每跳等待（100–3000）。 |
+| `probe.trace.concurrency` | int | 2 | 并发追踪数（≤8）。 |
 
-质量种入语义（启动时执行、幂等）：开启时--缺失的矩阵行被创建（`source=system`、vantage `all`），漂移的行按配置刷新（module/target/options），配置中已删除的 `source=system` 行连**结果历史**一起删除；关闭时--所有 system 目标挂起（停用、保留历史）。在 UI 里删除的行会在下次重启时重种；要永久移除某目标，请从 `groups` 里删掉它（或关闭 `probe.quality`）。
+质量种入语义（启动时执行、幂等；「设置 → 拨测」翻转开关后立即重跑）：开启时--缺失的矩阵行被创建（`source=system`、vantage `all`），漂移的行按配置刷新（module/target/options），被挂起的 system 行**复活**（矩阵由总开关管理，行级停用对 system 目标不生效），配置中已删除的 `source=system` 行连**结果历史**一起删除；关闭时--所有 system 目标挂起（停用、保留历史）。在 UI 里删除的行会在下次重启时重种；要永久移除某目标，请从 `groups` 里删掉它（或关闭 `probe.quality`）。
 
 **示例**（与 `configs/config.example.yaml` 一致）：
 ```yaml
@@ -423,6 +441,8 @@ probe:
     http_degraded_ms: 800
     dns_degraded_ms: 300
     ok_rate_threshold: 0.9
+    loss_pct_threshold: 5
+    jitter_degraded_ms: 30
     groups:
       domestic:
         - {name: quality-dns-ali,    module: dns,  target: www.baidu.com, options: {record: A, resolver: 223.5.5.5}}
@@ -440,6 +460,7 @@ probe:
     interval_seconds: 300
     max_targets: 100
     sweep_interval_minutes: 15
+    mesh_enabled: true
 ```
 
 矩阵支撑的判定语义（为什么两个解析器、为什么有直连 IP TCP 腿、为什么国际组只作参照）见[架构 → 拨测](architecture.md)，并由 `GET /api/v1/probe-quality` 呈现。
@@ -597,6 +618,7 @@ head -c 32 /dev/urandom | base64
 | `retention.host_services_days` | int | 30 | 主机服务记录保留天数 |
 | `retention.host_tls_certs_days` | int | 30 | TLS 证书记录保留天数 |
 | `retention.probe_results_days` | int | 30 | 拨测历史结果保留天数（`probe_tls_certs` 不清扫--每目标只存当前证书链） |
+| `retention.probe_ext_days` | int | 30 | 出口回显轮次 + 路径采样 + 分阶段计时行保留天数（`data/probe_ext.db` 旁路库，#716/#717/#718/#719）。 |
 | `retention.sweep_interval_hours` | int | 6 | 清理扫描间隔（小时） |
 | `retention.batch_size` | int | 5000 | 每批清理的最大行数 |
 
@@ -649,9 +671,26 @@ head -c 32 /dev/urandom | base64
 
 运维要点：防火墙只对 trap 来源网段放行该 UDP 端口（到达监听器的包都会被看到）；v3 trap（USM、凭据名引用凭据库）是已设计的后续项——配置面刻意没有 v3 键，避免开启一个空壳。
 
+## 局域网自宣告配置（#729）
+
+`scanner.discovery` 的反方向：本实例在局域网里**宣告自己**，让蜂探 App 的一次扫描直接识别出这是 MiBee 服务（type `steward`），而不是要求手填地址。三件套挂在一个开关下：mDNS 广告 `_mibee-steward._tcp`、公开身份端点 `GET /.well-known/mibee-service`（`{"service":"steward","name","ver","id"}`——无鉴权、恰好四个字段，与 `/health` 同等最小披露口径）、以及在 steward 端口应答共享探测帧 `MIBEE-NVR-DISCv1?`（应答带 `type=steward`）的 UDP 应答器。
+
+默认开：蜂探「扫不到就不出现」（裁定⑨A），宣告即是可见性。某个宣告面启动失败只记一行日志、绝不阻塞启动（损失的只是那一条发现路径）。对外披露刻意最少——稳定实例 ID（`data/instance-id`，首启生成、重启/升级/换 IP 不变；data 目录不可写时降级为进程内临时 ID 并记 warn）、实例名、API 端口。
+
+| 键 | 类型 | 默认值 | 说明 |
+|-----|------|---------|-------------|
+| `announce.enabled` | bool | `true` | 总开关；`false` 同时注销 well-known HTTP 端点（404） |
+| `announce.name` | string | `""` | 宣告的实例名（mDNS + well-known）；留空 = OS 主机名 |
+| `announce.mdns` | bool | `true` | `_mibee-steward._tcp` 广告（5353/udp；与 avahi/umdns 共存） |
+| `announce.udp` | bool | `true` | UDP 发现应答器（蜂探在组播受限 Wi-Fi 下的兜底路径） |
+| `announce.udp_port` | int | `49091` | steward 发现端口（紧邻 NVR 的 49090；登记确认跟踪在 #729） |
+| `announce.tls` | bool | `false` | 宣告的协议方案提示——仅当 TLS 终止的反向代理覆盖客户端发现的同一端口时置 true |
+
+取名 `announce`（而非 `discovery`）是为了与 `scanner.discovery` 保持无歧义：那个块是本实例**发现别人**；这个块是**被别人发现**。
+
 ## Docker 配置模板
 
-仓库提供了现成的 Docker Compose 配置模板 [`configs/config.docker.yaml`](../../configs/config.docker.yaml)，预配置了适合容器化部署的路径和网络设置--将其复制为你的起始 `config.yaml`，并为生产环境调整 `auth.jwt_secret` 和 `auth.initial_admin_password`。
+仓库提供了现成的 Docker Compose 配置模板 [`configs/config.docker.yaml`](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/configs/config.docker.yaml)，预配置了适合容器化部署的路径和网络设置--将其复制为你的起始 `config.yaml`，并为生产环境调整 `auth.jwt_secret` 和 `auth.initial_admin_password`。
 
 ## 完整配置示例
 

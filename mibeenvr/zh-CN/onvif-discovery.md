@@ -1,6 +1,6 @@
 # ONVIF 自动发现
 
-> 适用于 MiBeeNvr v0.14.0
+> 适用于 MiBeeNvr v0.15.0
 
 MiBee NVR 通过 ONVIF 协议自动发现局域网中的 IP 摄像头，并自动检测编码格式（H.264 / H.265）。
 
@@ -109,10 +109,10 @@ cameras:
 
 ## 摄像头品牌兼容性
 
-参阅[摄像头品牌兼容指南](https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/docs/zh/camera-guide.md)获取海康、大华、宇视、Axis、Reolink 等 20+ 品牌的详细 ONVIF 配置。
+参阅[摄像头品牌兼容指南](camera-guide.md)获取海康、大华、宇视、Axis、Reolink 等 20+ 品牌的详细 ONVIF 配置。
 
 ## 下一步
 
-- [小米摄像头接入](xiaomi.md) — TUTK P2P 连接
+- [小米摄像头接入](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/xiaomi-setup.md) — TUTK P2P 连接
 - [SRT / RTMP 推流接入](srt-rtmp.md) — 推流摄像头配置
 - [树莓派摄像头接入](raspberrypi.md) — libcamera 配置

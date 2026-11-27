@@ -6,6 +6,7 @@
 
 | 起始 → 目标 | 状态 | 需要的操作 |
 |------------|------|----------|
+| **v0.14.x → v0.15.0** | 🟡 **自动迁移；升级后验证混合录像回放** | 数据库与存储结构自动升级；注意 merge 产物形态变化、`merge.transcode_merge` 默认关闭与 Home Assistant 兼容边界。详见 [v0.14.x → v0.15.0](#v014x--v0150)。 |
 | **0.12.x → 0.13.0** | 🟡 **需阅读安全收紧与默认值变化** | 若干端点移入鉴权组、`?token=` 透传移除；数据库 schema v40（不可降级）；HLS/MJPEG/合并默认值变化。详见 [0.12.x → 0.13.0](#012x--0130)。 |
 | **0.11.x → 0.12.0** | 🟢 **透明升级（一处注意）** | 无破坏性 API 变更；数据库增量迁移自动完成；国标默认媒体传输改 TCP 被动。详见 [0.11.x → 0.12.0](#011x--0120)。 |
 | **0.10.x → 0.11.0** | 🟡 **需阅读许可与 API 变更** | 许可证变更（AGPL-3.0）；一个 API 响应字段改名；纯 HTTP AAC 直播音频降级。详见 [0.10.x → 0.11.0](#010x--0110)。 |
@@ -17,16 +18,30 @@
 
 ---
 
-## v0.14.0 更新速览
+## v0.14.x → v0.15.0
 
-- **GB/T 28181 正式转正为生产支持**：商用真机（海康 2026 版固件）全流程验证——设备接入、级联上联、语音对讲、PTZ 与 GB35114 A 级国密证书互认；级联目录默认只发布 GB 源；INVITE 改走设备注册通道。见 [GB/T 28181 指南](gb28181.md)
-- **Linux 原生软件包（deb / rpm）**：Debian/Ubuntu 与 RHEL 系 amd64/arm64 官方包，包布局与二进制部署完全一致、可互换升级。见 [Linux 原生软件包](install-linux.md)
-- **实时语音监听**：Web Audio 调度的即时监听，全编码器可用；设备页改为分组视图；GB28181 取流停滞看门狗
-- **门铃与 DLNA Web 面板**：SIP 门铃状态端点上线——见 [SIP 门铃](doorbell.md)与 [DLNA 媒体服务器](dlna.md)
-- ONVIF 旧固件兼容：空 200 响应认证回退梯；P2P 隧道未携带 E2EE 密钥时一次性 WARN
-- Web 界面截图与向导卡片图全面刷新
+v0.15.0 新增热成像/双光谱测温与温度回放、监控网格与照片墙、零接触相机引导，以及 OpenTelemetry 追踪与 OTLP 日志外发。数据库和存储结构升级自动完成，但升级后请重点验证以下两项。
 
-完整变更列表见 [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases) 的 v0.14.0 说明。
+### 🟡 merge 产物形态变化
+
+- 混编码 rolling-merge 统一走 FFmpeg 转码的 `merge.transcode_merge` **默认关闭**；关闭时混编码 run 保持旧行为，需要时再显式开启。
+- 音频一致的 run 会为未覆盖区间合成 G.711 静音；新合成产物与升级前旧段可能存在时间戳或编码参数差异。
+- **旧库升级后请混合回放升级前后录像**，分别使用内嵌播放器、DLNA、GB28181 验证。截至 v0.15.0 发布说明，新旧产物混合回放的专项回归仍在进行（#1163）；如遇异常，请记录回放途径与时间段反馈。
+
+### 🟡 Home Assistant 兼容边界
+
+本版修复 Home Assistant 2025.12+ / 2026.x 的集成初始化兼容问题，已在 HA 2026.2.3 与真实 NVR 上验证。`hacs.json` 的最低版本 `2025.1.0` 是声明值，更老版本未随本版复测（#1161）；使用更老版本前请先备份并验证集成加载、摄像头实体与录像开关。
+
+### 部署形态
+
+- **Docker**：更新镜像 tag 后重建容器。
+- **fnOS**：通过应用中心升级；离线包为 `mibee-nvr-fnos-0.15.0.fpk`，在线包为 `mibee-nvr-fnos-online-0.15.0.fpk`。
+- **Windows / macOS**：覆盖安装，分别使用 `MiBeeNVR-Setup-v0.15.0-windows-amd64.exe` 与 `MiBeeNVR-v0.15.0-macOS-universal.dmg`。
+- **裸机 Linux**：按常规停服、备份、替换二进制、启动；自动升级继续执行签名校验与健康门回滚。
+
+完整资产与变更见 [v0.15.0 Release](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases/tag/v0.15.0)。
+
+---
 
 ## 0.12.x → 0.13.0
 
@@ -73,7 +88,7 @@
 - **RTSP 输出支持 MJPEG/JPEG**（RTP-JPEG）；H.264/H.265 最新帧截图（可选 FFmpeg）与 MQTT 快照触发
 - **HMAC 签名 webhook 触发端点**：`POST /api/trigger/webhook/{camera_id}`，Stripe 风格签名 + 双向防重放——见 [Webhook 集成](webhook-integration.md)
 - **MQTT 事件总线转发**（`mqtt.status_events`）与定时强制录像窗口（`{"action":"record","duration":"60s"}`）
-- **ONVIF 相机侧移动侦测触发**（`motion_source: camera:onvif`）——见 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)
+- **ONVIF 相机侧移动侦测触发**（`motion_source: camera:onvif`）——见 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/onvif-guide.md)
 - **Home Assistant 官方定制集成随包发布**（HACS 可装，mDNS 自动发现）——见[接入 Home Assistant](home-assistant.md)
 - **Vision 多实例路由** + 推送熔断自动退避；AI 事件快照端点
 - **延时摄影 MJPEG 双模可用** + `timelapse-merge` CLI 批量转换 + 合并历史播放——见[延时摄影](timelapse.md)
@@ -107,10 +122,10 @@ v0.11.0 起 MiBee NVR 的许可证从 MIT 变更为 **AGPL-3.0-only**（v0.10.1 
 
 - **只是使用 MiBee NVR**（运行、录像、看流——包括商用场景）：零义务，对你没有任何变化。
 - **分发修改版**：修改版必须以 AGPL-3.0 开源发布。
-- **基于 `pkg/` 扩展接口构建自己的程序**：受[链接例外](../../LICENSE.pkg-linking-exception)保护，你的程序许可证由你决定。
+- **基于 `pkg/` 扩展接口构建自己的程序**：受[链接例外](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/LICENSE.pkg-linking-exception)保护，你的程序许可证由你决定。
 - **独立进程通过 HTTP/WebSocket API 调用运行中的 NVR**：完全不受许可证影响。
 
-详见 [LICENSE](../../LICENSE)、[NOTICE](../../NOTICE) 与 [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md)。
+详见 [LICENSE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/LICENSE)、[NOTICE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/NOTICE) 与 [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/CONTRIBUTING.md)。
 
 ### 🔴 破坏性：`GET /api/cameras/{id}/protocols` 字段改名
 
@@ -128,7 +143,7 @@ v0.11.0 起 MiBee NVR 的许可证从 MIT 变更为 **AGPL-3.0-only**（v0.10.1 
 
 ### 🟢 GB/T 28181 国标平台接入（可选，默认关闭）
 
-v0.11.0 新增国标平台角色：支持 SIP 的摄像头（海康、大华、宇视等）REGISTER 到 NVR，以普通相机形式出现——支持 PTZ、语音对讲、设备侧录像检索回放、报警/目录/移动位置订阅，以及作为下级平台级联上联。全部功能**默认关闭**，不开启则无任何变化。配置方法见 [GB/T 28181 指南](gb28181.md)。
+v0.11.0 新增国标平台角色：支持 SIP 的摄像头（海康、大华、宇视等）REGISTER 到 NVR，以普通相机形式出现——支持 PTZ、语音对讲、设备侧录像检索回放、报警/目录/移动位置订阅，以及作为下级平台级联上联。全部功能**默认关闭**，不开启则无任何变化。配置方法见 [GB/T 28181 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md)。
 
 新增配置段：`gb28181:`（平台角色）与 `gb28181_cascade:`（下级角色）。新增 DB 表（`gb28181_devices`、`gb28181_channels`、`camera_ptz_presets`、`cascade_channels`、`gb28181_fingerprints`）以 `CREATE TABLE IF NOT EXISTS` 在首次启动时创建——无迁移。
 

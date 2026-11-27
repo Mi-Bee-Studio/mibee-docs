@@ -41,7 +41,7 @@ downloads ride the configured TCP port on each bound interface.
   audio sources. Each item carries codec/size/duration metadata so the
   renderer decides playability itself; seek support uses HTTP ranges.
 - Live streams are **not** exposed in this version — DLNA renderers handle
-  live sources poorly, and the Web UI / [WHEP](streaming.md) path is the
+  live sources poorly, and the Web UI / [WHEP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/streaming-protocol-selection.md) path is the
   right tool for live viewing.
 - Browsing is read-only; recordings are never modified or deleted via DLNA.
 

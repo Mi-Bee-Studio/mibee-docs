@@ -1,6 +1,6 @@
 # CLI 用户手册
 
-> 适用于 MiBeeNvr v0.14.0 · 命令名 `mibee-nvr`（预编译包可能带架构后缀，如 `mibee-nvr-amd64`）
+> 适用于 MiBeeNvr v0.15.0 · 命令名 `mibee-nvr`（预编译包可能带架构后缀，如 `mibee-nvr-amd64`）
 
 MiBee NVR 是「单二进制 + 子命令」形态：**不带子命令直接运行即启动服务器**，带子命令则执行对应的管理工具后退出。
 
@@ -121,7 +121,7 @@ mibee-nvr validate-config --config /data/mibee-nvr.yaml
 mibee-nvr download-model --config mibee-nvr.yaml
 ```
 
-内置 5 次指数退避重试和大小 / 完整性校验，适合离线环境预下载后随包分发。模型用于[浏览器端 AI 检测](ai-detection.md)。
+内置 5 次指数退避重试和大小 / 完整性校验，适合离线环境预下载后随包分发。模型用于[浏览器端 AI 检测](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/ai-detection-tuning.md)。
 
 ## merge-cameras — 合并摄像头
 
@@ -165,7 +165,7 @@ mibee-nvr timelapse-merge --camera all --encoding jpeg --start 2026-08-26 \
 - 命令可在 NVR 运行中执行（WAL 并发模型，与 cleanup/repair 一致）；但 timelapse 已启用的摄像头会被拒绝 —— 其窗口归服务器合并调度器所有，需 `--force` 或停服后运行。
 - **执行时自动自降级**（nice 19 + IO best-effort 最低档，`--no-throttle` 关闭）：大窗口合并与在线录像平权竞争会拖垮录像（2026-09-12 事故：load 8-13 持续 4.5h，录像 17→10 台），事后 renice 无法挽回。
 - **目录形源删除自动限速**（每 200 个文件暂停 `--delete-throttle`）：MJPEG/延时帧目录的百万级小文件 unlink 会让 ext4 日志（jbd2）饱和数十分钟，拖慢所有磁盘 IO。
-- 合并中间产物（帧提取/复制目录）写在**存储根** `<root>/periodic-merge/tmp/` 下，不再用系统 `/tmp`（1s 采样全天窗口约需 3.5-7GB，小根分区会 ENOSPC）；合并输出采用流式生成（#747），内存占用与窗口大小无关。中断（Ctrl-C/崩溃）遗留的中间目录由 NVR 服务端启动清扫回收（宽限期 `storage.periodic_temp_grace_s`，默认 24h，见 [配置](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md#storageperiodic_temp_grace_s)）。
+- 合并中间产物（帧提取/复制目录）写在**存储根** `<root>/periodic-merge/tmp/` 下，不再用系统 `/tmp`（1s 采样全天窗口约需 3.5-7GB，小根分区会 ENOSPC）；合并输出采用流式生成（#747），内存占用与窗口大小无关。中断（Ctrl-C/崩溃）遗留的中间目录由 NVR 服务端启动清扫回收（宽限期 `storage.periodic_temp_grace_s`，默认 24h，见 [配置](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/configuration.md#storageperiodic_temp_grace_s)）。
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
@@ -363,7 +363,7 @@ mibee-nvr update --check
 
 # 手动升级到最新稳定版（需要 sudo）
 sudo mibee-nvr update
-sudo mibee-nvr update --version v0.14.0
+sudo mibee-nvr update --version v0.15.0
 
 # root helper 入口（update 服务的 ExecStart；请求文件由应用写入、只消费一次，任意结果都会被删除）
 mibee-nvr update --apply-request /var/lib/mibee-nvr/update-request.json
@@ -380,11 +380,11 @@ mibee-nvr update --apply-request /var/lib/mibee-nvr/update-request.json
 - **仅限 Linux 裸机**：Docker 部署永久禁用（容器不可变，用 Watchtower / `docker compose pull`），Windows / macOS 桌面构建同样拒绝（自更新会错拿到 linux 二进制）。
 - `update.download_mirror` 可把制品下载切到镜像源（版本检查仍走 GitHub API）。
 
-自动升级开关（`update.auto_apply`）、服务与 polkit 安装见[自动升级](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/deployment-autoupdate.md)。
+自动升级开关（`update.auto_apply`）、服务与 polkit 安装见[自动升级](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/deployment-autoupdate.md)。
 
 ## gen-gb35114-certs — 签发 GB35114 试点证书
 
-仅存在于 `-tags gb35114` 构建（默认构建运行会提示重建方式）。为 GB35114 安全注册签发自签试点材料（A/B/C 各级身份通用）：SM2 平台身份 + 由平台签发的设备身份，输出布局直接对应 `gb28181.security35114` 的三个路径键。详见 [GB28181 指南 — GB35114 安全增强](gb28181.md)。
+仅存在于 `-tags gb35114` 构建（默认构建运行会提示重建方式）。为 GB35114 安全注册签发自签试点材料（A/B/C 各级身份通用）：SM2 平台身份 + 由平台签发的设备身份，输出布局直接对应 `gb28181.security35114` 的三个路径键。详见 [GB28181 指南 — GB35114 安全增强](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md)。
 
 ```bash
 mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
@@ -405,4 +405,4 @@ mibee-nvr gen-gb35114-certs --platform-id 34020000002000000001 \
 
 - [配置参考](config.md) — YAML 顶层键速查
 - [初始化向导](wizard.md) — Web 端首次配置
-- [升级指南](upgrade-faq.md) — 版本升级与数据迁移
+- [升级指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/upgrade-guide.md) — 版本升级与数据迁移

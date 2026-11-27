@@ -6,6 +6,7 @@ This guide covers upgrade paths and breaking changes between MiBee NVR releases.
 
 | From → To | Status | Action required |
 |-----------|--------|-----------------|
+| **v0.14.x → v0.15.0** | 🟡 **Automatic migration; verify mixed-archive playback afterward** | Database/storage upgrades are automatic; note the merge artifact-shape changes, `merge.transcode_merge` off by default, and the Home Assistant compatibility boundary. See [v0.14.x → v0.15.0](#v014x--v0150). |
 | **0.12.x → 0.13.0** | 🟡 **Read: security tightening & default changes** | Several endpoints moved behind auth; `?token=` passthrough removed; DB schema v40 (no downgrade); HLS/MJPEG/merge default changes. See [0.12.x → 0.13.0](#012x--0130). |
 | **0.11.x → 0.12.0** | 🟢 **transparent (one caveat)** | No breaking API changes; automatic incremental DB migration; GB28181 default media transport switched to TCP-passive. See [0.11.x → 0.12.0](#011x--0120). |
 | **0.10.x → 0.11.0** | 🟡 **Read the license + API changes** | License change (AGPL-3.0); one API response field rename; plain-HTTP AAC live-audio degradation. See [0.10.x → 0.11.0](#010x--0110). |
@@ -17,16 +18,30 @@ This guide covers upgrade paths and breaking changes between MiBee NVR releases.
 
 ---
 
-## v0.14.0 at a glance
+## v0.14.x → v0.15.0
 
-- **GB/T 28181 graduated to production support**: verified end-to-end on commercial hardware (Hikvision 2026 firmware) — device access, cascade uplink, voice intercom, PTZ and GB35114 level-A certificate interop; the cascade catalog now publishes GB sources only by default; INVITEs follow the device's REGISTER transport. See the [GB/T 28181 guide](gb28181.md)
-- **Native Linux packages (deb / rpm)**: official packages for the Debian/Ubuntu and RHEL families, amd64/arm64; package layout is fully interchangeable with binary deployments. See [Native Linux packages](install-linux.md)
-- **Instant live listening**: Web Audio-scheduled live listening across all codecs; groups-only device page; GB28181 stream stall watchdog
-- **Doorbell & DLNA web panels**: SIP doorbell status endpoint — see [SIP Doorbell](doorbell.md) and [DLNA Media Server](dlna.md)
-- ONVIF compatibility: default auth fallback ladder for old firmwares replying with empty 200 bodies; P2P: one-time WARN when a tunnel arrives without an E2EE key
-- Refreshed web UI screenshots and walkthrough card
+v0.15.0 adds thermal/dual-spectrum temperature readouts and history, the adjustable surveillance grid and photo wall, zero-touch camera onboarding, plus OpenTelemetry tracing and OTLP log shipping. Database and storage upgrades are automatic; verify these two areas after upgrading.
 
-Full changelog: the v0.14.0 notes on [GitHub Releases](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases).
+### 🟡 Merge artifact-shape changes
+
+- `merge.transcode_merge`, which routes mixed-codec rolling merges through FFmpeg, is **off by default**. While off, mixed-codec runs retain the previous behavior; enable it explicitly when needed.
+- Audio-consistent runs synthesize G.711 silence for uncovered intervals. Newly synthesized artifacts may differ from pre-upgrade segments in timestamps or codec parameters.
+- **Play recordings from before and after the upgrade together**, using the embedded player, DLNA, and GB28181 respectively. As of the v0.15.0 release notes, dedicated regression coverage for mixed old/new playback is still in progress (#1163); report anomalies with the playback path and time range.
+
+### 🟡 Home Assistant compatibility boundary
+
+This release fixes integration initialization on Home Assistant 2025.12+ / 2026.x and was verified with HA 2026.2.3 and a real NVR. The `2025.1.0` minimum in `hacs.json` remains a declared value; older versions were not re-tested in this release (#1161). Back up and verify integration loading, camera entities, and recording switches before deploying to an older HA version.
+
+### Deployment forms
+
+- **Docker**: update the image tag and recreate the container.
+- **fnOS**: upgrade through the App Center; the offline package is `mibee-nvr-fnos-0.15.0.fpk`, and the online package is `mibee-nvr-fnos-online-0.15.0.fpk`.
+- **Windows / macOS**: install over the existing edition using `MiBeeNVR-Setup-v0.15.0-windows-amd64.exe` and `MiBeeNVR-v0.15.0-macOS-universal.dmg`.
+- **Bare-metal Linux**: stop, back up, replace the binary, and start as usual; automatic upgrades still enforce signature checks and health-gate rollback.
+
+See the [v0.15.0 release](https://github.com/Mi-Bee-Studio/MiBeeNvr/releases/tag/v0.15.0) for the full asset list and changelog.
+
+---
 
 ## 0.12.x → 0.13.0
 
@@ -73,7 +88,7 @@ The incremental migration runs automatically on first start: camera groups (v36�
 - **RTSP output supports MJPEG/JPEG** (RTP-JPEG); latest-frame snapshots for H.264/H.265 (optional FFmpeg) and MQTT snapshot triggering
 - **HMAC-signed webhook trigger endpoint**: `POST /api/trigger/webhook/{camera_id}`, Stripe-style signatures + two-way replay protection — see [Webhook Trigger Integration](webhook-integration.md)
 - **MQTT event-bus forwarding** (`mqtt.status_events`) and scheduled forced-recording windows (`{"action":"record","duration":"60s"}`)
-- **ONVIF camera-side motion detection trigger** (`motion_source: camera:onvif`) — see [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md)
+- **ONVIF camera-side motion detection trigger** (`motion_source: camera:onvif`) — see [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/onvif-guide.md)
 - **Home Assistant custom integration ships with releases** (installable via HACS, mDNS auto-discovery) — see [Home Assistant Integration](home-assistant.md)
 - **Vision multi-instance routing** + push circuit breaker with automatic backoff; an AI event snapshot endpoint
 - **Timelapse MJPEG dual-mode GA** + `timelapse-merge` CLI for batch conversion + merged-history playback — see [Timelapse Recording](timelapse.md)
@@ -107,10 +122,10 @@ Starting with v0.11.0, MiBee NVR is licensed under **AGPL-3.0-only** (previously
 
 - **Just using MiBee NVR** (running it, recording cameras, watching streams — including commercially): no obligations, nothing changes for you.
 - **Redistributing a modified version**: your modified version must be released under AGPL-3.0.
-- **Building your own program on the `pkg/` extension interfaces**: covered by a [linking exception](../../LICENSE.pkg-linking-exception) — your program's license stays your choice.
+- **Building your own program on the `pkg/` extension interfaces**: covered by a [linking exception](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/LICENSE.pkg-linking-exception) — your program's license stays your choice.
 - **A separate program talking to a running NVR** over its HTTP/WebSocket APIs: never affected by the license.
 
-See [LICENSE](../../LICENSE), [NOTICE](../../NOTICE), and [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/CONTRIBUTING.md) for details.
+See [LICENSE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/LICENSE), [NOTICE](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/NOTICE), and [CONTRIBUTING.md](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/CONTRIBUTING.md) for details.
 
 ### 🔴 Breaking: `GET /api/cameras/{id}/protocols` field names
 
@@ -128,7 +143,7 @@ The FAAD2 (GPL-2.0) WASM fallback for AAC live-preview audio was removed for lic
 
 ### 🟢 GB/T 28181 platform access (opt-in, off by default)
 
-v0.11.0 adds a GB/T 28181 platform role: SIP-capable cameras (Hikvision, Dahua, Uniview, …) register with the NVR and appear as normal cameras — with PTZ, two-way voice talk, device-side recording retrieval, alarm/catalog/mobile-position subscriptions, and cascade to an upper platform. Everything is **disabled by default**; nothing changes unless you turn it on. See the [GB/T 28181 guide](gb28181.md) for setup.
+v0.11.0 adds a GB/T 28181 platform role: SIP-capable cameras (Hikvision, Dahua, Uniview, …) register with the NVR and appear as normal cameras — with PTZ, two-way voice talk, device-side recording retrieval, alarm/catalog/mobile-position subscriptions, and cascade to an upper platform. Everything is **disabled by default**; nothing changes unless you turn it on. See the [GB/T 28181 guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md) for setup.
 
 New config sections: `gb28181:` (platform role) and `gb28181_cascade:` (lower-platform role). New DB tables (`gb28181_devices`, `gb28181_channels`, `camera_ptz_presets`, `cascade_channels`, `gb28181_fingerprints`) are created with `CREATE TABLE IF NOT EXISTS` on first start — no migration.
 

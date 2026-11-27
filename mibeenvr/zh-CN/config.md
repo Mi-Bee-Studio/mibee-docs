@@ -1,6 +1,6 @@
 # 配置参考
 
-> 适用于 MiBeeNvr v0.14.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
+> 适用于 MiBeeNvr v0.15.0 · 配置文件默认为 `mibee-nvr.yaml`（可用 `-config` 指定）
 
 MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速查**；每个键的完整字段说明见仓库中的[完整配置参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)。
 
@@ -13,7 +13,7 @@ MiBee NVR 的全部行为由一个 YAML 文件驱动。本页是**顶层键速�
 | Web UI → 设置 | 大部分运行参数 | 存储路径、直播、GB28181、AI 检测、录像与处理等分页 |
 | 编辑 YAML | 批量 / 初始化 | 摄像头列表、部署脚本等；改完需重启 |
 
-> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](cli.md#encrypt-config-加密敏感字段)）。
+> 用 `mibee-nvr encrypt-config` 可把配置里的明文密码就地加密（见 [CLI 手册](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/cli.md#encrypt-config-加密敏感字段)）。
 
 ## 顶层键速查
 
@@ -88,9 +88,12 @@ cameras:
     password: "camera123"
     enabled: true
     recording_enabled: true      # false = 仅直播不落盘
+    # 双光谱（热成像）相关键：imaging_type: thermal（标注热通道+默认策略）、
+    # thermal_readout:（温度读数端点）、spectrum_group:（双通道独立注册时的配对键）
+    # 见《摄像头指南》「热成像 / 双光谱摄像头」一节。
 ```
 
-各接入协议的完整写法见对应文档：[ONVIF](onvif-discovery.md) · [小米](xiaomi.md) · [SRT/RTMP](srt-rtmp.md) · [树莓派](raspberrypi.md) · [GB28181](gb28181.md)。
+各接入协议的完整写法见对应文档：[ONVIF](onvif-discovery.md) · [小米](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/xiaomi-setup.md) · [SRT/RTMP](srt-rtmp.md) · [树莓派](raspberrypi.md) · [GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md)。
 
 ## 常见组合示例
 
