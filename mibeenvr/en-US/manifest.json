@@ -38,6 +38,16 @@
       ]
     },
     {
+      "title": "Video Tutorials",
+      "items": [
+        {
+          "slug": "video-tutorials",
+          "file": "video-tutorials.md",
+          "title": "Video Tutorials (3 episodes)"
+        }
+      ]
+    },
+    {
       "title": "Playbooks & Choosing",
       "items": [
         {
