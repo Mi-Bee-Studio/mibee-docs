@@ -38,6 +38,16 @@
       ]
     },
     {
+      "title": "视频教程",
+      "items": [
+        {
+          "slug": "video-tutorials",
+          "file": "video-tutorials.md",
+          "title": "视频教程（B 站 · 3 集）"
+        }
+      ]
+    },
+    {
       "title": "玩法与选型",
       "items": [
         {
