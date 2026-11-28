@@ -1,6 +1,6 @@
 # MiBee Steward 功能总览
 
-本页是 MiBee Steward 的完整能力清单，以 **v0.5.0**（2026-08-19 发布）为基线。MiBee Steward 是一个**设备/网络层的资产发现、识别与登记**工具--回答三个问题：*网络上有哪些设备？它们是什么？它们还活着吗？* 每个功能都围绕这三问展开；明确的[产品边界](product-scope.md)之外的活儿，主动让位给更成熟的工具。
+本页是 MiBee Steward 的完整能力清单，覆盖截至 **v0.10.0**（2026-11-24）已发布的能力。MiBee Steward 是一个**设备/网络层的资产发现、识别与登记**工具--回答三个问题：*网络上有哪些设备？它们是什么？它们还活着吗？* 每个功能都围绕这三问展开；明确的[产品边界](product-scope.md)之外的活儿，主动让位给更成熟的工具。
 
 ![仪表盘](images/dashboard.webp)
 
@@ -70,6 +70,14 @@
 
 ![变更历史](images/pb-changes.webp)
 
+## 网络异常诊断（#761）
+
+- **回答什么**：当一台设备看似在不断变换 IP 时，这是真实的轮换——还是假象？判定引擎把地址目击历史（sightings）与逐 IP 扫描存活事实（snapshots）、多宿主 presence 层、变更流做联接，对模式进行分类并输出证据链。
+- **实证分类**：`stale_arp_scan_artifact`（大量目击地址、无一在扫描中应答——目击来自陈旧 ARP 缓存读取，而非设备真的在移动）、`multihomed_alias`（同一台主机活跃于多个网段）、`locally_administered_mac`（虚拟/软 MAC；按 MAC 做绑定不会生效）、`ip_slot_takeover`（变更流记录到同一地址上 MAC 被替换）、`hostname_identity_split`（多行设备以不同 MAC 广播同一主机名）。
+- **设计原则**：单看 sightings 是歧义的——它记录的是"某视角观测到了什么"，包括陈旧 ARP 缓存的读取。因此每个地址都会与扫描快照（`miss_count`、`flap_count`）交叉核对后才出结论；`stale_arp_scan_artifact` 是唯一高置信分类，正因为它立足于存活事实。
+- **消费接口**：`GET /api/v1/devices/{id}/diagnosis`（只读、按需计算）与设备详情页的**网络异常诊断**面板——判定徽章、带证据的结论、逐地址存活时间线、同名兄弟行。
+- **刻意不做告警**：遵循"告警只看影响，不看变化"原则，判定为拉取式；若下游影响需要推送，请挂接既有变更流的通知规则。
+
 ## 设备配置备份（Config Backup，v0.5.0，opt-in）
 
 Oxidized/RANCID 风格的网络设备配置拉取与版本管理：
@@ -87,10 +95,17 @@ blackbox 风格的外部资源周期探测--公网站点、托管 TLS 端口等�
 - **五种模块**：`http`（状态 <400 为成功，https 附带证书链）、`tls`（完整证书链）、`tcp`、`icmp`、`dns`（A/AAAA/CNAME/TXT 查询，可指定专用解析器）；每目标可配间隔（10s–86400s）与超时（1–60s）。
 - **按模块选项（#605）**：`http`--method（GET/HEAD）、`expected_status`（精确状态码集合，留空 = 沿用 <400 判定）、`keyword` + `keyword_mode`（contains / not_contains / regex）正文匹配、`ignore_tls_errors`（默认 false = 校验 TLS）；`dns`--`record`、`resolver`（host[:port]，留空用系统解析器）、`expected_ips`（A/AAAA 答案须命中其一）；`tcp`--连接后 `send` 载荷 + `expect` banner 匹配（`expect_mode`）。选项以 JSON 存在目标行上、原样下发 vantage agent。刻意不支持自定义请求头与凭据：选项在数据库中是明文，且必须保持 agent 命令通道无密钥，这是设计保证。
 - **设备绑定与自动生成（#606）**：目标可绑定到已发现设备（`device_id`，`GET /probe-targets?device_id=` 按设备过滤）；设备详情页对每个发现的服务提供一键建拨测 + 绑定目标面板。`probe.autogen`（默认关闭）把发现的 http/https 服务自动生成为设备绑定目标（`source=auto`）并跟随其生命周期--服务消失 → 目标停用挂起，回归 → 复活；手工目标永不触碰。分工口径：心跳回答「设备可达性」，拨测回答「服务层语义」。
-- **出口质量（#608）**：内置公共拨测点矩阵（`probe.quality`，裸配置默认关闭；随附的 `config.example.yaml` 显式设 `enabled: true`），从每个视角（中心 + 全部 agent）执行，按网络在滑动窗口上分析，判定链确定（`egress_down > dns_fault > upstream_resolver > degraded > ok`）并做跨视角目标隔离。判定与分数以 Prometheus gauge `mibee_probe_egress_verdict` / `mibee_probe_quality_score` 导出（仅指标；通知联动刻意未建）。
+- **出口质量（#608）**：内置公共拨测点矩阵（`probe.quality`；自 #737 起缺省 `enabled` 键默认**开启**——升级保留下来的旧配置不再静默失去矩阵；显式 `enabled: false` 仍可关闭，开关也位于「设置 → 拨测」），从每个视角（中心 + 全部 agent）执行，按网络在滑动窗口上分析，判定链确定（`egress_down > dns_fault > upstream_resolver > degraded > ok`）并做跨视角目标隔离。判定与分数以 Prometheus gauge `mibee_probe_egress_verdict` / `mibee_probe_quality_score` 导出（仅指标；通知联动刻意未建）。
 - **引擎**：10s tick 重读目标（增删改即时生效，无需重启）、并发经 `probe.max_concurrency` 可配（默认 8）、断点续跑、手动触发。
 - **证书库存**：复用扫描器的证书链采集，SNI 自动推导；瞬时失败保留最后已知良好链。
 - **多视角（#277）**：目标的探测可由中心、所有已注册 agent 或指定 agent 发起--结果按 `(target, vantage)` 分别记录，历史弹窗并排展示并在不一致时高亮，指标带 `mibee_probe_*{vantage=…}` 标签。调度器按 agent 上报的 `supported_modules` 能力声明过滤计划（#604）；tcp/dns 计划要求 agent 0.2.0+。
+- **突发采样（#744）**：icmp 目标可在 options 中携带 `burst_count`（每轮 1–20 个回显包，`burst_interval_ms` 10–1000 间隔）。突发轮次把 `loss_pct`（丢包率）与 `jitter_ms`（相邻回显 RTT 差分均值）升级为一等指标——落库 `probe_results`、历史弹窗图表（丢包/抖动模式）呈现，并由质量判定消费为稳定码 `loss_burst` / `jitter_high`（阈值 `probe.quality.loss_pct_threshold` 默认 5%、`jitter_degraded_ms` 默认 30）。60s 节奏的探测看不见微突发丢包，突发轮可以。
+- **UDP 出口归因（#745）**：当某视角的全部 icmp 链路死亡而 TCP 可达链路仍然通过时，degraded 判定附加 `udp_egress_blocked.tcp_alive_udp_dead`——是 UDP 通道问题，不是网络离线。仅作归因：绝不自行生成或升级判定（影响优先的告警原则）。
+- **HostNet 归因（#746）**：agent 每 5 分钟采样自身网络事实（网口错误/丢包计数、默认路由指纹、一次对中心的 DNS 解析计时）随报告 meta 上报；中心落序列（`vantage_hostnet`），并在 degraded 判定上附加 `vantage_local_degraded.iface_errors`（跟踪计数在两次采样间上升；下降视为重置而非劣化）或 `vantage_local_degraded.route_change`——用计数器回答"是我的网络坏了还是目标坏了"。
+- **站点间矩阵（#747）**：开启 `probe.autogen.mesh_enabled`（默认开）后，autogen sweep 依据 agent 上报源地址自动对账视角矩阵：中心→agent 与有序 agent→agent 的 icmp 链路（`mesh-*`，source `system`，10 包突发），N×N 的 RTT/丢包/抖动矩阵无需手工接线。链路跟随地址漂移，agent 注销即停用，回归即复活。
+- **站点矩阵视图（#748）**：拨测页新增「站点间矩阵」面板——把 `mesh-*` 链路渲染成 N×N 热力网格（行=发起探测的站点，列=被探测的站点），单元格显示窗口内 p50 与丢包率并按时延/健康着色；缺链路显示破折号、本窗口未上报显示省略号（0 ms 绝不冒充健康）。面板默认折叠、首次展开才拉取 `GET /api/v1/probe-matrix`，与出口质量面板共用时间窗 chips；点单元格直接下钻该链路的历史图表。只有目的端 agent 仍注册的链路才出现在轴上（autogen 按目的端上报源地址建链路，agent 注销即整列消失）。
+- **网关画像（#750–#754）**：面向站点路由器设备的可选网络能力画像。`probe.nat`（设置中心，默认关——探测会向第三方暴露站点公网映射）承载 STUN 服务器列表，内置默认全部为公共节点（Cloudflare / Google / Nextcloud / Bilibili / Antisip；产品零自建 STUN——中立性约束）。名单按**存活**而非品牌选：2026-11-23 从两个视角各发 5 次探测，原先出厂的腾讯与小米端点均为 0/5 被退役，只保留实测通过的节点；存量列表在读时归一化（`ReconcileSTUNServers`），换名单前写下的 overlay 不会继续探测死节点。用户可加自己的节点（host:port，≤8 行，内置行可停用不可删），支持所见即所得的一次性测试（映射地址 + 往返延迟）。设置变更即向全部 agent 下发 `gateway_probe`：agent 执行 UPnP IGD 发现（WAN IP、端口映射能力）与 NAT 映射行为判定（单 socket、≥2 个不同服务器：映射全部一致 = 锥形/EIM、任何差异 = 对称/EDM，应答不足两个 = 未知，绝不猜测）。证据落入路由器设备的 `scan_attributes.gateway`，设备页渲染为"网络画像"区块。
+- **agent 时钟偏移（#749）**：agent 每 5 分钟对公共 NTP 池做一次 SNTP 采样；校准偏移随报告 meta 上报，在 agents 页与上报时刻启发式偏移并排展示。
 - **指标与告警**：`mibee_probe_up` / `mibee_probe_duration_seconds` / `mibee_probe_cert_expiry_timestamp_seconds`（加上述质量 gauge），附带示例告警规则（目标宕机、证书临期）。
 
 ![拨测](images/pb-probes.webp)

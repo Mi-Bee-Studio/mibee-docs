@@ -124,7 +124,7 @@ MiBee Steward 设备管理与监控系统（含设备系统、网络扫描、多
 
 
 
-所有端点共同遵循的约定。本节的机器可读形式是 [`docs/openapi.yaml`](../openapi.yaml)（由 CI 奇偶校验测试保证与实现同步）；这里是文字契约。
+所有端点共同遵循的约定。本节的机器可读形式是 [`docs/openapi.yaml`](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/docs/openapi.yaml)（由 CI 奇偶校验测试保证与实现同步）；这里是文字契约。
 
 
 
@@ -394,7 +394,7 @@ flowchart LR
 
 
 
-- **公开**：无需认证（健康检查、登录、登出、2FA 校验、`/metrics`、`/sd`）
+- **公开**：无需认证（健康检查、登录、登出、2FA 校验、`/metrics`、`/sd`、`/.well-known/mibee-service`）
 
 
 - **需认证**：有效的 JWT 令牌（任意角色）
@@ -746,8 +746,26 @@ flowchart LR
 
 根路径别名 `GET /health` 返回同样的 JSON：外部监控、容器探针与负载均衡按惯例探测 `/health` 时将拿到真实健康状态，而不是 SPA fallback 的 HTML（#571）。
 
+### GET /.well-known/mibee-service
 
+生态服务发现身份端点（#729，蜂探 docs/02 §8.1）：蜂探 App 的子网扫描命中此端点即可按类型归类发现的实例，无需再手填地址。契约要求无鉴权且最小披露——恰好四个字段，不含地址、能力、凭据任何信息（与 `/health` 同等披露口径；必须公开，因为 App 在发现实例之前无从鉴权）。
 
+**公开**
+
+**响应**：
+
+```json
+{
+  "service": "steward",
+  "name": "steward-lan",
+  "ver": "v0.9.1",
+  "id": "6f0c8e2b1a4d5f379c8e0b2a4d6f8c1e"
+}
+```
+
+`service` 恒为 `steward`（docs/02 §8.4 类型注册表值）；`name` 为宣告的实例名（`announce.name` 或 OS 主机名）；`ver` 为构建版本；`id` 为稳定实例 ID（`data/instance-id`，重启/升级/换 IP 不变——它是 App 侧绑定与归并的锚点）。`announce.enabled: false` 时端点注销（404）。
+
+同一身份还通过 mDNS `_mibee-steward._tcp`（TXT `ver/id/name/tls/api`，与 NVR 服务同形）和 49091/udp 上应答共享探测帧 `MIBEE-NVR-DISCv1?`（应答带 `type=steward`）的 UDP 应答器宣告——两者都由 `announce` 配置块控制，见 [configuration.md](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/docs/zh/configuration.md#局域网自宣告配置729)。
 
 
 
@@ -3591,7 +3609,7 @@ SSH 凭据供设备配置备份探测使用（详见 [设备配置历史](#设�
 
 
 
-面向外网等显式配置端点的周期探测（blackbox_exporter 模式）：`http` / `tls` / `tcp` / `icmp` / `dns` 五类模块（`dns` 为纯域名解析探测，可指定解析器与期望 IP 断言）。`tls` 模块与 https 的 `http` 模块会采集完整证书链（复用扫描器的证书清点能力，`tls` 结果含信任判定与 TLS 版本）。目标可携带按模块的 `options` 对象（#605，http 方法/期望状态码/正文关键字/忽略 TLS 错误，dns 记录类型/解析器/期望 IP，tcp 载荷/banner），并可经 `device_id` 绑定到已发现设备（#606）；每个响应都带 `source`（`manual` / `auto` / `system`）。选项刻意不含凭据与认证头：它在数据库中是明文，且必须保持 agent 命令通道无密钥。读（`CapProbeRead`）任意登录用户可用；写（`CapProbeManage`）操作员及以上。字段级文档见 [openapi.yaml](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/docs/openapi.yaml)（`ProbeTarget` / `ProbeOptions` / `ProbeQualityReport`）。
+面向外网等显式配置端点的周期探测（blackbox_exporter 模式）：`http` / `tls` / `tcp` / `icmp` / `dns` 五类模块（`dns` 为纯域名解析探测，可指定解析器与期望 IP 断言）。`tls` 模块与 https 的 `http` 模块会采集完整证书链（复用扫描器的证书清点能力，`tls` 结果含信任判定与 TLS 版本）。目标可携带按模块的 `options` 对象（#605，http 方法/期望状态码/正文关键字/忽略 TLS 错误，dns 记录类型/解析器/期望 IP，tcp 载荷/banner、icmp 突发计数/间隔），并可经 `device_id` 绑定到已发现设备（#606）；每个响应都带 `source`（`manual` / `auto` / `system`）。选项刻意不含凭据与认证头：它在数据库中是明文，且必须保持 agent 命令通道无密钥。读（`CapProbeRead`）任意登录用户可用；写（`CapProbeManage`）操作员及以上。字段级文档见 [openapi.yaml](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/main/docs/openapi.yaml)（`ProbeTarget` / `ProbeOptions` / `ProbeQualityReport`）。
 
 
 
@@ -3625,10 +3643,22 @@ SSH 凭据供设备配置备份探测使用（详见 [设备配置历史](#设�
 
 
 | `/api/v1/probe-targets/{id}/certificates` | GET | 需认证 · `CapProbeRead` | 当前证书链（响应形状与设备证书端点一致） |
+| `/api/v1/probe-targets/{id}/phases` | GET | 需认证 · `CapProbeRead` | 分阶段计时历史（#717），新到旧（`limit`，默认 200 / 上限 500） |
+| `/api/v1/probe-targets/autogen-sweep` | POST | 操作员及以上 · `CapProbeManage` | 立即执行一轮自动生成对账（读取生效策略：overlay 优先于 config） |
 
 
 | `/api/v1/probe-quality` | GET | 需认证 · `CapProbeRead` | 质量分析（#613）：按管理分类的分视角判定--内网/外网业务简单健康 + 出口矩阵判定链（可选 `window` 分钟覆盖回看窗口） |
 | `/api/v1/probe-quality/history` | GET | 需认证 · `CapProbeRead` | 分桶质量趋势--同一条判定链按小时（`days=7`）/ 天（`days=30`）桶回放 |
+| `/api/v1/probe-quality/episodes` | GET | 需认证 · `CapProbeRead` | 劣化段（#720）：相对基线的下降，带交叉佐证与归因（`days`，`active=1` = 仅未解决） |
+| `/api/v1/probe-matrix` | GET | 需认证 · `CapProbeRead` | 站点间 N×N 矩阵（#748）：mesh-* 自动生成目标上每条链路的 RTT/丢包/抖动（可选 `window` 分钟） |
+| `/api/v1/probe-egress` | GET | 需认证 · `CapProbeRead` | 各视角当前出口身份（#718）：最近一轮公网 IP 回显、ASN 富化、本地网关（只记录不通知） |
+| `/api/v1/probe-paths` | GET | 需认证 · `CapProbeRead` | 各目标/视角最近追踪路径（#719）：跳列表、到达 TTL、回程 TTL |
+| `/api/v1/settings/probes` | GET | 管理员 · `CapUserManage` | 生效的拨测策略开关（质量矩阵 + 自动生成；DB overlay 优先于 YAML） |
+| `/api/v1/settings/probes` | PUT | 管理员 · `CapUserManage` | 更新拨测策略开关（矩阵立即重种 / 自动生成立即对账） |
+| `/api/v1/settings/probes/stun-servers` | GET | 管理员 · `CapUserManage` | 网关画像用的 STUN 服务器列表（#750）；`?defaults=1` 返回出厂默认列表 |
+| `/api/v1/settings/probes/stun-servers` | PUT | 管理员 · `CapUserManage` | 整体替换列表（内置行可停用不可删除；最多 8 条） |
+| `/api/v1/settings/probes/stun-servers/test` | POST | 管理员 · `CapUserManage` | 发一次 STUN Binding Request 测试端点（映射地址 + RTT，不落库） |
+| `/api/v1/devices/{id}/diagnosis` | GET | 需认证 · `CapDeviceRead` | 设备网络异常诊断（#761）：地址时间线 + 存活事实、带证据链的分类发现、同名设备兄弟行 |
 
 
 
@@ -3709,10 +3739,10 @@ SSH 凭据供设备配置备份探测使用（详见 [设备配置历史](#设�
 - `notes`（可选，≤500 字符）、`enabled`（可选，默认 true）
 
 
-- `vantage`（可选，默认 `center`）：执行计划--`center`（本机执行）、`agent:{agent_id}`（该 agent 经分布式命令通道执行；中心拒绝本地执行，手动触发返回 409）、`all`（中心 + 全部已注册 agent；各轨道结果分别盖 `center` / `agent:{id}` 章--见[分布式](distributed.md#多视角拨测277)）
+- `vantage`（可选，默认 `center`）：执行计划--`center`（本机执行）、`agent:{agent_id}`（该 agent 经分布式命令通道执行；中心拒绝本地执行，手动触发返回 409）、`all`（中心 + 全部已注册 agent；各轨道结果分别盖 `center` / `agent:{id}` 章--见[分布式](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/docs/zh/distributed.md#多视角拨测277)）
 
 
-- `options`（可选，按模块，#605）：http--`method`（`GET`/`HEAD`）、`expected_status`（精确状态码集合如 `[200,204]`，留空 = 状态 < 400）、`keyword` + `keyword_mode`（`contains`/`not_contains`/`regex`）、`ignore_tls_errors`（默认 false = 校验 TLS）；dns--`record`（`A`/`AAAA`/`CNAME`/`TXT`）、`resolver`（`host[:port]`，留空用系统解析器）、`expected_ips`（A/AAAA 答案须命中其一，至多 8 条）；tcp--`send`（连接后写入的载荷）、`expect` + `expect_mode`（`contains`/`regex`）banner 匹配。`icmp`/`tls` 无选项。不属于该模块的字段会被拒绝；刻意不设凭据/认证头（选项在库中明文，且必须原样走无密钥的 agent 命令通道）。
+- `options`（可选，按模块，#605）：http--`method`（`GET`/`HEAD`）、`expected_status`（精确状态码集合如 `[200,204]`，留空 = 状态 < 400）、`keyword` + `keyword_mode`（`contains`/`not_contains`/`regex`）、`ignore_tls_errors`（默认 false = 校验 TLS）；dns--`record`（`A`/`AAAA`/`CNAME`/`TXT`）、`resolver`（`host[:port]`，留空用系统解析器）、`expected_ips`（A/AAAA 答案须命中其一，至多 8 条）；tcp--`send`（连接后写入的载荷）、`expect` + `expect_mode`（`contains`/`regex`）banner 匹配。icmp--`burst_count`（每轮 1–20 个回显；0/1 = 旧版单发）与 `burst_interval_ms`（回显间隔 10–1000，0 = 探测器默认 20ms，需配合 `burst_count`），突发轮把 `loss_pct` / `jitter_ms` 作为一等指标上报（#744）；tls 无选项。不属于该模块的字段会被拒绝；刻意不设凭据/认证头（选项在库中明文，且必须原样走无密钥的 agent 命令通道）。
 
 
 - `device_id`（可选，#606）：绑定到已发现资产；`GET /probe-targets?device_id=` 按它过滤，设备删除时解绑（auto 目标停用，manual 目标继续运行）。
@@ -4286,6 +4316,7 @@ Prometheus 数据源的仪表板配置与查询透传。读（`CapDashboardRead`
 
 
 | `GET /sd` | Prometheus HTTP SD 文件内容（已注册设备的 IP 与标签，供 Prometheus 服务发现） |
+| `GET /.well-known/mibee-service` | 生态服务发现身份端点（#729）：`{service: steward, name, ver, id}`——蜂探扫描的分类依据 |
 
 
 

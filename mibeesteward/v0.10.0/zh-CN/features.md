@@ -1,0 +1,185 @@
+# MiBee Steward 功能总览
+
+本页是 MiBee Steward 的完整能力清单，覆盖截至 **v0.10.0**（2026-11-24）已发布的能力。MiBee Steward 是一个**设备/网络层的资产发现、识别与登记**工具--回答三个问题：*网络上有哪些设备？它们是什么？它们还活着吗？* 每个功能都围绕这三问展开；明确的[产品边界](product-scope.md)之外的活儿，主动让位给更成熟的工具。
+
+![仪表盘](images/dashboard.webp)
+
+## 能力地图
+
+| 层 | 模块 | 一句话 |
+|---|---|---|
+| 发现 | 多协议扫描 / 被动发现 / 路由器侧数据源 / eBPF | 把网络里的东西找出来 |
+| 识别 | 指纹规则库 / OUI 厂商 / 设备类型推断 | 认出它是谁（品牌、型号、类型） |
+| 登记 | 资产台账 / 心跳鲜活度 / 设备系统 | 登记成持续保鲜的账本 |
+| 理解 | L2 拓扑 / 变更检测 / TLS 证书盘点 | 理解设备之间的关系与变化 |
+| 运维 | 配置备份 / 拨测 / 通知 / 分布式采集 | 日常资产运维 |
+| 平台 | REST API / Prometheus 出口 / Web UI / RBAC | 对接与治理 |
+
+## 发现（Discovery）
+
+**扫描引擎 v2**：插件化五层流水线（探测 → 分类 → 处理 → 持久化 → 编排），新增协议只需一个 Classifier + 一个 Handler，不触碰编排与持久化层。
+
+- **主动探测**：ICMP、TCP 端口扫描、SNMP（v1/v2c/v3 USM）、HTTP、RTSP、ONVIF、ARP、mDNS/SSDP/NetBIOS/WS-Discovery（UDP）、rDNS（可配置专用 DNS 服务器）、SMB2 协商、FTP banner；指数退避重试（1s → 2s → 4s，仅网络错误）。
+- **级联深采**：扫到 HTTP → 探测 `/metrics` → 识别为 Prometheus → 级联探测 node_exporter → 自动回填硬件信息，一次扫描把设备画像越滚越细。
+- **被动发现服务**（opt-in）：两次计划扫描之间用 ARP 差分 + mDNS/SSDP 被动监听近实时登记新设备，把发现到登记的间隔缩短到约 1 分钟。
+- **路由器侧数据源**（跑在路由器上时）：DHCP 租约（dnsmasq）、conntrack 连接表、hostapd WiFi 工作站（信号强度/关联时间）、dnsmasq DNS 查询日志（被动 DNS 指纹）。
+- **路由器 ARP 表**：SNMP 遍历路由器 ARP 表，解析跨网段设备的 MAC。
+- **eBPF 被动观测器**（可选构建）：TC ingress 程序嗅探 WS-Discovery 多播与 TCP 魔术字节，作为补充证据源。
+- **LLDP 原始帧监听**（可选构建）：AF_PACKET 捕获 0x88cc，为不开放 SNMP 的端点提供 LLDP 证据。
+- **发现漏斗状态**：接收 → 抑制 → 已知跳过 → 识别 → 存活确认 → 登记，全链路计数器与最近发现列表。
+
+![扫描器](images/pb-scanner-form.webp)
+
+## 识别（Identification）
+
+- **数据驱动的指纹规则库**：识别规则是 YAML 数据而非硬编码，启动时从本地路径或二进制内嵌资源加载；新增一个厂商/型号签名 = 加一条 YAML，社区可贡献。
+- **导入语料**：Rapid7 Recog（Apache-2.0，约 1100+ 规则）+ SNMP 表（合计约 2500+ 规则），经 `cmd/fpimport` 转换；nmap 语料因协议不兼容仅作 clean-room 参考、不导入。
+- **协议指纹分类**：banner、HTTP（Server 头/HTML body）、RTSP、ONVIF 设备信息、SNMP sysObjectID/sysDesc、Prometheus/node_exporter、TLS 证书、SSH/Telnet banner。
+- **摄像头跨证据融合**：RTSP + ONVIF + HTTP 三级分类器专为 IP 摄像头场景优化（SNMP 位掩码启发式保留为 Go 代码）。
+- **OUI 厂商推断**：IEEE MA-S(/36)/MA-M(/28)/MA-L(/24) 三注册表最长前缀匹配，区分「网卡芯片厂商」与设备自报品牌；内置精选 CC-BY-SA 表开箱即用，可配置完整 IEEE 数据覆盖。
+- **设备类型推断表**：hostname/brand/port → 设备类型的关键字表同样是数据（YAML），来源标记 `heuristic`（主机名猜测，UI 显示 `?` 徽章）与 `protocol`（协议证据）区分可信度。
+- **MAC 观测标志**：本地管理位（U/L）、多播位作为中性观测字段记录，不影响资产身份。
+
+![指纹覆盖](images/pb-fingerprints.webp)
+
+## 资产登记与心跳（Registry & Liveness）
+
+- **多网络资产台账**：`networks` + 复合唯一 `(ip, network_id)`，同一私网 IP 可存在于不同网络；MAC 为首要 upsert 键，漫游设备保持单一资产；`device_uuid` 贯穿卫星表，改 IP 不分叉历史。
+- **心跳探测**：每设备可配 ICMP/TCP/HTTP/SNMP 探针与间隔（默认 30s），5 次失败判离线；离线设备退避探测（默认每 10 tick 一次），扫描复活即清零失败计数。
+- **存活时间序列**：`device_liveness` 每 tick 一条在线/离线判定，在线率、离线时长、历史曲线可查；状态翻转不再刷屏变更日志。
+- **资产归档（#662–#668）**：扫描发现的设备离线超过阈值（每设备覆写 > 全局 `archive.offline_days`，默认 7 天；无 MAC 24 小时快速通道）后**归档而非删除**——完整保留历史；连续在线 `archive.restore_online_minutes`（默认 60 分钟）自动恢复；`force_active`/`force_archive` 双 pin 压过自动化；周期模式学习器豁免按稳定周期回归的设备（历史 ≥60 天、相邻间隔在中位数 ±25% 内）。
+- **档案库页与卷宗**：`/archive` 列出归档设备（周期/强制徽章、手动恢复含破 pin 确认）；每台设备有六源卷宗时间线（归档事件、变更日志、配置版本、TLS 证书、文档、目击记录）。
+- **标签字典**：标签为受管字典（内置 internal/external/temporary/pending，删除保护）+ 每设备多标签绑定、批量打标、服务端 `?tag_id=` 过滤、每标签取色；设备编辑器用 chip 选择而非自由文本。
+- **设备系统档案**：一台设备可挂多个已安装系统（含入口 URL），卡片式 UI 带分类徽章。
+- **设备附件**：说明书/照片/发票上传到 `data/uploads`，挂在设备名下。
+
+## 拓扑（Topology）
+
+- **交换机侧 L2 邻接**：LLDP-MIB（跨厂商标准）、CISCO-CDP-MIB（`cdpCacheTable`）、Bridge-MIB 转发表、Q-BRIDGE-MIB（`dot1qTpFdbPort`，VLAN 感知的 MAC→端口）、STP-MIB（根桥/指定端口/端口角色）、IF-MIB（ifIndex → 人读端口名）。
+- **物化拓扑边**：`device_neighbors` → `topology_edges`（设备↔设备边，含本地/远端端口、VLAN 标签、STP 角色）；子网与 VLAN 表（802.1Q）随扫描更新。
+- **可视化**：分层力导向布局（核心/汇聚/接入三层着色，图例即层过滤器）、搜索聚焦（非匹配节点变暗）、邻居高亮 + 节点详情卡、端口钻取，大图增量重建保持交互。
+
+![网络拓扑](images/pb-topology.webp)
+
+## 变更检测（Change Detection）
+
+- **三类事件**：`device_added` / `device_changed` / `device_lost`（以及 `device_config_changed`），自动写入 `change_log` 并推送进程内 Watcher。
+- **防抖**：连续扫描 miss 计数阈值（默认 2）防单次漏扫误报；agent 网络用租约 TTL 判丢失，抖动计数衰减趋向丢失而非反复横跳。
+- **设备更换检测**：同 IP 换设备时 IP 持有者胜出，身份强制覆盖，旧记录标离线，新旧关系入变更日志。
+- **消费接口**：`GET /api/v1/changes` 查询历史；`GET /changes/watch` SSE 实时流；UI 时间线带结构化前后对比。
+
+![变更历史](images/pb-changes.webp)
+
+## 网络异常诊断（#761）
+
+- **回答什么**：当一台设备看似在不断变换 IP 时，这是真实的轮换——还是假象？判定引擎把地址目击历史（sightings）与逐 IP 扫描存活事实（snapshots）、多宿主 presence 层、变更流做联接，对模式进行分类并输出证据链。
+- **实证分类**：`stale_arp_scan_artifact`（大量目击地址、无一在扫描中应答——目击来自陈旧 ARP 缓存读取，而非设备真的在移动）、`multihomed_alias`（同一台主机活跃于多个网段）、`locally_administered_mac`（虚拟/软 MAC；按 MAC 做绑定不会生效）、`ip_slot_takeover`（变更流记录到同一地址上 MAC 被替换）、`hostname_identity_split`（多行设备以不同 MAC 广播同一主机名）。
+- **设计原则**：单看 sightings 是歧义的——它记录的是"某视角观测到了什么"，包括陈旧 ARP 缓存的读取。因此每个地址都会与扫描快照（`miss_count`、`flap_count`）交叉核对后才出结论；`stale_arp_scan_artifact` 是唯一高置信分类，正因为它立足于存活事实。
+- **消费接口**：`GET /api/v1/devices/{id}/diagnosis`（只读、按需计算）与设备详情页的**网络异常诊断**面板——判定徽章、带证据的结论、逐地址存活时间线、同名兄弟行。
+- **刻意不做告警**：遵循"告警只看影响，不看变化"原则，判定为拉取式；若下游影响需要推送，请挂接既有变更流的通知规则。
+
+## 设备配置备份（Config Backup，v0.5.0，opt-in）
+
+Oxidized/RANCID 风格的网络设备配置拉取与版本管理：
+
+- **计划任务**：按计划对路由器/交换机/防火墙执行 SSH `running-config` 拉取，版本化存储（`device_configs`），仅变更时生成新版本。
+- **厂商命令矩阵**：JunOS `show configuration | display set`、HP/Aruba/H3C/Comware `display current-configuration`、Cisco IOS/NX-OS、Arista、Huawei VRP、MikroTik 及未知厂商回退 `show running-config`。
+- **SSH 主机密钥 TOFU**：首次使用即信任并记录。
+- **差异对比**：任意两版本 unified diff；设备详情「配置历史」标签页带手工着色的 diff 渲染；配置变更联动变更检测与通知。
+- **加密凭据库**：SSH 凭据 AES-256-GCM 加密存储，写入加密、读取脱敏。
+
+## 拨测（Synthetic Probing，v0.5.0，#603–#610 扩展）
+
+blackbox 风格的外部资源周期探测--公网站点、托管 TLS 端口等「网络外」的资产：
+
+- **五种模块**：`http`（状态 <400 为成功，https 附带证书链）、`tls`（完整证书链）、`tcp`、`icmp`、`dns`（A/AAAA/CNAME/TXT 查询，可指定专用解析器）；每目标可配间隔（10s–86400s）与超时（1–60s）。
+- **按模块选项（#605）**：`http`--method（GET/HEAD）、`expected_status`（精确状态码集合，留空 = 沿用 <400 判定）、`keyword` + `keyword_mode`（contains / not_contains / regex）正文匹配、`ignore_tls_errors`（默认 false = 校验 TLS）；`dns`--`record`、`resolver`（host[:port]，留空用系统解析器）、`expected_ips`（A/AAAA 答案须命中其一）；`tcp`--连接后 `send` 载荷 + `expect` banner 匹配（`expect_mode`）。选项以 JSON 存在目标行上、原样下发 vantage agent。刻意不支持自定义请求头与凭据：选项在数据库中是明文，且必须保持 agent 命令通道无密钥，这是设计保证。
+- **设备绑定与自动生成（#606）**：目标可绑定到已发现设备（`device_id`，`GET /probe-targets?device_id=` 按设备过滤）；设备详情页对每个发现的服务提供一键建拨测 + 绑定目标面板。`probe.autogen`（默认关闭）把发现的 http/https 服务自动生成为设备绑定目标（`source=auto`）并跟随其生命周期--服务消失 → 目标停用挂起，回归 → 复活；手工目标永不触碰。分工口径：心跳回答「设备可达性」，拨测回答「服务层语义」。
+- **出口质量（#608）**：内置公共拨测点矩阵（`probe.quality`；自 #737 起缺省 `enabled` 键默认**开启**——升级保留下来的旧配置不再静默失去矩阵；显式 `enabled: false` 仍可关闭，开关也位于「设置 → 拨测」），从每个视角（中心 + 全部 agent）执行，按网络在滑动窗口上分析，判定链确定（`egress_down > dns_fault > upstream_resolver > degraded > ok`）并做跨视角目标隔离。判定与分数以 Prometheus gauge `mibee_probe_egress_verdict` / `mibee_probe_quality_score` 导出（仅指标；通知联动刻意未建）。
+- **引擎**：10s tick 重读目标（增删改即时生效，无需重启）、并发经 `probe.max_concurrency` 可配（默认 8）、断点续跑、手动触发。
+- **证书库存**：复用扫描器的证书链采集，SNI 自动推导；瞬时失败保留最后已知良好链。
+- **多视角（#277）**：目标的探测可由中心、所有已注册 agent 或指定 agent 发起--结果按 `(target, vantage)` 分别记录，历史弹窗并排展示并在不一致时高亮，指标带 `mibee_probe_*{vantage=…}` 标签。调度器按 agent 上报的 `supported_modules` 能力声明过滤计划（#604）；tcp/dns 计划要求 agent 0.2.0+。
+- **突发采样（#744）**：icmp 目标可在 options 中携带 `burst_count`（每轮 1–20 个回显包，`burst_interval_ms` 10–1000 间隔）。突发轮次把 `loss_pct`（丢包率）与 `jitter_ms`（相邻回显 RTT 差分均值）升级为一等指标——落库 `probe_results`、历史弹窗图表（丢包/抖动模式）呈现，并由质量判定消费为稳定码 `loss_burst` / `jitter_high`（阈值 `probe.quality.loss_pct_threshold` 默认 5%、`jitter_degraded_ms` 默认 30）。60s 节奏的探测看不见微突发丢包，突发轮可以。
+- **UDP 出口归因（#745）**：当某视角的全部 icmp 链路死亡而 TCP 可达链路仍然通过时，degraded 判定附加 `udp_egress_blocked.tcp_alive_udp_dead`——是 UDP 通道问题，不是网络离线。仅作归因：绝不自行生成或升级判定（影响优先的告警原则）。
+- **HostNet 归因（#746）**：agent 每 5 分钟采样自身网络事实（网口错误/丢包计数、默认路由指纹、一次对中心的 DNS 解析计时）随报告 meta 上报；中心落序列（`vantage_hostnet`），并在 degraded 判定上附加 `vantage_local_degraded.iface_errors`（跟踪计数在两次采样间上升；下降视为重置而非劣化）或 `vantage_local_degraded.route_change`——用计数器回答"是我的网络坏了还是目标坏了"。
+- **站点间矩阵（#747）**：开启 `probe.autogen.mesh_enabled`（默认开）后，autogen sweep 依据 agent 上报源地址自动对账视角矩阵：中心→agent 与有序 agent→agent 的 icmp 链路（`mesh-*`，source `system`，10 包突发），N×N 的 RTT/丢包/抖动矩阵无需手工接线。链路跟随地址漂移，agent 注销即停用，回归即复活。
+- **站点矩阵视图（#748）**：拨测页新增「站点间矩阵」面板——把 `mesh-*` 链路渲染成 N×N 热力网格（行=发起探测的站点，列=被探测的站点），单元格显示窗口内 p50 与丢包率并按时延/健康着色；缺链路显示破折号、本窗口未上报显示省略号（0 ms 绝不冒充健康）。面板默认折叠、首次展开才拉取 `GET /api/v1/probe-matrix`，与出口质量面板共用时间窗 chips；点单元格直接下钻该链路的历史图表。只有目的端 agent 仍注册的链路才出现在轴上（autogen 按目的端上报源地址建链路，agent 注销即整列消失）。
+- **网关画像（#750–#754）**：面向站点路由器设备的可选网络能力画像。`probe.nat`（设置中心，默认关——探测会向第三方暴露站点公网映射）承载 STUN 服务器列表，内置默认全部为公共节点（Cloudflare / Google / Nextcloud / Bilibili / Antisip；产品零自建 STUN——中立性约束）。名单按**存活**而非品牌选：2026-11-23 从两个视角各发 5 次探测，原先出厂的腾讯与小米端点均为 0/5 被退役，只保留实测通过的节点；存量列表在读时归一化（`ReconcileSTUNServers`），换名单前写下的 overlay 不会继续探测死节点。用户可加自己的节点（host:port，≤8 行，内置行可停用不可删），支持所见即所得的一次性测试（映射地址 + 往返延迟）。设置变更即向全部 agent 下发 `gateway_probe`：agent 执行 UPnP IGD 发现（WAN IP、端口映射能力）与 NAT 映射行为判定（单 socket、≥2 个不同服务器：映射全部一致 = 锥形/EIM、任何差异 = 对称/EDM，应答不足两个 = 未知，绝不猜测）。证据落入路由器设备的 `scan_attributes.gateway`，设备页渲染为"网络画像"区块。
+- **agent 时钟偏移（#749）**：agent 每 5 分钟对公共 NTP 池做一次 SNTP 采样；校准偏移随报告 meta 上报，在 agents 页与上报时刻启发式偏移并排展示。
+- **指标与告警**：`mibee_probe_up` / `mibee_probe_duration_seconds` / `mibee_probe_cert_expiry_timestamp_seconds`（加上述质量 gauge），附带示例告警规则（目标宕机、证书临期）。
+
+![拨测](images/pb-probes.webp)
+
+## 通知（Notifications）
+
+- **渠道**：webhook（飞书/企业微信/Telegram/Discord 均可走 webhook）与邮件（SMTP），支持测试发送。
+- **内置通知规则**（v0.5.0）：事件类型（设备丢失/恢复/新增/变更/配置变更）× 范围（全部/某网络/某设备）→ 目标渠道；每（规则×设备）冷却窗口（默认 30 分钟）防刷屏--刻意是「规则 → 渠道」的薄转发，不是告警引擎。
+- **按用户未读跟踪**：顶栏铃铛未读计数，打开即清。
+
+## 分布式采集（Agents）
+
+- **跨网段模型**：center + agent（`mibee-agent` 独立二进制，CGO-free，普通用户即可运行）；agent 扫描本地 LAN，通过 HTTPS 上报 center。
+- **NAT 友好的拉模型**：agent 主动发起全部连接（上报 + 命令轮询约 60s 周期），center 无需暴露入站端口。
+- **抗熵快路径**：`X-Network-State-Hash`（存活集合身份字段的 SHA-256）命中时 center 跳过逐设备处理，只刷租约--稳态网络近零开销。
+- **租约模型**：agent 上报刷新每设备租约，TTL（默认 5 分钟）过期由后台清扫器判丢失。
+- **命令通道**：center 下发扫描等命令，agent 轮询 → 确认 → 完成；可选远程运维（重启/重载配置/日志尾随，双向开关 + 审计）。
+- **机器令牌**：agent bearer token 绑定 `agent_id` + `network_id`，管理员 CRUD，一次性展示。
+
+![采集器](images/agents.webp)
+
+## 安全与访问控制（Security & RBAC）
+
+- **认证**：JWT（cookie 优先 + Bearer 回退）、登录锁定、令牌黑名单；TOTP 两步验证可选。
+- **多角色能力模型**（v0.5.0）：`admin` / `operator` / `viewer` 映射到细粒度能力集（`CapDeviceRead`、`CapScanTrigger`…），每条路由按能力 gating，未知角色一无所授。
+- **对象级网络授权**：按用户分配可见网络；`closed` 模式下非管理员只见被授权网络（设备、扫描、变更、拓扑、导出全读面），未授权详情返回 404，管理员始终绕过。
+- **SNMPv3 凭据库**：USM 凭据（认证/加密口令与协议、安全级别）AES-256-GCM 加密存储，读取永不回显；v3 下全部 OID 路径可用（身份 8 OID + 全部拓扑 walk）。
+- **基础设施**：CSRF、速率限制（登录 10/分、全局 600/分、扫描 10/分）、安全响应头、可信代理白名单的 RealIP、全量敏感操作审计日志、`reset-admin-password` CLI 子命令。
+
+## API 与集成（API & Integrations）
+
+- **REST API**（`/api/v1`，snake_case）：设备、扫描任务/运行/结果、变更、网络、采集器与令牌、用户与授权、审计、文档、通知渠道与规则、凭据、拨测目标、拓扑、发现状态。
+- **Prometheus 出口**：`/metrics`（资产状态 gauge、心跳计数/延迟直方图、扫描运行/时长/任务、拨测指标、网络漂移 gauge）；`/sd` HTTP 服务发现端点，把发现的资产自动注册进 Prometheus。
+- **导入导出**：CSV 导入（含逐行错误反馈）、CSV/JSON 导出（CSRF 安全）。
+- **生态**：Grafana 仪表盘示例、7 条示例告警规则（宕机、5xx、心跳失败、DB 锁、内存、拨测目标宕机、证书临期）、n8n 与 Home Assistant 对接指南。
+
+## Web 界面（Web UI）
+
+SvelteKit 5 单页应用嵌入二进制，中英双语（自动检测 + 区域格式化）、明暗主题、响应式布局、键盘可达性。
+
+| 页面 | 能力 |
+|---|---|
+| 仪表盘 | 可配置组件卡（状态分布、心跳成功率、类型分布、位置分布）、扫描活动、需要关注横幅 + 一键扫描 |
+| 设备列表 | 跨网络聚合、筛选（状态/类型/网络）、可选列（本地持久化）、服务端搜索/排序/分页（含数值 IP 排序）、拓扑视图切换 |
+| 设备详情 | 健康横幅 + 标签页：概览 / 扫描发现（服务/端口/banner，每服务一键建拨测）/ 网络与证书（TLS 链、邻居、子网）/ 系统 / 心跳 / 绑定拨测 / 配置历史 |
+| 扫描中心 | 快速扫描（同步）、扫描任务（异步，支持取消）、扫描结果、被动发现漏斗 |
+| 拓扑 | 分层布局、层过滤、搜索聚焦、邻居高亮、端口钻取 |
+| 变更 | 时间线 + 事件筛选 + 结构化差异 |
+| 拨测 | 目标管理（manual / auto / system 三种来源、按模块选项）、状态/延迟/证书天数徽章、历史与证书链模态框、出口质量区块 |
+| 采集器/网络/用户/审计 | 分布式运维与治理面 |
+| 设置 | 个人资料/密码/TOTP/主题语言；通知渠道与规则；SNMP 凭据 |
+
+![设备详情](images/pb-camera-overview.webp)
+
+## 部署与运维（Deployment & Operations）
+
+- **单二进制零依赖**：CGO-free（modernc.org/sqlite 纯 Go），前端 `go:embed` 嵌入，SQLite WAL 内嵌存储；`make build-all` 交叉编译 linux amd64 + arm64。
+- **部署形态**：systemd + Nginx、Docker（多阶段非 root、多架构 GHCR 镜像、bridge/host/macvlan 网络档位）、OpenWrt procd（center + agent，UCI 配置，ARMv7）。
+- **保留策略**：分表批量清扫（心跳 7 天、扫描 30 天、审计 90 天等，全部可配），静默设备自动清理。
+- **数据安全**：schema 版本门控（版本不符启动即拒，避免对旧库做不完整的原地升级）、`scripts/backup.sh`（`.backup` + 完整性检查，7 天保留）。
+- **配置**：koanf（YAML + `MIBEE_*` 环境变量覆盖），示例配置覆盖全部模块。
+- **可观测性**：slog 结构化日志、请求/扫描/心跳/拨测指标、绑定重试抗重启风暴、优雅停机。
+
+## 产品边界（不做什么）
+
+与[产品范围](product-scope.md)一致，以下能力**有意不做**，交给更合适的工具，通过 `/metrics` 与 `/sd` 出口对接：
+
+| 不做 | 推荐替代 |
+|---|---|
+| 告警引擎（阈值/静默/路由树） | Prometheus + Alertmanager |
+| 自由探索式仪表盘 | Grafana |
+| 状态页 | Uptime Kuma / gatus |
+| 主机深度监控（CPU/内存/磁盘） | node_exporter / Netdata |
+| L7 服务注册发现 | Consul / etcd |
+| 配置下发/推送 | Ansible / Oxidized |
+
+内置通知规则只做「设备事件 → 渠道」的薄转发--需要真正的告警语义时请上 Alertmanager。

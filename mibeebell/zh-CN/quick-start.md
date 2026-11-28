@@ -6,9 +6,9 @@
 
 ## 1. 安装（两种方式）
 
-**飞牛（fnOS）应用**（推荐）：下载对应架构的 `mibee-bell-fnos-<版本>-arm64.fpk`（或 `-x86.fpk`）→ 应用中心手动安装 → 桌面「蜂铃」图标进入。
+**飞牛（fnOS）应用**（推荐）：从 [v0.2.0 发布页](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.2.0)下载 `mibee-bell-fnos-0.2.0-arm64.fpk`（ARM64）或 `mibee-bell-fnos-0.2.0-amd64.fpk`（x86）→ 应用中心手动安装 → 桌面「蜂铃」图标进入。
 
-**二进制**：从[发布会 Releases](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.1.0) 下载对应平台可执行文件（附 checksums.txt 校验），放到任意目录：
+**二进制**：从[发布会 v0.2.0 Releases](https://github.com/mickeyzzc/releases/releases/tag/mibeebell-v0.2.0) 下载对应平台可执行文件（附 checksums.txt 校验），放到任意目录：
 
 ```bash
 ./mibee-bell -listen :9080

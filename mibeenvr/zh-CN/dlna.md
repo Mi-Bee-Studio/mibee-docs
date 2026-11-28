@@ -38,7 +38,7 @@ dlna:
   录像是 AVI,独立音频源是音频 MP4。每个条目带编码/大小/时长元数据,
   能不能播由播放器自己判断;拖动走 HTTP Range。
 - 直播流**不在此版本暴露**——DLNA 播放器对直播源支持普遍很差,直播
-  请走 Web UI / [WHEP](streaming.md)。
+  请走 Web UI / [WHEP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/streaming-protocol-selection.md)。
 - 浏览是只读的;不会经 DLNA 修改或删除任何录像。
 
 ## 故障排查

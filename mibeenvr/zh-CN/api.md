@@ -1,6 +1,6 @@
 # API 概览
 
-> 适用于 MiBeeNvr v0.14.0 · 完整接口文档见仓库 [docs/zh/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/zh/api)
+> 适用于 MiBeeNvr v0.15.0 · 完整接口文档见仓库 [docs/zh/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/zh/api)
 
 MiBee NVR 的全部功能都可通过 REST API 驱动（Web UI 本身就是这套路 API 的消费者），并提供 SSE 实时事件流。本页是认证方式与核心端点速查。
 
@@ -37,14 +37,14 @@ curl -H "Authorization: Bearer mbv_xxx" http://localhost:9090/api/recordings
 | `POST /api/trigger/webhook/{camera_id}` | Webhook 触发（公开限流组，凭据为 HMAC 签名，见下表） |
 | `GET /models/{filename}` | 浏览器端 AI 模型文件 |
 
-> v0.13 起录像下载（`/api/recordings/{id}/download`、`/api/recordings/{id}/merged`、延时合并下载）、回放、`GET /api/events` 与 `GET /api/health/cameras` 已从匿名移入鉴权组（浏览器经 `?token=` 会话令牌或 cookie 透明携带凭据）；旧版 base64 `?token=` 透传已移除。详见[身份验证 · v0.13 鉴权范围变更](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/authentication.md)。
+> v0.13 起录像下载（`/api/recordings/{id}/download`、`/api/recordings/{id}/merged`、延时合并下载）、回放、`GET /api/events` 与 `GET /api/health/cameras` 已从匿名移入鉴权组（浏览器经 `?token=` 会话令牌或 cookie 透明携带凭据）；旧版 base64 `?token=` 透传已移除。详见[身份验证 · v0.13 鉴权范围变更](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/api/authentication.md)。
 
 ## 核心端点组
 
 | 组 | 端点 | 说明 |
 |----|------|------|
 | 摄像头 | `GET/POST /api/cameras`、`GET/PUT/DELETE /api/cameras/{id}`、`POST /api/cameras/{id}/adaptive/trigger`、`PUT/GET /api/cameras/{id}/storage-root` | 摄像头 CRUD、自适应录制外部触发、按相机存储根 |
-| PTZ 云台 | `POST /api/cameras/{id}/ptz/move`、`POST /api/cameras/{id}/ptz/stop`、`GET /api/cameras/{id}/ptz/status`、`GET/POST /api/cameras/{id}/ptz/presets`、`POST /api/cameras/{id}/ptz/presets/{token}/goto` | 统一云台控制（ONVIF / 小米 / GB28181 通道共用；向量语义与协议差异见 [小米接入](xiaomi.md)「云台控制」章） |
+| PTZ 云台 | `POST /api/cameras/{id}/ptz/move`、`POST /api/cameras/{id}/ptz/stop`、`GET /api/cameras/{id}/ptz/status`、`GET/POST /api/cameras/{id}/ptz/presets`、`POST /api/cameras/{id}/ptz/presets/{token}/goto` | 统一云台控制（ONVIF / 小米 / GB28181 通道共用；向量语义与协议差异见 [小米接入](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/xiaomi-setup.md)「云台控制」章） |
 | 实时流 | `GET /api/cameras/{id}/stream.flv`、HLS / WebRTC / MJPEG 端点 | 拉流（FLV 需 BasicAuth） |
 | 录像 | `GET /api/recordings` | 列表 / 筛选 / 分页 |
 | 回放 | `GET /api/cameras/{id}/playback/playlist.m3u8` | 按录像回放 |
@@ -100,7 +100,7 @@ curl -N "http://localhost:9090/api/events?filter=segment.&api_key=mbv_…"
 data: {"Topic":"segment.completed","Data":{ ... }}
 ```
 
-> 事件也可通过 [MQTT](mqtt.md) 订阅，适合家庭自动化集成。
+> 事件也可通过 [MQTT](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md) 订阅，适合家庭自动化集成。
 
 ## 完整文档
 
@@ -110,6 +110,6 @@ data: {"Topic":"segment.completed","Data":{ ... }}
 
 ## 下一步
 
-- [MQTT 集成](mqtt.md) — 事件的家庭自动化集成
+- [MQTT 集成](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md) — 事件的家庭自动化集成
 - [WebDAV / FTP](webdav-ftp.md) — 文件级访问录像
 - [CLI 手册](cli.md) — 命令行管理

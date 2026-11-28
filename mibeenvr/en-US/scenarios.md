@@ -29,7 +29,7 @@ The one-liner on Linux:
 curl -fsSL https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/install.sh | sudo bash
 ```
 
-Docker, or an app-store package on Synology / QNAP / fnOS, work equally well — see [Getting Started](quickstart.md). Once installed, open `http://device-ip:9090`.
+Docker, or an app-store package on Synology / QNAP / fnOS, work equally well — see [Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/getting-started.md). Once installed, open `http://device-ip:9090`.
 
 ### Step 2: Follow the setup wizard (2 min)
 
@@ -86,7 +86,7 @@ Draw the zones you actually care about — the front walk, the gate entrance. Ta
 - Class filter: keep only `person`
 - Frame skip: 8–10 on low-power devices, 3–5 on desktops
 
-The [AI tuning guide](ai-detection.md) has recommended values for four situation archetypes (edge device / desktop / security arming / demo).
+The [AI tuning guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/ai-detection-tuning.md) has recommended values for four situation archetypes (edge device / desktop / security arming / demo).
 
 ### Step 4: Pipe alerts into your life
 
@@ -145,7 +145,7 @@ Once the platform's dashboard shows the incoming stream, start the broadcast. Th
 **Tips**:
 
 - Relay and recording don't interfere — recording while relaying on the same camera is by design
-- Details in [Live Relay](relay.md)
+- Details in [Live Relay](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/relay-guide.md)
 
 ---
 
@@ -200,7 +200,7 @@ Xiaomi cameras are locked to their cloud — playback means a subscription. With
 
 ![Xiaomi scan](images/xiaomi-scan.webp)
 
-Recordings now land on your own disk — no subscription, no privacy concerns. CS2 models and 7 legacy TUTK models (Dafang, Xiaofang, Xiaobai, Aqara G2, …) are supported. See [Xiaomi camera setup](xiaomi.md).
+Recordings now land on your own disk — no subscription, no privacy concerns. CS2 models and 7 legacy TUTK models (Dafang, Xiaofang, Xiaobai, Aqara G2, …) are supported. See [Xiaomi camera setup](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/xiaomi-setup.md).
 
 ---
 
@@ -208,4 +208,4 @@ Recordings now land on your own disk — no subscription, no privacy concerns. C
 
 - Full feature boundary: [Feature Overview](features.md)
 - Comparing options: [How It Compares](comparison.md)
-- Stuck? Start with [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/troubleshooting.md)
+- Stuck? Start with [Troubleshooting](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/troubleshooting.md)

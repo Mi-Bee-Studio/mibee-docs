@@ -2,7 +2,7 @@
 
 MiBee NVR 通过多种协议支持广泛的 IP 摄像头，包括 RTSP（H.264/H.265/MJPEG）、HTTP JPEG 和 ONVIF。本指南提供主流摄像头品牌的全面兼容性信息，包括支持的协议、配置示例和故障排除技巧。
 
-**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/onvif-guide.md)。
+**ONVIF 集成**：有关全面的 ONVIF 摄像头支持、发现方法、PTZ 控制和故障排除，请参阅 [ONVIF 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/onvif-guide.md)。
 
 ## 快速入门（Top 3 品牌）
 
@@ -657,6 +657,86 @@ cameras:
 - 需要特定的固件修改
 - 使用自定义固件时性能可能较差
 
+## 热成像 / 双光谱摄像头
+
+双光谱设备（可见光 + 热成像）对 NVR 来说是**两路普通视频流**——录像、预览、回放全链路零特判。在此之上 NVR 提供温度能力：直播温度角标、点测温、越限高亮、双窗并列、回放温度曲线。
+
+### 接入热通道
+
+按设备暴露方式三选一：
+
+1. **RTSP 直连**（多数商用双光谱机）：厂商通常把热通道放在第二路 RTSP 地址（例如海康 `/Streaming/Channels/201`），照常按 RTSP 添加。
+2. **ONVIF 手选 profile**：ONVIF 枚举的 profile 有时不含热通道、或名称上无从分辨——在摄像头编辑页手动选择第二 media profile 的 profile token。
+3. **GB28181**：设备在目录中以 `PhotoelectricImagingType=2` 标注热通道时，NVR 自动建机并标记为热成像通道（详见 [GB28181 指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/gb28181-guide.md)）。
+
+### 标注与温度配置
+
+```yaml
+cameras:
+  - id: "gb-thermal"
+    protocol: "gb28181"
+    imaging_type: thermal        # 可见光留空或 visible。thermal 触发默认策略：
+                                 #   AI 分析推送自动跳过（检测模型按可见光训练）
+                                 #   建议连续录制（标定挡片瞬变会反复触发运动门控）
+    health_overrides:
+      min_fps: 1                 # 低帧率热像（2–8fps）必配，否则健康检查误判低帧率
+    thermal_readout:             # 温度数据源（设备侧 HTTP 读数端点，可选）
+      url: "http://192.168.1.50:8088/api/thermal/current"
+      auth_header: "Authorization"
+      auth_value: "Bearer <token>"
+    spectrum_group: "front-gate" # 双通道各自独立注册（device_id 不同）时，
+                                 # 可见光/热成像两台相机写同一组键即可在界面配对
+```
+
+- **thermal_readout** 不配置时视频链路一切照常，仅温度角标 / 点测温 / 温度曲线不显示。
+- **spectrum_group**：设备以「一设备双通道」目录注册（两通道共享 device_id）时无需配置，NVR 自动配对。组键限 1–64 位 `[A-Za-z0-9._-]`。
+
+### 界面能力
+
+| 能力 | 入口 |
+| --- | --- |
+| 直播温度角标（最高/最低温） | 热成像通道直播页，自动挂载 |
+| 点测温（点击画面测该点温度） | 热成像通道直播页 |
+| 悬停温度读数（鼠标移到热像画面任意处读该点温度，走已缓存温度矩阵，不增加设备请求） | 热成像通道直播页 |
+| 越限高亮（阈值以上标红点） | 直播页「高亮≥°C」输入框 |
+| 双窗并列（可见光+热成像同屏，测温点镜像标记） | 直播页「双窗并列」开关 |
+| 回放温度曲线（分钟级最高/最低，保留 90 天） | 热成像通道的录像详情页 |
+
+### 海康双光谱实战要点
+
+海康双光谱机型三种接入路径均实测可用；温度源使用设备私有 ISAPI 逐像素温度矩阵：
+
+```yaml
+cameras:
+  - id: "gb-thermal"
+    protocol: "gb28181"
+    imaging_type: thermal
+    health_overrides:
+      min_fps: 1
+    thermal_readout:
+      kind: hikvision           # 海康 ISAPI 逐像素温度矩阵（Digest 认证，
+                                 # 自动套用设备申报的热像-可见光配准矩形）
+      url: "http://192.168.1.50"
+      username: "admin"         # thermal_readout 自带凭据优先于相机条目凭据
+      password: "******"        # （GB 注册通道的相机条目通常没有可用 HTTP 凭据）
+    spectrum_group: "front-gate"
+```
+
+固件侧实测坑（海康 V5.5.x 固件，逐条验证过）：
+
+| 现象 | 根因 | 避法 |
+| --- | --- | --- |
+| 切换 H.265 保存后分辨率被静默改动 | 固件保存链路联动改分辨率 | 切编码后核对分辨率，必要时二次保存 |
+| 热像主码流画面横向拉伸变形 | 出厂 1280×720（16:9）拉伸 4:3 传感器 | 分辨率改 640×480（整 4 倍 4:3）即不变形 |
+| 轮询温度矩阵时设备负载/流量异常大 | 帧附加可见光 JPEG 默认开（每帧数百 KB） | 关闭「帧附加可见光图」后再启用温度轮询 |
+| ONVIF 事件订阅成功但永远收不到通知 | 设备对过长的订阅消费地址静默丢弃（POST 到空路径） | 保持事件监听路径短（NVR 已自动使用短路径） |
+
+### 存储与帧率
+
+- 热流典型 1–2 Mbps（约 11–22 GB/天）；画面大面积静止时实际码率远低于此。
+- 温度历史按分钟聚合独立落库（默认保留 90 天），不占录像存储配额。
+- 2–8 fps 的低帧率热像务必配置 `health_overrides.min_fps: 1`。
+
 ## 通用配置技巧
 
 ### RTSP URL 测试
@@ -787,9 +867,9 @@ cameras:
 
 ### 文档
 
-- [MiBee NVR 配置指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/configuration.md)
-- [MiBee NVR API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/api/README.md)
-- [MiBee NVR 入门指南](quickstart.md)
+- [MiBee NVR 配置指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/configuration.md)
+- [MiBee NVR API 参考](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/api/README.md)
+- [MiBee NVR 入门指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/getting-started.md)
 
 ### 社区支持
 
@@ -881,7 +961,7 @@ sudo nmap -sV -p 554,80,8080 --open 192.168.1.0/24
 
 这是连接 NVR 无法直接拨出的摄像头的推荐方式。
 
-详细架构设计请参见[架构文档](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/architecture.md)。
+详细架构设计请参见[架构文档](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/architecture.md)。
 
 ### 前置条件
 

@@ -2,7 +2,7 @@
 
 MiBee NVR supports a wide range of IP cameras through various protocols including RTSP (H.264/H.265/MJPEG), HTTP JPEG, and ONVIF. This guide provides comprehensive compatibility information for popular camera brands, including supported protocols, configuration examples, and troubleshooting tips.
 
-**ONVIF Integration**: For comprehensive ONVIF camera support, discovery methods, PTZ control, and troubleshooting, see the [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md).
+**ONVIF Integration**: For comprehensive ONVIF camera support, discovery methods, PTZ control, and troubleshooting, see the [ONVIF Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/onvif-guide.md).
 
 ## Quick Start (Top 3 Brands)
 
@@ -631,6 +631,94 @@ cameras:
 - Requires specific firmware modifications
 - Performance can be poor with custom firmware
 
+## Thermal / Dual-Spectrum Cameras
+
+A dual-spectrum device (visible light + thermal) is just **two ordinary video streams** to the NVR — recording, live view and playback need no special handling. On top of that the NVR offers temperature features: live temperature chip, spot probing, over-threshold highlighting, dual-pane view, and a playback temperature curve.
+
+### Bringing up the thermal channel
+
+Pick whichever way the device exposes it:
+
+1. **Direct RTSP** (most commercial dual-spectrum cameras): vendors usually expose the thermal channel on a second RTSP path (e.g. Hikvision `/Streaming/Channels/201`) — add it as a regular RTSP camera.
+2. **ONVIF with a hand-picked profile**: ONVIF profile enumeration sometimes omits the thermal channel or gives it an indistinguishable name — select the second media profile's token manually in the camera edit form.
+3. **GB28181**: when the device marks the thermal channel in its catalog with `PhotoelectricImagingType=2`, the NVR auto-enrolls it and labels it as the thermal channel (see the [GB28181 guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md)).
+
+### Labeling and temperature configuration
+
+```yaml
+cameras:
+  - id: "gb-thermal"
+    protocol: "gb28181"
+    imaging_type: thermal        # Leave empty or "visible" for optics. thermal
+                                 # enables the default policies: AI analysis
+                                 # push is skipped (detection models are
+                                 # visible-light trained) and continuous
+                                 # recording is recommended (the calibration
+                                 # shutter flash retriggers motion gates).
+    health_overrides:
+      min_fps: 1                 # Required for low-framerate thermal (2–8fps),
+                                 # otherwise the health check flags low fps.
+    thermal_readout:             # Temperature source (device-side HTTP readout,
+                                 # optional)
+      url: "http://192.168.1.50:8088/api/thermal/current"
+      auth_header: "Authorization"
+      auth_value: "Bearer <token>"
+    spectrum_group: "front-gate" # When the two channels register separately
+                                 # (distinct device IDs), give both cameras the
+                                 # same group key to pair them in the UI.
+```
+
+- Without **thermal_readout** the video pipeline works as usual; only the temperature chip / spot probing / temperature curve stay dark.
+- **spectrum_group**: unnecessary when the device registers as one device with two channels (shared device ID) — the NVR pairs them automatically. Group keys are 1–64 chars of `[A-Za-z0-9._-]`.
+
+### UI features
+
+| Feature | Where |
+| --- | --- |
+| Live temperature chip (max/min) | Thermal-channel live view, mounted automatically |
+| Spot probe (click to measure a point) | Thermal-channel live view |
+| Hover readout (move the pointer anywhere on the thermal image to read that point's temperature; served from the cached matrix, no extra device requests) | Thermal-channel live view |
+| Over-threshold highlighting | "Highlight ≥°C" input on the live view |
+| Dual pane (visible + thermal side by side, probe mirroring) | "Dual pane" toggle on the live view |
+| Playback temperature curve (minute-level max/min, 90-day retention) | Recording detail page of thermal channels |
+
+### Hikvision dual-spectrum field notes
+
+All three bring-up paths are field-verified on Hikvision dual-spectrum cameras; the temperature source is the vendor's private ISAPI per-pixel matrix:
+
+```yaml
+cameras:
+  - id: "gb-thermal"
+    protocol: "gb28181"
+    imaging_type: thermal
+    health_overrides:
+      min_fps: 1
+    thermal_readout:
+      kind: hikvision           # Hikvision ISAPI per-pixel temperature matrix
+                                 # (Digest auth; the device-declared thermal↔optical
+                                 # registration rectangle is applied automatically)
+      url: "http://192.168.1.50"
+      username: "admin"         # thermal_readout credentials take priority over the
+      password: "******"        # camera entry's (GB-enrolled channels usually have
+                                 # no usable HTTP credentials on the entry itself)
+    spectrum_group: "front-gate"
+```
+
+Firmware quirks verified in the field (Hikvision V5.5.x firmware):
+
+| Symptom | Root cause | Workaround |
+| --- | --- | --- |
+| Resolution silently changes after switching to H.265 and saving | The firmware's save pipeline couples codec and resolution | Re-check resolution after a codec switch; save a second time if needed |
+| Thermal main stream looks horizontally stretched | Factory 1280×720 (16:9) stretches the 4:3 sensor | Set the resolution to 640×480 (integer 4×, 4:3) |
+| Device load/traffic spikes while the temperature matrix is polled | Frame-attached visible-light JPEG is on by default (hundreds of KB per frame) | Disable "frame-attached visible image" before enabling temperature polling |
+| ONVIF event subscription succeeds but no notification ever arrives | The device silently drops subscriptions with long consumer addresses (POSTs to an empty path) | Keep the event listener path short (the NVR already uses a short path automatically) |
+
+### Storage and framerate
+
+- A thermal stream is typically 1–2 Mbps (~11–22 GB/day); mostly-static scenes are far below that.
+- Temperature history is aggregated per minute into a separate store (90-day default) and does not count against recording retention.
+- For 2–8fps low-framerate thermal, always set `health_overrides.min_fps: 1`.
+
 ## General Configuration Tips
 
 ### RTSP URL Testing
@@ -761,9 +849,9 @@ cameras:
 
 ### Documentation
 
-- [MiBee NVR Configuration Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md)
-- [MiBee NVR API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/README.md)
-- [MiBee NVR Getting Started](quickstart.md)
+- [MiBee NVR Configuration Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/configuration.md)
+- [MiBee NVR API Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/api/README.md)
+- [MiBee NVR Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/getting-started.md)
 
 ### Community Support
 
@@ -992,7 +1080,7 @@ flowchart LR
 
 ### Notes & limitations
 
-- **H.265 handling for RTMP targets**. Classic RTMP carries H.264 only: with `transcode_policy: "auto"` H.265 sources are transcoded to H.264 (see [Relay Guide](relay.md)); H.264 sources are forwarded directly with zero transcode overhead. **When the receiver is another MiBee NVR**, set the policy to `passthrough` and H.265 is forwarded natively via enhanced-RTMP (hvc1) — zero transcode cost on the sender, suitable for many concurrent streams on ARM SBCs.
+- **H.265 handling for RTMP targets**. Classic RTMP carries H.264 only: with `transcode_policy: "auto"` H.265 sources are transcoded to H.264 (see [Relay Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/relay-guide.md)); H.264 sources are forwarded directly with zero transcode overhead. **When the receiver is another MiBee NVR**, set the policy to `passthrough` and H.265 is forwarded natively via enhanced-RTMP (hvc1) — zero transcode cost on the sender, suitable for many concurrent streams on ARM SBCs.
 - **Audio is forwarded**: AAC audio is passed through; G.711-only sources are handled per target platform requirements (see Relay Guide).
 - **Target must be reachable**: the relay dials OUT to the target, so the target's RTMP/RTSP port must be accessible (port-forward if behind NAT).
 - **Resilient reconnect**: if the source camera or target connection drops, the relay retries with exponential backoff and resumes automatically.

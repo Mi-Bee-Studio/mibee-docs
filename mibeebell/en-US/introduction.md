@@ -49,7 +49,7 @@ Distilled from post-mortems of dead competitors — five non-negotiables:
 | Milestone | Scope | Status |
 |---|---|---|
 | **v0.1** | ingest entries (webhook/Alertmanager/Bark/MQTT) + gate pipeline + full L0 + SQLite + SSE + embedded UI | ✅ released |
-| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging | ✅ released |
+| **v0.2** | mesh HA (claim lease / dead-man switch / silence sync), at-rest credential encryption, Scout notification-center API, http_enrich external tagging, per-person subscriptions, multi-Bell federation, ecosystem discovery | ✅ **v0.2.0 released (2026-11-11)** |
 | **v0.3** | full 17-channel set (Twilio/PagerDuty/Opsgenie/WeCom app/LINE…), PagerDuty/simple-JSON/Grafana ingest, AI triage (L1 embedded model + L2 cloud) with the controlled pipeline-intervention framework, first-run setup wizard | ✅ released (delivered with the v0.1.x series) |
 | **v1.0** | per-person routing, federation | planned |
 

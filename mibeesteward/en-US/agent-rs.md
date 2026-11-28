@@ -73,7 +73,7 @@ The differential testing paid for itself immediately: it exposed a latent BER bu
 
 The 3× code growth is the deliberate price of the two requirements that motivated the rewrite: no runtime memory surprises, and no dependency on libraries whose allocation behavior we cannot control. Where the Go agent delegated wire formats to libraries, the Rust agent owns them — and owns their differential tests.
 
-## Feature parity (retirement state, 0.1.5; Rust-column notes call out later additions)
+## Feature parity (current agent 0.2.4; retirement state of the Go agent was 0.1.5, Rust-column notes call out later additions)
 
 | Capability | Go agent | Rust agent | Notes |
 |---|---|---|---|
@@ -90,10 +90,17 @@ The 3× code growth is the deliberate price of the two requirements that motivat
 | hostapd/iw WiFi station telemetry | ✔ | ✔ | live rig validation pending an AP-equipped rig |
 | Heartbeat probe specs from report | ✔ | ✔ | |
 | Vantage probe plans (probe command, #344) | ✔ icmp/http/tls | ✔ all five modules (0.2.0, #604/#605) | Go/early-Rust agents failed tcp plans with "unknown module" — a live bug; the center now shields legacy agents via capability negotiation and 0.2.0 adds tcp + dns execution, option semantics (http keyword/expected-status, tcp send/expect, dns record/resolver/expected-ips), and the `supported_modules` declaration |
+| Egress echo rounds (`egress` command, #718) | ✗ | ✔ (0.2.2) | the center pushes the echo-source set + cadence to agents declaring `egress`; each vantage reports raw round outcomes to `POST /agents/egress-report` (ASN enrichment stays on the center) |
+| Zero-privilege path tracer (`trace` in probe plans, #719) | ✗ | ✔ (0.2.2, Linux) | a semantic port of the center's tracer (per-TTL TCP connect with hash-fixed source port + IP_RECVERR, ICMP ping sockets with seq-carries-TTL and IP_RECVTTL reply TTL); traces ride the probe plan's `trace` block, a failed probe triggers a rate-limited snapshot (`trigger=failure`), reports go to `POST /agents/path-report`; `libc` is the only new dependency (Linux-only) |
+| Per-stage timing in probe reports (#717) | ✗ | ✔ (0.2.3, dns stage) | http rows carry `phases.dns_ms` + `phases.resolved_ip` (measured around the resilient resolve loop, which already sits outside reqwest) as an optional block on the existing report rows; the center stores whatever stages a row carries. reqwest hides connect/TLS/TTFB, so agent http rows stay dns-only by design |
 | Retention sweep + VACUUM | ✔ | ✔ | |
 | conntrack new-host reporting | ✔ | ✔ | LAN endpoint of ESTABLISHED/[ASSURED] flows reported once on first sighting (src or dst side, Go parser parity incl. [UNASSURED] rejection) — #504 |
 | mDNS unicast queries (`scanner.mdns.unicast_queries`) | ✔ | ✔ | each query also sent to the target's 5353 directly, for unicast-only responders (#20/#504) |
 | dns_log source (dnsmasq `--log-queries` tail) | ✔ | ✔ | byte-offset resume, rotation reset, first-sweep EOF skip; query domains become scan seeds (#504) |
+| HostNet local-network attribution (#746) | ✗ | ✔ (0.2.4) | every 5 min samples per-interface rx/tx error + drop counters (`/proc/net/dev`), the default-route fingerprint (`/proc/net/route`), and center-host DNS timing; rides `meta.hostnet` for center-side deltas and degraded-vantage attribution (never mints a verdict) |
+| SNTP clock offset (#749) | ✗ | ✔ (0.2.4) | RFC 4330 offset against the public NTP pool every 5 min; rides `meta.clock_offset_ms` → `agent_status.sntp_offset_ms`, failure = 0 (unknown), never wedges the report path |
+| UDP DNS probe retransmit (#715) | ✗ | ✔ (0.2.4) | up to 3 UDP attempts inside the caller's timeout on the same socket (fresh transaction id per attempt), matching the center's retry ladder — one dropped packet no longer fails the whole probe |
+| Chained compression pointers in DNS replies (#714) | ✗ | ✔ (0.2.4) | follow nested RFC 1035 compression pointers under a 16-jump cap (loop-safe) instead of rejecting them as "double pointer"; fixes DNSPod CNAME answers and unblocks mDNS/reverse-DNS parsing |
 | Config (`agent.yaml` keys + `MIBEE_` env) | ✔ | ✔ | same shape — an existing agent.yaml works unchanged |
 | Passive eBPF TC observer (center #493/#496/#497/#508 stack) | ✗ (never shipped in the Go agent) | ✔ feature `ebpf` (#498) | same kernel object, aya loader, default-off |
 

@@ -38,7 +38,7 @@ NVR 把音频当作一等公民录制,不依附于任何摄像头:音源像摄�
 
 ## 家族二:旧手机当房间麦克风
 
-退役手机通过浏览器采集麦克风、经 [WHIP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/whip-ingest.md) 推流,就是个够用
+退役手机通过浏览器采集麦克风、经 [WHIP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/whip-ingest.md) 推流,就是个够用
 的 Wi-Fi 麦克风,无需装任何 App。
 
 1. 建音源:摄像头 → 添加 → 协议 **WHIP(WebRTC 推入)** → 编码**音频**,
@@ -113,5 +113,5 @@ document.getElementById('b').onclick = async () => {
 ## 下一步
 
 - [音频](audio.md)——摄像头自带音频的录制、实时监听、双向对讲
-- [WHIP 推入](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/whip-ingest.md)——手机和 OBS 发布用的推入端点
+- [WHIP 推入](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/whip-ingest.md)——手机和 OBS 发布用的推入端点
 - [录像与回放](recording-playback.md)——日时间轴与录像库

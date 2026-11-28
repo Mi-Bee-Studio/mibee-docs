@@ -44,7 +44,7 @@ G.711; devices that only serve other codecs will be called out explicitly.
 ## Family 2: an old phone as a room microphone
 
 A retired phone is a serviceable Wi-Fi microphone via the browser's mic
-capture pushed over [WHIP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/whip-ingest.md) — no app needed.
+capture pushed over [WHIP](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/whip-ingest.md) — no app needed.
 
 1. Create the source: Cameras → Add → protocol **WHIP (WebRTC push)** →
    encoding **audio**, stream key e.g. `room-mic`. The form shows the
@@ -123,5 +123,5 @@ Unlinked sources work too — they simply stand alone in the library.
 ## Next steps
 
 - [Audio](audio.md) — in-camera audio recording, live listening, two-way talk
-- [WHIP ingest](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/whip-ingest.md) — the push endpoint phones and OBS publish to
+- [WHIP ingest](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/whip-ingest.md) — the push endpoint phones and OBS publish to
 - [Recordings & playback](recording-playback.md) — the day timeline and library

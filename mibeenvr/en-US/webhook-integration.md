@@ -1,6 +1,6 @@
 # Webhook Trigger Integration
 
-MiBee NVR exposes an HMAC-signed HTTP trigger endpoint — the counterpart of the [MQTT trigger](mqtt.md): external systems (sensors, automation platforms, IoT gateways) POST a signed request to start/stop recording or capture a snapshot, with no MQTT broker required.
+MiBee NVR exposes an HMAC-signed HTTP trigger endpoint — the counterpart of the [MQTT trigger](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md): external systems (sensors, automation platforms, IoT gateways) POST a signed request to start/stop recording or capture a snapshot, with no MQTT broker required.
 
 ## Overview
 
@@ -55,6 +55,6 @@ curl -X POST "http://192.168.1.50:9090/api/trigger/webhook/cam-xxxx?action=recor
 | | MQTT trigger | Webhook trigger |
 |---|---|---|
 | Dependency | Requires an MQTT broker | None (direct HTTP) |
-| Direction | Bidirectional (also [publishes status](mqtt.md#status-publishing)) | One-way (trigger only) |
+| Direction | Bidirectional (also [publishes status](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md#status-publishing)) | One-way (trigger only) |
 | Auth | Broker username/password | HMAC signature + replay window |
 | Best for | Environments already on a smart-home bus | Single sensors / scripts / cloud-function callbacks |

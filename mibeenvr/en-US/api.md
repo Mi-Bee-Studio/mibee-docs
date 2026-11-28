@@ -1,6 +1,6 @@
 # API Overview
 
-> For MiBeeNvr v0.14.0 · full endpoint docs live in the repo at [docs/en/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/en/api)
+> For MiBeeNvr v0.15.0 · full endpoint docs live in the repo at [docs/en/api/](https://github.com/Mi-Bee-Studio/MiBeeNvr/tree/main/docs/en/api)
 
 Everything MiBee NVR does is drivable over its REST API (the web UI itself is a consumer of it), plus an SSE event stream. This page is an auth + core-endpoint cheat sheet.
 
@@ -37,14 +37,14 @@ curl -H "Authorization: Bearer mbv_xxx" http://localhost:9090/api/recordings
 | `POST /api/trigger/webhook/{camera_id}` | Webhook trigger (public rate-limited group; the HMAC signature is the credential — see below) |
 | `GET /models/{filename}` | Browser-side AI model files |
 
-> As of v0.13, recording downloads (`/api/recordings/{id}/download`, `/api/recordings/{id}/merged`, timelapse merge download), playback, `GET /api/events`, and `GET /api/health/cameras` moved from anonymous into the authenticated group (browsers carry credentials transparently via the `?token=` session token or cookie); the legacy base64 `?token=` passthrough was removed. See [Authentication · v0.13 auth scope changes](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/api/authentication.md).
+> As of v0.13, recording downloads (`/api/recordings/{id}/download`, `/api/recordings/{id}/merged`, timelapse merge download), playback, `GET /api/events`, and `GET /api/health/cameras` moved from anonymous into the authenticated group (browsers carry credentials transparently via the `?token=` session token or cookie); the legacy base64 `?token=` passthrough was removed. See [Authentication · v0.13 auth scope changes](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/api/authentication.md).
 
 ## Core Endpoint Groups
 
 | Group | Endpoints | Notes |
 |-------|-----------|-------|
 | Cameras | `GET/POST /api/cameras`, `GET/PUT/DELETE /api/cameras/{id}`, `POST /api/cameras/{id}/adaptive/trigger`, `PUT/GET /api/cameras/{id}/storage-root` | camera CRUD, adaptive-recording external trigger, per-camera storage root |
-| PTZ | `POST /api/cameras/{id}/ptz/move`, `POST /api/cameras/{id}/ptz/stop`, `GET /api/cameras/{id}/ptz/status`, `GET/POST /api/cameras/{id}/ptz/presets`, `POST /api/cameras/{id}/ptz/presets/{token}/goto` | unified pan/tilt/zoom control (shared by ONVIF / Xiaomi / GB28181 channels; vector semantics and per-protocol differences: see the PTZ chapter in [Xiaomi Setup](xiaomi.md)) |
+| PTZ | `POST /api/cameras/{id}/ptz/move`, `POST /api/cameras/{id}/ptz/stop`, `GET /api/cameras/{id}/ptz/status`, `GET/POST /api/cameras/{id}/ptz/presets`, `POST /api/cameras/{id}/ptz/presets/{token}/goto` | unified pan/tilt/zoom control (shared by ONVIF / Xiaomi / GB28181 channels; vector semantics and per-protocol differences: see the PTZ chapter in [Xiaomi Setup](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/xiaomi-setup.md)) |
 | Live streams | `GET /api/cameras/{id}/stream.flv`, HLS / WebRTC / MJPEG endpoints | pull streams (FLV needs BasicAuth) |
 | Recordings | `GET /api/recordings` | list / filter / paginate |
 | Playback | `GET /api/cameras/{id}/playback/playlist.m3u8` | per-recording playback |
@@ -107,7 +107,7 @@ The payload is nested — business fields live inside `Data` (including `recordi
 data: {"Topic":"segment.completed","Data":{ ... }}
 ```
 
-> Events are also available via [MQTT](mqtt.md) for home-automation integrations.
+> Events are also available via [MQTT](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md) for home-automation integrations.
 
 ## Full Documentation
 
@@ -117,6 +117,6 @@ Request/response fields and error codes per group live in the repo:
 
 ## Next Steps
 
-- [MQTT Integration](mqtt.md) — events for home automation
+- [MQTT Integration](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/mqtt-integration.md) — events for home automation
 - [WebDAV / FTP](webdav-ftp.md) — file-level access to recordings
 - [CLI Reference](cli.md) — command-line administration

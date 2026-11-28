@@ -1,6 +1,6 @@
 # Linux 原生软件包（deb / rpm）
 
-适用：不使用 Docker 的 **Debian / Ubuntu**（amd64、arm64）与 **RHEL / Fedora / Rocky / AlmaLinux / openSUSE**（x86_64、aarch64）。其他架构（含 armv7）请走[二进制部署](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/zh/deployment.md)或 [Docker](install-docker.md)。
+适用：不使用 Docker 的 **Debian / Ubuntu**（amd64、arm64）与 **RHEL / Fedora / Rocky / AlmaLinux / openSUSE**（x86_64、aarch64）。其他架构（含 armv7）请走[二进制部署](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/deployment.md)或 [Docker](install-docker.md)。
 
 ## 安装
 

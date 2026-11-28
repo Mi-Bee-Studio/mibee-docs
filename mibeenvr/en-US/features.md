@@ -1,6 +1,6 @@
 # Feature Overview
 
-> Applies to MiBeeNvr v0.14.0 (released 2026-10)
+> Applies to MiBeeNvr v0.15.0 (released 2026-11)
 
 Everything MiBee NVR can do, on one page. Each section links to its dedicated guide — treat this as the map, and dive into the spots that interest you.
 
@@ -19,7 +19,7 @@ Everything MiBee NVR can do, on one page. Each section links to its dedicated gu
 | HTTP JPEG / MJPEG | ESP32-class low-power DIY cams | Snapshot and MJPEG streams; pairs with MiBeeCam firmware |
 | Raspberry Pi cameras | USB / CSI modules | Via an RTSP service (rpi-cam) |
 
-Zero-config discovery: ONVIF WS-Discovery scanning + mDNS/DNS-SD service advertisement + UDP broadcast responder — open the web UI in your LAN and both the NVR and cameras show up.
+Zero-config discovery: ONVIF WS-Discovery scanning + mDNS/DNS-SD service advertisement + UDP broadcast responder — open the web UI in your LAN and both the NVR and cameras show up. v0.15.0 also adds **zero-touch camera onboarding**: a temporary alias reaches cameras still on their factory-default subnet, ONVIF or Hikvision ISAPI rewrites their network settings, and serial matching relocates and enrolls them. It needs Linux `CAP_NET_ADMIN`, one broadcast domain, and camera HTTP port 80. The feature is off by default; see [Zero-Touch Camera Onboarding](#zero-touch-camera-onboarding).
 
 ## Live Viewing
 
@@ -62,16 +62,17 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 - Alarm / catalog / mobile-position subscriptions with alarm linkage
 - Device-side recording search (RecordInfo) + playback pull (speed control / seek)
 - **Lower-level cascade**: the NVR registers to an upper platform, forwards catalog/alarms; the upper platform can request NVR-local recordings (as of v0.13 the main stream activates on demand at playback time — nothing is pulled while idle); per-camera catalog convergence and optional sub-stream cascading keep your uplink light
-- **GB35114**: A-level certificate mutual auth / B-level per-AU video signatures / C-level SM4 media encryption (SM2/SM3/SM4, requires a `-tags gb35114` build) — full-level coverage of the national-standard video security chain
+- **GB35114**: A-level certificate mutual auth / B-level per-AU video signatures / C-level SM4 media encryption (SM2/SM3/SM4, requires a `-tags gb35114` build; #1079) — full-level coverage of the national-standard video security chain
 
-> Off by default — enabling is opt-in. See the [GB/T 28181 guide](gb28181.md).
+> Off by default — enabling is opt-in. See the [GB/T 28181 guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md).
 
 ## Smart Features
 
 - **Browser-side AI detection**: ONNX Runtime Web (WebGPU → WASM SIMD fallback) runs YOLO11 inference in your browser — zero server load, works even on aging NVR hardware
-- **ROI zones**: draw the doorway / hallway / gate; only targets inside the zone raise events. Confidence, frame-skip and class filters all tunable (see the [AI tuning guide](ai-detection.md))
-- **MiBeeVision integration**: optional external AI backend (as of v0.13: multi-instance routing via `vision.instances` + push circuit-breaker with automatic back-off) — the NVR pushes recording segments and re-pushes missed ones after reconnects; AI event snapshot endpoint. The official **MiBeeVision Lite** binary ships free in the NVR repository (independent version line; Lite is single-camera, CPU inference, Linux x86_64/ARM64) — no self-built AI backend required
-- **Camera-side motion detection**: ONVIF MotionAlarm events serve directly as a recording trigger (`motion_source: camera:onvif`, see the [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/onvif-guide.md)) — detection work is offloaded to the camera, zero decode cost on the NVR
+- **ROI zones**: draw the doorway / hallway / gate; only targets inside the zone raise events. Confidence, frame-skip and class filters all tunable (see the [AI tuning guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/ai-detection-tuning.md))
+- **MiBeeVision integration**: optional external AI backend (as of v0.13: multi-instance routing via `vision.instances` + push circuit-breaker with automatic back-off) — the NVR pushes recording segments and re-pushes missed ones after reconnects; AI event snapshot endpoint. The official **MiBeeVision Lite** binary is distributed free through the release hub ([Lite v0.1.0](https://github.com/mickeyzzc/releases/releases/tag/mibee-vision-v0.1.0); independent version line, single camera, CPU inference, Linux x86_64/ARM64) — no self-built AI backend required
+- **Camera-side motion detection**: ONVIF MotionAlarm events serve directly as a recording trigger (`motion_source: camera:onvif`, see the [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/onvif-guide.md)) — detection work is offloaded to the camera, zero decode cost on the NVR
+- **Thermal / dual-spectrum cameras**: a thermal channel records continuously as its own camera entry (AI-analysis push skipped by default); pair visible and thermal channels with `spectrum_group` for side-by-side viewing, override the main-stream profile to pick the thermal channel, and get automatic labels on GB28181 catalog entries carrying PhotoelectricImagingType. Spot probes, max/min temperature chips, hover readouts, over-threshold highlighting, and minute-level temperature-history playback are included; device temperature alarms drive linked recording plus an evidence snapshot (both the ONVIF RadiometryAlarm and GB alarm NOTIFY paths). See the [camera guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/camera-guide.md#thermal--dual-spectrum-cameras) and [ONVIF guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/onvif-guide.md)
 - **Health monitoring**: multi-level camera health checks, auto-remediation, blacklisting, IP-drift self-healing (re-discovers cameras by ONVIF serial number)
 - **SSE live events**: camera status, health events and segment completion stream to the UI in real time
 
@@ -103,6 +104,7 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 - **[DLNA media server](dlna.md)**: TVs and LAN players discover the NVR via SSDP and browse cameras → days → recordings (default off, LAN interfaces only)
 - **[Home Assistant](home-assistant.md)**: the official custom integration ships with the release (mDNS auto-discovery + per-camera entities / switches); a fully native RTSP-output + MQTT assembly works too
 - **Prometheus**: 300+ metric families at `/api/metrics`
+- **OpenTelemetry**: opt-in OTLP/HTTP distributed tracing and remote log shipping for requests, recorder connections, merge/cleanup passes, GB28181 sessions, and Vision pushes; logs can carry `otel_trace_id` / `otel_span_id` for one-click log↔trace navigation. See [Observability](observability.md)
 - **REST API**: everything scriptable; API keys (`mbv_` prefix) alongside BasicAuth
 
 ## Deployment & Distribution
@@ -122,6 +124,7 @@ SIP cameras/platforms REGISTER directly to the NVR and appear as regular cameras
 - Modern Svelte 5 SPA, **English / 中文**, light & dark themes, installable PWA
 - Setup wizard (3 minutes to first recording), surveillance grid (header "Smooth / HD" sub-stream toggle), recording library (activity filters + heat timeline), timelapse, dashboard, health page, stats page
 - **Camera groups**: drag cards into groups, reorder and rename; the camera picker filters by group and selects a whole group in one click
+- **Adjustable surveillance grid + photo wall**: the default 4 tiles stay; the picker can raise the preview count to 6/9/12/16 (tiers clamp to the server's HLS preview budget, editable under Settings → Streaming). Above 4 tiles a photo-wall layout is available with several arrangement templates — the enlarged tile anchored top-left/top-right/bottom-left/bottom-right/center, plus two- and three-tile variants (small tiles dense-pack the rest; featured tiles can rotate). In HD mode above 4 tiles only the featured tiles ride the main stream, the rest stay on the sub-stream
 - **Dashboard with four tabs**: storage trend (per-camera usage + stacked daily-write chart with a clickable legend), health history, transcoding history, AI events (shown when an external AI backend is configured)
 - **Per-camera flow diagnosis**: expand any camera in the dashboard's camera-status list into a flow tree (source → hub → recording / live viewing / health checks / relays / sub-stream), color-coded at a glance — green = active, gray = idle, orange = trouble (e.g. marked recording but no frames inflow), red = heavy frame drops; includes plain-language health-score factor breakdown and this camera's storage usage
 - Fully responsive — the phone browser gets the complete experience, not a stripped one
@@ -140,7 +143,28 @@ timeline
     v0.10 : H.265 WASM live : Timelapse v3 : Auth modernization : NAS distribution
     v0.11 : GB/T 28181 : Continuous playback timeline : LAN discovery : Adaptive recording : On-demand sub-streams : Per-camera storage
     v0.13 : Object-storage cold archive : Tiered recording + pixel gating : Desktop app : Bare-metal auto-update : I/O budgeting
+    v0.15 : Thermal and dual-spectrum : Temperature readouts and history : Surveillance grid and photo wall : Zero-touch onboarding : OpenTelemetry
 ```
+
+## Zero-Touch Camera Onboarding
+
+Zero-touch onboarding is for cameras still on the vendor's factory-default subnet and therefore unreachable from the NVR's subnet. The NVR temporarily binds an alias in that subnet, probes candidates, rewrites network settings, then relocates and enrolls each camera by serial number. The alias is removed on every exit path, including failure and timeout.
+
+1. Enable it and set the factory subnet in `mibee-nvr.yaml`:
+
+   ```yaml
+   camera_onboarding:
+     enabled: true                  # off by default; rewrites device network settings
+     default_subnet: "192.168.1.0/24"
+     target_dhcp: true              # or set false and fill target_static_ip
+     target_static_ip: "192.168.10.84"
+   ```
+
+2. Run the NVR on Linux with `CAP_NET_ADMIN`, keep the factory subnet in the same broadcast domain, and make sure camera HTTP port 80 is reachable.
+3. Call `POST /api/onboarding/scan`, then `POST /api/onboarding/adopt` with credentials and the target address. Per-camera overrides are `mode`, `static_ip`, and `prefix_len`; static mode is recommended.
+4. Confirm the camera appears at its new address on the Cameras page; recording behaves exactly like a manually added camera.
+
+Scan results distinguish activated, factory-unactivated, and credentials-required devices. Activate an unactivated device in its web UI or the vendor tool first. Hikvision static mode falls back to ISAPI when ONVIF rejects network writes. Concurrent scans/adopts return `409`. DHCP mode refuses to guess when the serial is not unique; retry in static mode. For full endpoints, see the product repository's `docs/en/api/onboarding.md` at v0.15.0.
 
 ## Performance & Reliability
 
@@ -163,6 +187,6 @@ The design baseline is a **low-end ARM board** (1GB RAM, Cortex-A53 class); all 
 
 ## Next Steps
 
-- Get running fast: [Getting Started](quickstart.md)
+- Get running fast: [Getting Started](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/getting-started.md)
 - See real-world recipes: [Scenario Playbooks](scenarios.md)
 - Comparing options: [How It Compares](comparison.md)

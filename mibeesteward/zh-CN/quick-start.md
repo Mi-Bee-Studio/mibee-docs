@@ -13,17 +13,22 @@
 
 ### 方式一：GitHub Releases
 
-从 [Mi-Bee-Studio/MiBeeSteward Releases](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases) 下载对应架构的二进制（当前 v0.9.0）：
+从 [MiBee Steward v0.10.0 Release](https://github.com/Mi-Bee-Studio/MiBeeSteward/releases/tag/v0.10.0) 下载对应架构的二进制：
 
 ```bash
-chmod +x mibee-steward
-./mibee-steward --config config.yaml
+# amd64；arm64 资产名为 mibee-steward-linux-arm64
+chmod +x mibee-steward-linux-amd64
+./mibee-steward-linux-amd64 --config config.yaml
 ```
+
+校验和文件为 `SHA256SUMS.center`；带可选 LLDP/CDP 与 ARP 能力的变体为 `mibee-steward-linux-amd64-full` / `mibee-steward-linux-arm64-full`。
+
+> **从 v0.9.x 或更早版本升级？** v0.10.0 的 schema v9 → v10 → v11 不就地升级。先运行 `scripts/backup.sh`，删除旧数据库，再以全新数据库启动并重新扫描；拨测历史清零，归档条目不随重建保留。详见[部署指南](https://github.com/Mi-Bee-Studio/MiBeeSteward/blob/v0.10.0/docs/zh/deployment.md#v09x--v0100-跨界操作)。
 
 ### 方式二：Docker
 
 ```bash
-docker pull ghcr.io/mi-bee-studio/mibeesteward:0.9.0
+docker pull ghcr.io/mi-bee-studio/mibeesteward:0.10.0
 ```
 
 扫描依赖网络命名空间能力，容器建议使用 host 网络模式并声明 `NET_RAW` / `NET_ADMIN`：
@@ -33,7 +38,7 @@ docker run -d --name mibee \
   --network host \
   --cap-add NET_RAW --cap-add NET_ADMIN \
   -v "$PWD/configs:/app/configs:ro" \
-  ghcr.io/mi-bee-studio/mibeesteward:0.9.0
+  ghcr.io/mi-bee-studio/mibeesteward:0.10.0
 ```
 
 > Docker 默认 bridge 模式位于 NAT 之后，ICMP、ARP/MAC 与多播探测会失效，不能用于真实资产盘点。详见[部署](deployment.md)。

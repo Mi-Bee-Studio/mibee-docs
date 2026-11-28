@@ -1,6 +1,6 @@
 # Webhook 触发集成
 
-MiBee NVR 提供一个 HMAC 签名的 HTTP 触发端点，是 [MQTT 触发](mqtt.md)的对等物：传感器、自动化平台、IoT 网关等外部系统不需要 MQTT 代理，直接 POST 一个签名请求即可启动 / 停止录像或抓拍。
+MiBee NVR 提供一个 HMAC 签名的 HTTP 触发端点，是 [MQTT 触发](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md)的对等物：传感器、自动化平台、IoT 网关等外部系统不需要 MQTT 代理，直接 POST 一个签名请求即可启动 / 停止录像或抓拍。
 
 ## 概述
 
@@ -55,6 +55,6 @@ curl -X POST "http://192.168.1.50:9090/api/trigger/webhook/cam-xxxx?action=recor
 | | MQTT 触发 | Webhook 触发 |
 |---|---|---|
 | 依赖 | 需要 MQTT 代理 | 零依赖（HTTP 直连） |
-| 方向 | 双向（还可[订阅状态发布](mqtt.md#状态发布)） | 单向（仅触发） |
+| 方向 | 双向（还可[订阅状态发布](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/mqtt-integration.md#状态发布)） | 单向（仅触发） |
 | 鉴权 | 代理账号密码 | HMAC 签名 + 重放窗 |
 | 适合 | 已有智能家居总线的环境 | 单点传感器 / 脚本 / 云函数回调 |

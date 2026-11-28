@@ -1,6 +1,6 @@
 # Configuration Reference
 
-> For MiBeeNvr v0.14.0 · default config file `mibee-nvr.yaml` (override with `-config`)
+> For MiBeeNvr v0.15.0 · default config file `mibee-nvr.yaml` (override with `-config`)
 
 A single YAML file drives all of MiBee NVR. This page is a **top-level key cheat sheet**; for every field see the [full configuration reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) in the repository.
 
@@ -13,7 +13,7 @@ There are **two entry points**; the web UI is the recommended one (persists imme
 | Web UI → Settings | Most runtime options | Storage, streaming, GB28181, AI detection, recording & processing pages |
 | Edit the YAML | Bulk edits / bootstrapping | Camera list, deploy scripts; restart after editing |
 
-> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](cli.md#encrypt-config-encrypt-sensitive-fields)).
+> `mibee-nvr encrypt-config` encrypts plaintext secrets in place (see the [CLI reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/cli.md#encrypt-config-encrypt-sensitive-fields)).
 
 ## Top-Level Key Cheat Sheet
 
@@ -88,9 +88,13 @@ cameras:
     password: "camera123"
     enabled: true
     recording_enabled: true      # false = live-only, no recording
+    # Dual-spectrum (thermal) keys: imaging_type: thermal (label the thermal
+    # channel + default policies), thermal_readout: (temperature readout
+    # endpoint), spectrum_group: (pair channels that register separately).
+    # See the "Thermal / Dual-Spectrum Cameras" section in the camera guide.
 ```
 
-Full recipes per protocol: [ONVIF](onvif-discovery.md) · [Xiaomi](xiaomi.md) · [SRT/RTMP](srt-rtmp.md) · [Raspberry Pi](raspberrypi.md) · [GB28181](gb28181.md).
+Full recipes per protocol: [ONVIF](onvif-discovery.md) · [Xiaomi](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/xiaomi-setup.md) · [SRT/RTMP](srt-rtmp.md) · [Raspberry Pi](raspberrypi.md) · [GB28181](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md).
 
 ## Common Recipes
 

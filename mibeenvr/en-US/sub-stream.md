@@ -1,6 +1,6 @@
 # Sub-Streams (Low-Resolution Secondary Streams)
 
-> For MiBeeNvr v0.14.0
+> For MiBeeNvr v0.15.0
 
 Most IP cameras output two streams: the **main stream** (high resolution, for recording) and a **sub-stream** (low resolution/bitrate, traditionally for previews). MiBee NVR makes the sub-stream an **on-demand** first-class citizen: the surveillance grid, GB cascade, and external AI consumers ride the sub-stream while **main-stream recording is untouched**; with no viewers the sub-stream pull stops by itself — zero cost when nobody watches.
 
@@ -12,8 +12,8 @@ Most IP cameras output two streams: the **main stream** (high resolution, for re
 | Live page (single camera) | Per-camera quality switcher (shown when this camera has a sub-stream) |
 | Live API | `stream/ws` / `stream.flv` with `?quality=sub`; HLS uses the path form `/api/cameras/{id}/stream/sub/index.m3u8` |
 | WebRTC (WHEP) | True sub-stream session when the sub-stream is H.264; H.265 sub-streams fall back to main (WebRTC is H.264-only) |
-| GB28181 cascade | Per-camera "cascade sub-stream" toggle — upper-platform previews stop saturating your uplink (see the [GB/T 28181 guide](gb28181.md)) |
-| External AI push | Sub-stream analysis layer — low-res segments decode at 1/4–1/16 the cost of main (see the [configuration reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md#vision-push-integration-configuration)) |
+| GB28181 cascade | Per-camera "cascade sub-stream" toggle — upper-platform previews stop saturating your uplink (see the [GB/T 28181 guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md)) |
+| External AI push | Sub-stream analysis layer — low-res segments decode at 1/4–1/16 the cost of main (see the [configuration reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/configuration.md#vision-push-integration-configuration)) |
 
 **Fallback semantics**: when a camera has no sub-stream or the pull fails, every consumer falls back to the main stream, and the live response header `X-Stream-Quality: main|sub` reports what was actually served — the frontend never black-screens, scripts can decide.
 
@@ -26,7 +26,7 @@ The collapsible **"Sub-stream"** section of the camera edit form:
 | Sub-stream RTSP URL | Manually enter any camera's `rtsp://…` sub-stream address (Hikvision convention `…/Streaming/Channels/102`, Dahua `…/cam/realmonitor?channel=1&subtype=1`) |
 | ONVIF sub-stream profile token | **Blank = auto-discover**: after connecting, the NVR picks the second-highest resolution profile besides the main one (fill-once; clear and save to re-discover) |
 
-Either target suffices. GB28181 cameras have their own vendor-convention sub-channel probing — see the [GB/T 28181 guide](gb28181.md).
+Either target suffices. GB28181 cameras have their own vendor-convention sub-channel probing — see the [GB/T 28181 guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md).
 
 > **ONVIF profile metadata can lie** (advertising H.264 while serving H.265) — the NVR trusts the actual RTSP DESCRIBE, no manual verification needed.
 
@@ -68,6 +68,6 @@ rtsp://<NVR-IP>:8554/<camera_id>
 
 ## Next Steps
 
-- [Streaming Protocol Selection](streaming.md) — choosing WebRTC / WS / FLV / HLS / WASM
-- [GB/T 28181 Guide](gb28181.md) — cascading the sub-stream to an upper platform
-- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/configuration.md) — all configuration keys
+- [Streaming Protocol Selection](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/streaming-protocol-selection.md) — choosing WebRTC / WS / FLV / HLS / WASM
+- [GB/T 28181 Guide](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/gb28181-guide.md) — cascading the sub-stream to an upper platform
+- [Configuration Reference](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/configuration.md) — all configuration keys

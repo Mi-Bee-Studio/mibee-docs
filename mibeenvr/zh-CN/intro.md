@@ -1,6 +1,6 @@
 # 产品介绍
 
-> 适用于 MiBeeNvr v0.14.0
+> 适用于 MiBeeNvr v0.15.0
 
 MiBee NVR 是一个用 Go 语言编写的轻量级、自托管网络视频录像机（NVR）。它将 IP 摄像头的视频流录制为 MP4 片段并保存到磁盘，提供现代化 Web 界面用于查看录像、管理摄像头和访问录制内容。
 
@@ -56,7 +56,7 @@ flowchart LR
 | SRT / RTMP | srt / rtmp | 推流接入，跨网络摄像头 |
 | 延时摄影 | timelapse | 独立延时摄影模式 |
 
-> **品牌兼容性**：参阅[摄像头品牌兼容指南](https://raw.githubusercontent.com/Mi-Bee-Studio/MiBeeNvr/main/docs/zh/camera-guide.md)获取海康、大华、宇视、Axis、Reolink 等 20+ 品牌的详细配置。
+> **品牌兼容性**：参阅[摄像头品牌兼容指南](camera-guide.md)获取海康、大华、宇视、Axis、Reolink 等 20+ 品牌的详细配置。
 
 ## 为什么选择 MiBee NVR
 
@@ -80,4 +80,4 @@ MiBee Nvr v0.11.0 采用 **AGPL-3.0** 开源许可证。
 
 - **GitHub Issues**：[MiBeeNvr Issues](https://github.com/Mi-Bee-Studio/MiBeeNvr/issues)
 - **讨论区**：[MiBeeNvr Discussions](https://github.com/Mi-Bee-Studio/MiBeeNvr/discussions)
-- **升级指南**：[升级指南](upgrade-faq.md)
+- **升级指南**：[升级指南](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/zh/upgrade-guide.md)

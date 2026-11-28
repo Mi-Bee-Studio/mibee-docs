@@ -149,6 +149,6 @@ curl -u admin:PASSWORD http://localhost:9090/api/ai/models
 
 ## Related
 
-- [Known issue: logit explosion causing wall-to-wall person:100% false positives](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/known-issues/ai-logit-false-positives.md)
-- [Known issue: ONNX model loading gzip-trailer](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/main/docs/en/known-issues/ai-onnx-gzip-trailer.md)
+- [Known issue: logit explosion causing wall-to-wall person:100% false positives](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/known-issues/ai-logit-false-positives.md)
+- [Known issue: ONNX model loading gzip-trailer](https://github.com/Mi-Bee-Studio/MiBeeNvr/blob/v0.15.0/docs/en/known-issues/ai-onnx-gzip-trailer.md)
 - Architecture: AI inference is entirely browser-side (`web/src/lib/ai-detection/`); the backend only stores config and model files
